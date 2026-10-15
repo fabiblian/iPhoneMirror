@@ -245,6 +245,25 @@ currently in use are skipped without interrupting mirroring.
 > sources neither require nor inspect `libusb0`, and never open the driver
 > manager because of driver state.
 
+### Stop mirroring shortcut
+
+**Ctrl+Shift+X** stops mirroring in the focused preview, or the selected device
+when the main window is focused. It works without reverse control enabled.
+Change or clear it under **Configure shortcuts → Stop mirroring**. It stops the
+capture session while keeping the application open. An existing assignment of
+the same chord is preserved; choose a free chord for Stop mirroring in that case.
+
+### USB video without phone audio (experimental)
+
+Before starting USB mirroring, clear **Use iPhone audio** under the USB modes
+in the mirroring settings. This suppresses the USB audio request, independently
+of **Play audio on Windows**, which only mutes local playback. The choice belongs
+to the selected device for this app run and is locked while its capture is active.
+Stop mirroring before changing it. Select AirPods as the playback destination on
+the iPhone after starting if necessary. This mode needs real-device iOS testing;
+it does not guarantee that iOS will preserve a particular audio route. Recordings
+and streams from this USB session have no phone audio.
+
 ## Wireless AirPlay
 
 The AirPlay receiver starts with the main application. The user does not need

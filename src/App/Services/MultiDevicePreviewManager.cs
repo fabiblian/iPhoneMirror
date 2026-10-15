@@ -56,6 +56,30 @@ internal sealed class MultiDevicePreviewManager : IDisposable
             ? window.Handle : 0;
 
     internal bool ContainsWindow(nint handle) => handle != 0 && _windows.Values.Any(w => w.Handle == handle);
+    internal (string Udid, ulong Handle)? GetSessionForWindow(nint handle)
+    {
+        if (handle == 0) return null;
+        foreach (var pair in _windows)
+            if (pair.Value.Handle == handle)
+                return (pair.Key, pair.Value.SessionHandle);
+        return null;
+    }
+
+    internal PreviewVisibilityTarget? GetVisibilityTarget(nint handle)
+    {
+        var pair = _windows.FirstOrDefault(pair => pair.Value.Handle == handle && handle != 0);
+        return pair.Value is { IsLive: true } window
+            ? new(pair.Key, window, window.SessionHandle) : null;
+    }
+
+    internal bool IsCurrent(PreviewVisibilityTarget target) =>
+        target.Window.IsLive && target.Window.SessionHandle == target.Session &&
+        _windows.TryGetValue(target.Udid, out var current) && ReferenceEquals(current, target.Window) &&
+        viewModel.GetDeviceSessionHandle(target.Udid) == target.Session;
+
+    internal bool IsVisibilityHidden(nint handle) =>
+        _windows.Values.Any(w => w.Handle == handle && w.IsVisibilityHidden);
+
     internal bool IsFullScreenWindow(nint handle) => _windows.Values.Any(w => w.Handle == handle && w.IsFullScreen);
     internal bool ToggleFullScreenWindow(nint handle)
     {

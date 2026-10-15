@@ -21,16 +21,23 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
     private static PreviewSettingsWindow? _current;
     private bool _syncing;
 
-    internal static void ShowOrActivate()
+    private PreviewVisibilityTarget? _visibilityTarget;
+    private MainWindow? VisibilityOwner => Application.Current?.MainWindow as MainWindow;
+
+    internal static void ShowOrActivate(nint previewWindow = 0)
     {
         if (_current is { } existing)
         {
+            existing._visibilityTarget = existing.VisibilityOwner?.ResolveSettingsPreviewTarget(previewWindow);
+            existing.Sync();
             if (existing.WindowState == WindowState.Minimized)
                 existing.WindowState = WindowState.Normal;
             existing.Activate();
             return;
         }
         var window = new PreviewSettingsWindow();
+        window._visibilityTarget = window.VisibilityOwner?.ResolveSettingsPreviewTarget(previewWindow);
+        window.Sync();
         if (Application.Current?.MainWindow is { IsVisible: true } owner && !ReferenceEquals(owner, window))
             window.Owner = owner;
         else
@@ -67,7 +74,14 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             Swatches.Children.Add(swatch);
         }
         PreviewFrameService.Changed += Sync;
-        Closed += (_, _) => PreviewFrameService.Changed -= Sync;
+        NativePreviewWindow.VisibilityChanged += Sync;
+        if (VisibilityOwner is { } main) main.WindowVisibilityChanged += Sync;
+        Closed += (_, _) =>
+        {
+            PreviewFrameService.Changed -= Sync;
+            NativePreviewWindow.VisibilityChanged -= Sync;
+            if (VisibilityOwner is { } main) main.WindowVisibilityChanged -= Sync;
+        };
         Sync();
     }
 
@@ -95,6 +109,9 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
         _syncing = true;
         try
         {
+            ShowPreviewCheckBox.IsEnabled = VisibilityOwner?.CanSetPreviewVisibility(_visibilityTarget) == true;
+            ShowPreviewCheckBox.IsChecked = VisibilityOwner?.IsPreviewShown(_visibilityTarget) == true;
+            ShowAppCheckBox.IsChecked = VisibilityOwner?.IsAppShown != false;
             FrameEnabledCheckBox.IsChecked = settings.Enabled;
             FrameOptions.IsEnabled = settings.Enabled;
             FrameOptions.Opacity = settings.Enabled ? 1.0 : 0.5;
@@ -103,7 +120,6 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             FixedColorOptions.IsEnabled = !settings.AutoColor;
             FixedColorOptions.Opacity = settings.AutoColor ? 0.5 : 1.0;
             OpacitySlider.Value = Math.Round(settings.Opacity * 100);
-            RoundnessSlider.Value = Math.Round(settings.Roundness * 100);
             if (!ColorTextBox.IsKeyboardFocusWithin) ColorTextBox.Text = settings.Color;
             foreach (var child in Swatches.Children.OfType<Button>())
             {
@@ -152,9 +168,6 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
     private void OnOpacityChanged(object sender, RoutedPropertyChangedEventArgs<double> e) =>
         Update(s => s.Opacity = e.NewValue / 100.0);
 
-    private void OnRoundnessChanged(object sender, RoutedPropertyChangedEventArgs<double> e) =>
-        Update(s => s.Roundness = e.NewValue / 100.0);
-
     private void OnHomeStyleChanged(object sender, SelectionChangedEventArgs e)
     {
         if (Enum.TryParse<PreviewHomeButtonStyle>(SelectedTag(HomeStyleComboBox), out var style))
@@ -189,6 +202,20 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             PreviewFrameService.Update(s => s.Color = PreviewFrameSettings.FormatColor(rgb));
         // Show the normalized value, or restore the last valid one.
         ColorTextBox.Text = PreviewFrameService.Current.Color;
+    }
+
+    private async void OnShowPreviewChanged(object sender, RoutedEventArgs e)
+    {
+        if (_syncing || !IsInitialized || VisibilityOwner is not { } main) return;
+        await main.SetPreviewShownAsync(_visibilityTarget, ShowPreviewCheckBox.IsChecked == true);
+        Sync();
+    }
+
+    private async void OnShowAppChanged(object sender, RoutedEventArgs e)
+    {
+        if (_syncing || !IsInitialized || VisibilityOwner is not { } main) return;
+        await main.SetAppShownAsync(ShowAppCheckBox.IsChecked == true);
+        Sync();
     }
 
     private void OnResetClick(object sender, RoutedEventArgs e) => PreviewFrameService.Reset();

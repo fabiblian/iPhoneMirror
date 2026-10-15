@@ -167,6 +167,7 @@ internal sealed class NativePreviewWindow : IDisposable
     private PreviewFrameInsets _frameInsets;
     private PreviewFrameSettings _frameSettings = new();
     private bool _homeHover;
+    private string? _lastFrameError;
     private byte _capturedMouseButtons;
     private nint _largeIcon;
     private nint _smallIcon;
@@ -273,7 +274,7 @@ internal sealed class NativePreviewWindow : IDisposable
                 settings => settings.Enabled = !settings.Enabled);
             _windowMenuItem.Items.Add(_frameItem);
             _previewSettingsItem = new MenuItem { Style = itemStyle };
-            _previewSettingsItem.Click += (_, _) => PreviewSettingsWindow.ShowOrActivate();
+            _previewSettingsItem.Click += (_, _) => PreviewSettingsWindow.ShowOrActivate(_handle);
             _windowMenuItem.Items.Add(_previewSettingsItem);
         }
         _windowMenuItem.Items.Add(_styleItem);
@@ -408,6 +409,15 @@ internal sealed class NativePreviewWindow : IDisposable
     internal event Action<bool>? ActivationChanged;
     // Raised on the UI thread when the home pill in the frame is clicked.
     internal event Action? HomeRequested;
+    private bool _previewHidden;
+    private bool _appHidden;
+    private bool _restoreVisible;
+    private bool _protectedContent;
+    private string _protectedAudioDisplay = string.Empty;
+    internal static event Action? VisibilityChanged;
+    internal bool IsVisibilityHidden => _previewHidden || _appHidden;
+    internal bool IsPreviewHidden => _previewHidden;
+    internal bool IsLive => !_disposed && _handle != 0;
     internal ulong SessionHandle => _sessionHandle;
     internal nint Handle => _handle;
     internal (uint Width, uint Height, int Rotation) ControlGeometry =>
@@ -429,6 +439,8 @@ internal sealed class NativePreviewWindow : IDisposable
         }
 
         _sessionHandle = sessionHandle;
+        if (previousHandle != sessionHandle) SetPreviewHidden(false);
+        VisibilityChanged?.Invoke();
         _attachPreview = hwnd => NativeCore.AttachDevicePreview(sessionHandle, hwnd);
         _detachPreview = hwnd => NativeCore.DetachDevicePreview(sessionHandle, hwnd);
         _refreshPreview = hwnd => NativeCore.AttachDevicePreview(sessionHandle, hwnd);
@@ -579,6 +591,12 @@ internal sealed class NativePreviewWindow : IDisposable
     {
         var boundsApplied = _aspectController.ApplyInitialBounds();
         _isTopMost = false;
+        if (Volatile.Read(ref BossKeyHidden) != 0)
+        {
+            _appHidden = true;
+            _restoreVisible = true;
+            return;
+        }
         if (!SetWindowPos(_handle, HwndNoTopMost, 0, 0, 0, 0,
                 SwpNoSize | SwpNoMove | SwpNoActivate | SwpShowWindow))
         {
@@ -596,7 +614,7 @@ internal sealed class NativePreviewWindow : IDisposable
 
     internal void Activate()
     {
-        if (_disposed || _handle == 0) return;
+        if (_disposed || _handle == 0 || IsVisibilityHidden) return;
         if (IsIconic(_handle)) _ = ShowWindow(_handle, SwRestore);
         else _ = ShowWindow(_handle, SwShow);
         if (!_attached && _attachPreview(_handle))
@@ -620,19 +638,36 @@ internal sealed class NativePreviewWindow : IDisposable
         _ = ShowWindow(_handle, SwHide);
     }
 
-    internal void SetBossKeyHidden(bool hidden)
+    internal void SetPreviewHidden(bool hidden) => SetVisibilityHidden(hidden, app: false);
+
+    internal void SetBossKeyHidden(bool hidden) => SetVisibilityHidden(hidden, app: true);
+
+    private void SetVisibilityHidden(bool hidden, bool app)
     {
-        if (_disposed || _handle == 0) return;
-        if (hidden)
+        if (!IsLive || (app ? _appHidden : _previewHidden) == hidden) return;
+        var wasHidden = IsVisibilityHidden;
+        if (!wasHidden && hidden) _restoreVisible = IsWindowVisible(_handle);
+        if (app) _appHidden = hidden;
+        else _previewHidden = hidden;
+        if (!wasHidden && IsVisibilityHidden)
         {
-            _styleWindow?.Close();
             _contextMenu.IsOpen = false;
             _contextMenu.PlacementTarget = null;
+            _capturedMouseButtons = 0;
+            if (GetCapture() == _handle) _ = ReleaseCapture();
+            _pointerInput?.Invoke(new PreviewPointerEventArgs(PreviewPointerKind.Reset, 0, 0, 0, 0));
+            _keyboardInput?.Invoke(new PreviewKeyboardEventArgs(PreviewKeyboardKind.Reset, 0));
+            _protectedOverlay?.Hide();
             _ = ShowWindow(_handle, SwHide);
-            return;
         }
-
-        _ = ShowWindow(_handle, SwShow);
+        else if (wasHidden && !IsVisibilityHidden && _restoreVisible)
+        {
+            // SW_SHOWNA keeps the current minimized/maximized/fullscreen placement.
+            _ = ShowWindow(_handle, 8);
+            SetProtectedContent(_protectedContent, _protectedAudioDisplay);
+            if (_protectedOverlay is not null) _protectedOverlay.Show();
+        }
+        VisibilityChanged?.Invoke();
     }
 
     internal static void SetAllBossKeyHidden(bool hidden)
@@ -654,12 +689,15 @@ internal sealed class NativePreviewWindow : IDisposable
     internal void SetProtectedContent(bool protectedContent, string audioDisplay)
     {
         if (_disposed || _handle == 0 || _managedContent is not null) return;
+        _protectedContent = protectedContent;
+        _protectedAudioDisplay = audioDisplay;
         if (!protectedContent)
         {
             _protectedOverlay?.Close();
             _protectedOverlay = null;
             return;
         }
+        if (IsVisibilityHidden) return;
         if (_protectedOverlay is null)
             _protectedOverlay = ProtectedContentOverlayWindow.ShowFor(_handle,
                 audioDisplay, () => _frameInsets);
@@ -768,7 +806,7 @@ internal sealed class NativePreviewWindow : IDisposable
             return 0;
         }
         if (message == WmActivate)
-            ActivationChanged?.Invoke((wParam.ToInt64() & 0xFFFF) != 0);
+            ActivationChanged?.Invoke(!IsVisibilityHidden && (wParam.ToInt64() & 0xFFFF) != 0);
         if (WindowsAutoPlayGuard.ShouldCancel(message, _sessionHandle != 0))
         {
             handled = true;
@@ -1239,12 +1277,12 @@ internal sealed class NativePreviewWindow : IDisposable
     }
 
     private readonly Func<nint> _inputForegroundWindow = GetForegroundWindow;
-    private bool IsReverseControlActive => _pointerInput is not null &&
+    private bool IsReverseControlActive => !IsVisibilityHidden && _pointerInput is not null &&
         (_isReverseControlEnabled?.Invoke(_handle) ?? false) &&
         _inputForegroundWindow() == _handle;
-    private bool IsReverseControlEnabledForWindow => _pointerInput is not null &&
+    private bool IsReverseControlEnabledForWindow => !IsVisibilityHidden && _pointerInput is not null &&
         (_isReverseControlEnabled?.Invoke(_handle) ?? false);
-    private bool IsUsbControlEnabledForWindow => _pointerInput is not null &&
+    private bool IsUsbControlEnabledForWindow => !IsVisibilityHidden && _pointerInput is not null &&
         (_isUsbControlEnabled?.Invoke() ?? false);
     // The reverse-control callback also includes wired/wireless touch targets.
     // Reserve their right-click for the window menu, even when a phone shortcut
@@ -1389,7 +1427,8 @@ internal sealed class NativePreviewWindow : IDisposable
             Right = layout.Insets.Right,
             Bottom = layout.Insets.Bottom,
             Argb = settings.ToArgb(),
-            Roundness = (float)settings.Roundness,
+            // Outer corners stay concentric with the iPhone's rounded corners.
+            Roundness = 0,
             Flags = (settings.AutoColor ? NativeCore.NativeWindowFrame.AutoColorFlag : 0) |
                 (_homeHover ? NativeCore.NativeWindowFrame.ButtonHoverFlag : 0),
         };
@@ -1410,9 +1449,17 @@ internal sealed class NativePreviewWindow : IDisposable
         }
         // Only offset input/aspect when the renderer actually draws the
         // outline (an older native core lacks the export).
+        string? frameError = "preview_not_attached";
         var applied = _sessionHandle != 0 && _attached &&
-            NativeCore.SetDeviceWindowFrame(_sessionHandle, _handle, frame)
+            NativeCore.SetDeviceWindowFrame(_sessionHandle, _handle, frame, out frameError)
             ? layout.Insets : default;
+        if (!layout.Insets.IsEmpty && applied.IsEmpty && frameError != _lastFrameError)
+        {
+            // Without the native outline the frame stays hidden; record why once.
+            Log("independent_window_frame_failed",
+                ("mode", WindowMode), ("error", frameError ?? "unknown"));
+        }
+        _lastFrameError = applied.IsEmpty ? frameError : null;
         if (applied == _frameInsets) return;
         _frameInsets = applied;
         _pointerInput?.Invoke(new PreviewPointerEventArgs(PreviewPointerKind.Reset, 0, 0, 0, 0));
@@ -1483,6 +1530,7 @@ internal sealed class NativePreviewWindow : IDisposable
         _disposed = true;
         _hoverOpacityTimer.Stop();
         OpenWindows.Remove(this);
+        VisibilityChanged?.Invoke();
         ThemeService.ThemeChanged -= OnThemeChanged;
         PreviewFrameService.Changed -= OnPreviewFrameChanged;
         _styleWindow?.Close();

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Services;
@@ -15,6 +16,8 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
     private string _statusText = string.Empty;
     public ObservableCollection<ShortcutBindingRow> Rows { get; } = [];
     public ObservableCollection<ShortcutBindingSection> Sections { get; } = [];
+    public ObservableCollection<ShortcutBindingSection> FilteredSections { get; } = [];
+    public bool HasSearchResults => FilteredSections.Count != 0;
 
     internal ShortcutSettingsWindow(
         IReadOnlyDictionary<BluetoothShortcutAction, KeyboardShortcut> shortcuts,
@@ -22,7 +25,9 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
     {
         _apply = apply;
         foreach (var action in Enum.GetValues<BluetoothShortcutAction>().Where(
-            action => action != BluetoothShortcutAction.ReverseControl))
+            action => action != BluetoothShortcutAction.ReverseControl)
+            .OrderBy(action => action == BluetoothShortcutAction.ShowPreview
+                ? (int)BluetoothShortcutAction.BossKey + 0.5 : (int)action))
         {
             var row = new ShortcutBindingRow(action,
                 shortcuts.TryGetValue(action, out var shortcut)
@@ -40,6 +45,8 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
         }
         InitializeComponent();
         DataContext = this;
+        RefreshSearch();
+        Loaded += (_, _) => ShortcutSearchBox.Focus();
         LocalizationService.LanguageChanged += OnLanguageChanged;
         Closed += (_, _) => LocalizationService.LanguageChanged -= OnLanguageChanged;
     }
@@ -62,6 +69,44 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnSearchChanged(object sender, TextChangedEventArgs e)
+    {
+        if (IsInitialized) RefreshSearch();
+    }
+
+    private void RefreshSearch()
+    {
+        var terms = ShortcutSearchBox.Text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        FilteredSections.Clear();
+        foreach (var section in Sections)
+        {
+            var matches = section.Rows.Where(row => terms.All(term =>
+                row.Label.Contains(term, StringComparison.CurrentCultureIgnoreCase) ||
+                section.Title.Contains(term, StringComparison.CurrentCultureIgnoreCase))).ToArray();
+            if (matches.Length == 0) continue;
+            var filtered = new ShortcutBindingSection(section.Category);
+            foreach (var row in matches) filtered.Rows.Add(row);
+            FilteredSections.Add(filtered);
+        }
+        OnPropertyChanged(nameof(HasSearchResults));
+        ShortcutListScrollViewer.ScrollToTop();
+    }
+
+    private void OnClearSearchClick(object sender, RoutedEventArgs e)
+    {
+        ShortcutSearchBox.Clear();
+        ShortcutSearchBox.Focus();
+    }
+
+    private void OnSearchPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        // Enter in the search field must not submit the dialog's default Save.
+        if (e.Key == Key.Enter) e.Handled = true;
+        if (e.Key != Key.Escape || ShortcutSearchBox.Text.Length == 0) return;
+        ShortcutSearchBox.Clear();
+        e.Handled = true;
+    }
 
     private void OnShortcutPreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -157,6 +202,7 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
     {
         foreach (var section in Sections) section.RefreshTitle();
         foreach (var row in Rows) row.RefreshLabel();
+        RefreshSearch();
         OnPropertyChanged(nameof(StatusText));
     }
 
@@ -168,11 +214,12 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
         {
             BluetoothShortcutAction.BluetoothControl or
             BluetoothShortcutAction.WirelessControl or
+            BluetoothShortcutAction.StopMirroring or
             BluetoothShortcutAction.WiredControl or
             BluetoothShortcutAction.VolumeUp or
             BluetoothShortcutAction.VolumeDown or
             BluetoothShortcutAction.LockScreen => ShortcutBindingCategory.Control,
-            BluetoothShortcutAction.BossKey => ShortcutBindingCategory.Control,
+            BluetoothShortcutAction.BossKey or BluetoothShortcutAction.ShowPreview => ShortcutBindingCategory.Control,
             BluetoothShortcutAction.Siri => ShortcutBindingCategory.Assistant,
             _ => ShortcutBindingCategory.Navigation,
         };
@@ -244,12 +291,14 @@ public sealed class ShortcutBindingRow : INotifyPropertyChanged
         {
             BluetoothShortcutAction.BluetoothControl => "ShortcutSettingsBluetoothControl",
             BluetoothShortcutAction.WirelessControl => "ShortcutSettingsWirelessControl",
+            BluetoothShortcutAction.ShowPreview => "ShowPreview",
+            BluetoothShortcutAction.StopMirroring => "ShortcutSettingsStopMirroring",
             BluetoothShortcutAction.WiredControl => "ShortcutSettingsWiredControl",
             BluetoothShortcutAction.ControlCenter => "ShortcutSettingsControlCenter",
             BluetoothShortcutAction.NotificationCenter => "ShortcutSettingsNotificationCenter",
             BluetoothShortcutAction.AppSwitcher => "ShortcutSettingsAppSwitcher",
             BluetoothShortcutAction.Home => "ShortcutSettingsHome",
-            BluetoothShortcutAction.BossKey => "ShortcutSettingsBossKey",
+            BluetoothShortcutAction.BossKey => "ShowApp",
             BluetoothShortcutAction.Dock => "ShortcutSettingsDock",
             BluetoothShortcutAction.Siri => "ShortcutSettingsSiri",
             BluetoothShortcutAction.VolumeUp => "ShortcutSettingsVolumeUp",

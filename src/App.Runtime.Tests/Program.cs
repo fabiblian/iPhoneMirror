@@ -214,6 +214,12 @@ internal static partial class Program
                 return RunWorkspacePerformanceAudit(workspacePerformanceOutput);
             if (args is ["--keyboard-focus"])
                 return RunKeyboardFocusTests();
+            if (args is ["--shortcut-search", var searchOutput])
+                return RunShortcutSearchTests(searchOutput);
+            if (args is ["--window-visibility", var visibilityOutput])
+                return RunWindowVisibilityTests(visibilityOutput);
+            if (args is ["--stop-mirroring-shortcut", var stopOutput])
+                return RunStopMirroringShortcutTests(stopOutput);
             if (args is ["--shortcuts"])
                 return RunKeyboardFocusTests(shortcutReview: true);
             if (args is ["--mouse-shortcuts"])
@@ -714,7 +720,7 @@ internal static partial class Program
             var createSession = RequireMethod(nativeType, "CreateDeviceSession",
                 BindingFlags.Instance | BindingFlags.Public);
             var sessionResult = createSession.Invoke(core,
-                [udid, 0U, 0U, 60U, true, 1.0, 0U, 0U, 0U, 0U, 0U]) ??
+                [udid, 0U, 0U, 60U, true, 1.0, 0U, 0U, 0U, 0U, 0U, false]) ??
                 throw new InvalidOperationException("Capture session returned no result.");
             if (!ReadProperty<bool>(sessionResult, "Success"))
                 throw new InvalidOperationException(

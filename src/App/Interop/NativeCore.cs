@@ -433,19 +433,33 @@ internal sealed class NativeCore : IDisposable
     }
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int im_session_set_window_frame(ulong handle, nint hwnd,
+    private static extern int im_session_set_window_frame2(ulong handle, nint hwnd,
         ref NativeWindowFrame frame);
 
-    internal static bool SetDeviceWindowFrame(ulong handle, nint hwnd, NativeWindowFrame frame)
+    internal static bool SetDeviceWindowFrame(ulong handle, nint hwnd, NativeWindowFrame frame,
+        out string? error)
     {
-        if (handle == 0 || hwnd == 0) return false;
+        error = null;
+        if (handle == 0 || hwnd == 0)
+        {
+            error = "no_session";
+            return false;
+        }
         frame.StructSize = (uint)Marshal.SizeOf<NativeWindowFrame>();
         frame.Roundness = float.IsFinite(frame.Roundness) ? Math.Clamp(frame.Roundness, 0, 1) : 0;
-        try { return im_session_set_window_frame(handle, hwnd, ref frame) == 0; }
-        catch (Exception error) when (error is EntryPointNotFoundException or DllNotFoundException)
+        try
         {
+            var result = im_session_set_window_frame2(handle, hwnd, ref frame);
+            if (result == 0) return true;
+            error = GetLastError($"result {result}");
+            return false;
+        }
+        catch (Exception exception) when (exception is EntryPointNotFoundException or DllNotFoundException)
+        {
+            // An iPhoneMirror.Core.dll older than this app (mixed build output).
+            error = "native_core_without_frame_support";
             DiagnosticLogger.ExceptionOnce("native-window-frame", "native",
-                "window_frame_unavailable", error);
+                "window_frame_unavailable", exception);
             return false;
         }
     }
@@ -873,7 +887,8 @@ internal sealed class NativeCore : IDisposable
     public NativeSessionCreateResult CreateDeviceSession(string udid,
         uint width, uint height, uint fps, bool playAudio, double volume,
         uint usbWidth = 0, uint usbHeight = 0, uint usbProjectionMode = 0,
-        uint decoderPreference = 0, uint colorOutputPreference = 0)
+        uint decoderPreference = 0, uint colorOutputPreference = 0,
+        bool usbVideoOnly = false)
     {
         var options = new NativeCaptureOptions
         {
@@ -888,7 +903,7 @@ internal sealed class NativeCore : IDisposable
         };
         options.Reserved[0] = usbWidth;
         options.Reserved[1] = usbHeight;
-        options.Reserved[2] = Math.Min(usbProjectionMode, 2U);
+        options.Reserved[2] = Math.Min(usbProjectionMode, 2U) | (usbVideoOnly ? 0x100U : 0U);
         options.Reserved[3] = Math.Min(decoderPreference, 2U);
         options.Reserved[4] = Math.Min(colorOutputPreference, 2U);
         var result = im_session_create(udid, ref options, out var handle);

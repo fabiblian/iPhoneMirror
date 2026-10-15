@@ -730,6 +730,10 @@ struct D3D11PreviewRenderer::Impl {
                 "IDCompositionDevice CreateRectangleClip frame");
             check(frame_clip_visual->SetClip(frame_clip.Get()),
                 "IDCompositionVisual SetClip frame");
+            // Anti-alias the rounded clip edges; the default hard border mode
+            // renders visible pixel steps along the corner arcs.
+            check(frame_clip_visual->SetBorderMode(DCOMPOSITION_BORDER_MODE_SOFT),
+                "IDCompositionVisual SetBorderMode frame");
             check(frame_clip_visual->AddVisual(frame_fill_visual.Get(), FALSE, nullptr),
                 "IDCompositionVisual AddVisual frame fill");
             check(composition_device->CreateVisual(&pill_clip_visual),
@@ -748,6 +752,8 @@ struct D3D11PreviewRenderer::Impl {
                 "IDCompositionDevice CreateRectangleClip pill");
             check(pill_clip_visual->SetClip(pill_clip.Get()),
                 "IDCompositionVisual SetClip pill");
+            check(pill_clip_visual->SetBorderMode(DCOMPOSITION_BORDER_MODE_SOFT),
+                "IDCompositionVisual SetBorderMode pill");
             check(pill_clip_visual->AddVisual(pill_fill_visual.Get(), FALSE, nullptr),
                 "IDCompositionVisual AddVisual pill fill");
             check(composition_root->AddVisual(frame_clip_visual.Get(), FALSE, nullptr),

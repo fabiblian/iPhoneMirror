@@ -861,11 +861,22 @@
                                TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
             </Border>
-            <Button x:Name="CaptureActionButton" Grid.Column="3"
-                    AutomationProperties.AutomationId="CaptureActionButton"
-                    shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                    Style="{StaticResource CaptureActionButton}"
-                    VerticalAlignment="Center"/>
+            <StackPanel x:Name="HeaderCaptureActions" Grid.Column="3"
+                        Orientation="Horizontal" VerticalAlignment="Center"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button x:Name="CaptureActionButton"
+                        AutomationProperties.AutomationId="CaptureActionButton"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CaptureActionButton}"
+                        VerticalAlignment="Center"/>
+                <Button x:Name="ExitAppButton" Content="{DynamicResource TrayExit}"
+                        AutomationProperties.AutomationId="ExitAppButton"
+                        AutomationProperties.Name="{DynamicResource TrayExit}"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource ToolButton}" MinHeight="40"
+                        Margin="8,0,0,0" Padding="16,8"
+                        VerticalAlignment="Center" Click="OnCloseWindowClick"/>
+            </StackPanel>
             <StackPanel Grid.Column="5" Orientation="Horizontal"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True">
                 <Button Style="{StaticResource TitleBarButton}"
@@ -1751,6 +1762,12 @@
                                 <TextBlock Text="{DynamicResource UsbProjectionPerDeviceHint}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                <CheckBox Content="{DynamicResource UsbAudioCaptureLabel}"
+                                          IsChecked="{Binding CaptureUsbAudio, Mode=TwoWay}"
+                                          IsEnabled="{Binding CanChangeUsbAudioCapture}"
+                                          Visibility="{Binding WiredVideoLimitSettingsVisibility}"
+                                          Margin="0,12,0,0"
+                                          AutomationProperties.AutomationId="UsbAudioCaptureCheckBox"/>
                             </StackPanel>
                         </Border>
 

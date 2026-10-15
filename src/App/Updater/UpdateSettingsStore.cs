@@ -60,6 +60,10 @@ internal sealed class UpdateSettings
     public int WirelessModeShortcutModifiers { get; set; }
     public int WiredModeShortcutVirtualKey { get; set; }
     public int WiredModeShortcutModifiers { get; set; }
+    public int ShowPreviewShortcutVirtualKey { get; set; } = 0x50;
+    public int ShowPreviewShortcutModifiers { get; set; } = 0x0003;
+    public int StopMirroringShortcutVirtualKey { get; set; } = 0x58;
+    public int StopMirroringShortcutModifiers { get; set; } = 0x0006;
     public int BluetoothVolumeUpShortcutVirtualKey { get; set; }
     public int BluetoothVolumeUpShortcutModifiers { get; set; }
     public int BluetoothVolumeDownShortcutVirtualKey { get; set; }
@@ -141,6 +145,10 @@ internal sealed class UpdateSettings
         WirelessModeShortcutModifiers = WirelessModeShortcutModifiers,
         WiredModeShortcutVirtualKey = WiredModeShortcutVirtualKey,
         WiredModeShortcutModifiers = WiredModeShortcutModifiers,
+        ShowPreviewShortcutVirtualKey = ShowPreviewShortcutVirtualKey,
+        ShowPreviewShortcutModifiers = ShowPreviewShortcutModifiers,
+        StopMirroringShortcutVirtualKey = StopMirroringShortcutVirtualKey,
+        StopMirroringShortcutModifiers = StopMirroringShortcutModifiers,
         BluetoothVolumeUpShortcutVirtualKey = BluetoothVolumeUpShortcutVirtualKey,
         BluetoothVolumeUpShortcutModifiers = BluetoothVolumeUpShortcutModifiers,
         BluetoothVolumeDownShortcutVirtualKey = BluetoothVolumeDownShortcutVirtualKey,
@@ -406,6 +414,32 @@ internal sealed class UpdateSettingsStore
                 settings.BluetoothSiriShortcutVirtualKey = 0;
                 settings.BluetoothSiriShortcutModifiers = 0;
                 settings.BluetoothShortcutSchema = 6;
+            }
+            var showPreview = KeyboardShortcut.FromSettings(settings, BluetoothShortcutAction.ShowPreview);
+            // Existing user bindings win over the newly introduced default.
+            if (showPreview.IsBound && Enum.GetValues<BluetoothShortcutAction>().Any(action =>
+                    action != BluetoothShortcutAction.ShowPreview &&
+                    KeyboardShortcut.FromSettings(settings, action) == showPreview))
+                showPreview = KeyboardShortcut.Unbound;
+            if (settings.ShowPreviewShortcutVirtualKey != (int)showPreview.VirtualKey ||
+                settings.ShowPreviewShortcutModifiers != (int)showPreview.Modifiers)
+            {
+                settings.ShowPreviewShortcutVirtualKey = (int)showPreview.VirtualKey;
+                settings.ShowPreviewShortcutModifiers = (int)showPreview.Modifiers;
+                migrationChanged = true;
+            }
+            var stopMirroring = KeyboardShortcut.FromSettings(settings, BluetoothShortcutAction.StopMirroring);
+            // Adding the default must not override a previously assigned user chord.
+            if (stopMirroring.IsBound && Enum.GetValues<BluetoothShortcutAction>().Any(action =>
+                    action != BluetoothShortcutAction.StopMirroring &&
+                    KeyboardShortcut.FromSettings(settings, action) == stopMirroring))
+                stopMirroring = KeyboardShortcut.Unbound;
+            if (settings.StopMirroringShortcutVirtualKey != (int)stopMirroring.VirtualKey ||
+                settings.StopMirroringShortcutModifiers != (int)stopMirroring.Modifiers)
+            {
+                settings.StopMirroringShortcutVirtualKey = (int)stopMirroring.VirtualKey;
+                settings.StopMirroringShortcutModifiers = (int)stopMirroring.Modifiers;
+                migrationChanged = true;
             }
             var bossKey = KeyboardShortcut.FromSettings(settings, BluetoothShortcutAction.BossKey);
             if (settings.BluetoothBossShortcutModifiers != (int)bossKey.Modifiers ||

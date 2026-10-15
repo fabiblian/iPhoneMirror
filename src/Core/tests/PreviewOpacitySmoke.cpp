@@ -121,6 +121,21 @@ int run_preview_opacity_smoke() {
         const auto centre = sample(first.handle);
         // Maximum roundness leaves the outermost corner pixel transparent.
         const auto corner = sample_at(first.handle, 1, 1);
+        // Smooth corners: where the arc separates the white background from
+        // the red frame, edge pixels are blended instead of a hard step.
+        auto blended_corner_pixels = 0;
+        {
+            RECT bounds{};
+            GetWindowRect(first.handle, &bounds);
+            const auto dc = GetDC(nullptr);
+            for (auto y = 0; y < 40; ++y)
+                for (auto x = 0; x < 40; ++x) {
+                    const auto pixel = GetPixel(dc, bounds.left + x, bounds.top + y);
+                    const auto green = GetGValue(pixel);
+                    if (pixel != CLR_INVALID && green > 40 && green < 215) ++blended_corner_pixels;
+                }
+            ReleaseDC(nullptr, dc);
+        }
         preview.set_frame(uniform(0, 0xFFFF0000U, 0.0F)); pump();
         const auto edge_removed = sample_at(first.handle, 6, 65);
         std::cout << "frame: edge=" << static_cast<int>(GetRValue(edge)) << ','
@@ -133,6 +148,9 @@ int run_preview_opacity_smoke() {
         // The background window is white; a red corner means no rounding.
         if (GetGValue(corner) < 200)
             throw std::runtime_error("Composition frame corners are not rounded");
+        std::cout << "frame corner: blended=" << blended_corner_pixels << '\n';
+        if (blended_corner_pixels == 0)
+            throw std::runtime_error("Composition frame corners are not anti-aliased");
 
         // Home bar: a taller bottom band moves the video up; the centred pill
         // is light on the dark-red outline.
@@ -177,7 +195,7 @@ int run_preview_opacity_smoke() {
 
         iPhoneMirror::WindowFrame invalid{};
         invalid.struct_size = sizeof(invalid);
-        if (im_session_set_window_frame(0, first.handle, nullptr) == 0)
+        if (im_session_set_window_frame2(0, first.handle, nullptr) == 0)
             throw std::runtime_error("Frame API accepted a null structure");
         auto too_small = invalid;
         too_small.struct_size = 4;
@@ -190,7 +208,7 @@ int run_preview_opacity_smoke() {
         auto align = invalid;
         align.button_align = static_cast<iPhoneMirror::WindowFrameButtonAlign>(4);
         for (const auto& candidate : {too_small, thick, negative, round, align})
-            if (im_session_set_window_frame(0, first.handle, &candidate) == 0)
+            if (im_session_set_window_frame2(0, first.handle, &candidate) == 0)
                 throw std::runtime_error("Frame API accepted invalid input");
         std::cout << "Native preview opacity smoke passed.\n";
         return 0;

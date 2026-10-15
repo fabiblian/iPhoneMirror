@@ -324,7 +324,7 @@
     <system:String x:Key="ShortcutSettingsNotificationCenter">Open Notification Center</system:String>
     <system:String x:Key="ShortcutSettingsAppSwitcher">Open App Switcher</system:String>
     <system:String x:Key="ShortcutSettingsHome">Go to Home Screen</system:String>
-    <system:String x:Key="ShortcutSettingsBossKey">Boss key (hide / show windows)</system:String>
+    <system:String x:Key="ShortcutSettingsBossKey">Show app</system:String>
     <system:String x:Key="ShortcutSettingsLockScreen">Lock Screen</system:String>
     <system:String x:Key="ShortcutSettingsVolumeUp">Volume up</system:String>
     <system:String x:Key="ShortcutSettingsVolumeDown">Volume down</system:String>
@@ -1180,7 +1180,6 @@
     <system:String x:Key="PreviewFrameColor">Color</system:String>
     <system:String x:Key="PreviewFrameColorHex">Hex color (#RRGGBB)</system:String>
     <system:String x:Key="PreviewFrameOpacity">Opacity</system:String>
-    <system:String x:Key="PreviewFrameRoundness">Corner rounding</system:String>
     <system:String x:Key="PreviewSettingsTitle">Preview settings</system:String>
     <system:String x:Key="PreviewSettingsDescription">Frame, home button and control for preview windows. Changes apply immediately.</system:String>
     <system:String x:Key="PreviewSettingsMenu">Preview settings…</system:String>
@@ -1620,4 +1619,13 @@ Pair, select and save.</system:String>
     <system:String x:Key="SetupCheckDisplay">Display preferences</system:String>
     <system:String x:Key="SetupCheckRunning">Checking…</system:String>
     <system:String x:Key="SetupCheckWaiting">Waiting</system:String>
+    <system:String x:Key="UsbAudioCaptureLabel">Use iPhone audio</system:String>
+    <system:String x:Key="UsbVideoOnlySelected">iPhone audio off</system:String>
+    <system:String x:Key="UsbAudioCaptureSelected">iPhone audio on</system:String>
+    <system:String x:Key="ShortcutSettingsStopMirroring">Stop mirroring</system:String>
+    <system:String x:Key="ShowPreview">Show preview</system:String>
+    <system:String x:Key="ShowApp">Show app</system:String>
+    <system:String x:Key="ShortcutFilterPlaceholder">Search shortcuts…</system:String>
+    <system:String x:Key="ShortcutFilterClear">Clear search</system:String>
+    <system:String x:Key="ShortcutFilterEmpty">No shortcuts found.</system:String>
 </ResourceDictionary>

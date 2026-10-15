@@ -96,8 +96,8 @@ public partial class MainWindow
         // Compare the actual top-level HWND, not process ownership or WPF
         // IsActive: native previews have their own HWNDs, and settings dialogs
         // in this same process must not feed the phone's keyboard.
-        return _viewModel.AutomationHumanAllowed(udid) && !_bossKeyHidden && !_keyboardFocusSuspended &&
-            sourceWindow != 0 &&
+        return _visibilityInputReleases == 0 && _viewModel.AutomationHumanAllowed(udid) && !_bossKeyHidden && !_keyboardFocusSuspended &&
+            sourceWindow != 0 && !_secondaryMirrors.IsVisibilityHidden(sourceWindow) &&
             sourceWindow == GetControlKeyboardWindow(udid) &&
             sourceWindow == _keyboardForegroundWindow();
     }
@@ -164,7 +164,11 @@ public partial class MainWindow
             _ = HandleUsbPointerInputAsync(new PreviewPointerEventArgs(
                 PreviewPointerKind.Reset, 0, 0, 0, 0), udid);
         }
-        else FocusControlDevice(udid, hwnd);
+        else
+        {
+            _lastVisibilityPreview = _secondaryMirrors.GetVisibilityTarget(hwnd);
+            FocusControlDevice(udid, hwnd);
+        }
     }
 
     private static bool IsGlobalControlShortcut(Services.BluetoothShortcutAction action) =>

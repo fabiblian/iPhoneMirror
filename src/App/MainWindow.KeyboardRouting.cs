@@ -27,8 +27,29 @@ public partial class MainWindow
         foreach (var (action, shortcut) in shortcuts)
         {
             if (action == BluetoothShortcutAction.ReverseControl) continue;
+            if (IsVisibilityShortcut(action))
+            {
+                bool VisibilityAvailable() => !_mappingClosing &&
+                    (_bossKeyHidden || (_shortcutSettingsWindow is null && !_mappingCapture.Waiting)) &&
+                    (action == BluetoothShortcutAction.BossKey || CanTogglePreviewVisibility);
+                bindings.Add(new(shortcut, action.ToString(), VisibilityAvailable, () =>
+                {
+                    var version = _keyboardShortcutGeneration;
+                    var target = ResolvePreviewVisibilityTarget();
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        if (version != _keyboardShortcutGeneration || !VisibilityAvailable()) return;
+                        if (action == BluetoothShortcutAction.ShowPreview)
+                            _ = TogglePreviewVisibilityAsync(target);
+                        else _ = ToggleBossKeyWindowsAsync();
+                    }, DispatcherPriority.Input);
+                }));
+                continue;
+            }
             bool Available() => !_mappingClosing && _mappingWindow?.IsEditing != true && _shortcutSettingsWindow is null && !_mappingCapture.Waiting &&
-                (IsGlobalControlShortcut(action) || IsControlKeyboardForeground);
+                (action == BluetoothShortcutAction.StopMirroring
+                    ? CanStopMirroringFromShortcut()
+                    : IsGlobalControlShortcut(action) || IsControlKeyboardForeground);
             bindings.Add(new(shortcut, action.ToString(), Available,
                 () => QueueKeyboardShortcut(() => HandleConfiguredShortcut(action), Available)));
         }
@@ -60,6 +81,41 @@ public partial class MainWindow
         Local(0x4D, KeyboardShortcut.Control, "Audio", () => _viewModel.PlayAudio = !_viewModel.PlayAudio);
         Local(0x53, KeyboardShortcut.Control, "Screenshot", () => _ = CaptureScreenshotAsync());
         _keyboardRouter.Shortcuts.Configure(bindings);
+    }
+
+    private bool CanStopMirroringFromShortcut()
+    {
+        if (_bossKeyHidden) return false;
+        var foreground = _keyboardForegroundWindow();
+        if (_secondaryMirrors.GetSessionForWindow(foreground) is { } preview)
+            return preview.Handle != 0;
+        return IsLocalShortcutForeground &&
+            (_viewModel.StopCommand.CanExecute(null) ||
+             (_viewModel.IsMediaCastSelected && _viewModel.MediaCastStopCommand.CanExecute(null)));
+    }
+
+    private async Task StopMirroringFromShortcutAsync()
+    {
+        if (!CanStopMirroringFromShortcut()) return;
+        // Capture the actual foreground preview and its session before yielding.
+        var preview = _secondaryMirrors.GetSessionForWindow(_keyboardForegroundWindow());
+        if (preview is null)
+        {
+            if (_viewModel.StopCommand.CanExecute(null)) _viewModel.StopCommand.Execute(null);
+            else if (_viewModel.IsMediaCastSelected && _viewModel.MediaCastStopCommand.CanExecute(null))
+                _viewModel.MediaCastStopCommand.Execute(null);
+            return;
+        }
+        try
+        {
+            await _viewModel.StopDeviceSessionAsync(preview.Value.Udid, preview.Value.Handle,
+                pauseWireless: true);
+        }
+        catch (Exception error)
+        {
+            _viewModel.AddUiLog(IPhoneMirror.App.Localization.LocalizationService.Format(
+                "StopFailedFormat", error.Message));
+        }
     }
 
     private bool IsLocalShortcutForeground =>
@@ -116,7 +172,7 @@ public partial class MainWindow
         ObserveKeyboardForeground();
         // Recording is the router's exclusive editor transaction, including
         // the release of a key held when the transaction was cancelled.
-        if (_mappingCapture.Process(key, down, _mappingCapture.Waiting,
+        if (!_bossKeyHidden && _mappingCapture.Process(key, down, _mappingCapture.Waiting,
             action => Dispatcher.BeginInvoke(action, DispatcherPriority.Input)))
         {
             // Recovery can quarantine this same physical key in the router.

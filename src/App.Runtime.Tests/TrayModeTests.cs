@@ -61,7 +61,7 @@ internal static partial class Program
             vm.GetType().GetProperty("SelectedDevice")!.SetValue(vm, first);
             InteractionAssert(settings.IsVisible, "Device selection closed the global tray settings.");
             settings.Close();
-            TestTrayAudioSettings(app, vm, first);
+            TestTrayAudioSettings(app, vm, first, output);
             TestTrayPanelInteractionAndLayout(vm, output);
 
             TestTrayMediaStop(main, vm);

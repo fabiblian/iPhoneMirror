@@ -54,7 +54,6 @@ internal sealed class PreviewFrameSettings
     internal const double DefaultThicknessDips = 12;
     internal const string DefaultColor = "#2B2B2B";
     internal const double DefaultOpacity = 1.0;
-    internal const double DefaultRoundness = 0.7;
     internal const double HomeBarHeightDips = 28;
 
     public bool Enabled { get; set; } = true;
@@ -63,8 +62,6 @@ internal sealed class PreviewFrameSettings
     /// <summary>Follow the colour at the edge of the phone image instead of <see cref="Color"/>.</summary>
     public bool AutoColor { get; set; }
     public double Opacity { get; set; } = DefaultOpacity;
-    /// <summary>0 = outer corners concentric with the iPhone image, 1 = maximum rounding.</summary>
-    public double Roundness { get; set; } = DefaultRoundness;
     public PreviewHomeButtonStyle HomeButton { get; set; } = PreviewHomeButtonStyle.Bar;
     public PreviewHomeButtonPosition HomeButtonPosition { get; set; } = PreviewHomeButtonPosition.Center;
     /// <summary>Start wired (else wireless) touch control when a framed preview opens.</summary>
@@ -77,7 +74,6 @@ internal sealed class PreviewFrameSettings
         Color = Color,
         AutoColor = AutoColor,
         Opacity = Opacity,
-        Roundness = Roundness,
         HomeButton = HomeButton,
         HomeButtonPosition = HomeButtonPosition,
         AutoStartControl = AutoStartControl,
@@ -93,7 +89,6 @@ internal sealed class PreviewFrameSettings
         Color = TryParseColor(Color, out var rgb) ? FormatColor(rgb) : DefaultColor,
         AutoColor = AutoColor,
         Opacity = double.IsFinite(Opacity) ? Math.Clamp(Opacity, 0.0, 1.0) : DefaultOpacity,
-        Roundness = double.IsFinite(Roundness) ? Math.Clamp(Roundness, 0.0, 1.0) : DefaultRoundness,
         HomeButton = Enum.IsDefined(HomeButton) ? HomeButton : PreviewHomeButtonStyle.Bar,
         HomeButtonPosition = Enum.IsDefined(HomeButtonPosition)
             ? HomeButtonPosition : PreviewHomeButtonPosition.Center,
@@ -106,7 +101,6 @@ internal sealed class PreviewFrameSettings
         string.Equals(Color, other.Color, StringComparison.OrdinalIgnoreCase) &&
         AutoColor == other.AutoColor &&
         Opacity == other.Opacity &&
-        Roundness == other.Roundness &&
         HomeButton == other.HomeButton &&
         HomeButtonPosition == other.HomeButtonPosition &&
         AutoStartControl == other.AutoStartControl;

@@ -1206,9 +1206,10 @@ void CaptureSession::run(std::stop_token stop_token) noexcept {
         preferences_.usb_requested_width, preferences_.usb_requested_height);
     auto session_options = display_configuration.session_options;
     const bool adaptive_display = display_configuration.adaptive_reconfiguration;
-    // Always negotiate the audio stream. The playback toggle is deliberately
-    // local so it can be switched on again without restarting USB/QuickTime.
-    session_options.request_audio = true;
+    // USB audio capture is selected before negotiation. The independent playback
+    // toggle remains local and cannot change the iPhone's audio route.
+    session_options.request_audio = preferences_.request_usb_audio;
+    logging::write(std::format("usb_audio request_audio={}", session_options.request_audio));
     if (preferences_.usb_projection_mode == UsbProjectionMode::AirPlay &&
         preferences_.usb_requested_width != 0 && preferences_.usb_requested_height != 0) {
         logging::write(std::format("advanced_usb_request={}x{}",
@@ -2299,7 +2300,7 @@ void CaptureSession::run(std::stop_token stop_token) noexcept {
                     if (enqueued) video_queue_cv.notify_one();
                 }
 
-                if (event.audio_sample) {
+                if (event.audio_sample && preferences_.request_usb_audio) {
                     last_audio_activity_ns.store(std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::steady_clock::now().time_since_epoch()).count(),
                         std::memory_order_release);

@@ -1909,10 +1909,6 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
     Equal(48d, clamped.ThicknessDips, "frame thickness clamps");
     Equal("#2B2B2B", clamped.Color, "invalid frame color falls back");
     Equal(1d, clamped.Opacity, "invalid frame opacity falls back");
-    Equal(0.7, defaults.Roundness, "frame default roundness");
-    Equal(1d, new PreviewFrameSettings { Roundness = 3 }.Normalized().Roundness, "frame roundness clamps");
-    Equal(0.7, new PreviewFrameSettings { Roundness = double.NaN }.Normalized().Roundness,
-        "invalid frame roundness falls back");
     Equal("#0A84FF", new PreviewFrameSettings { Color = "0a84ff" }.Normalized().Color,
         "frame color normalizes hex");
     Equal(0x800A84FFu, new PreviewFrameSettings { Color = "#0A84FF", Opacity = 0.5 }.ToArgb(),
@@ -1925,7 +1921,7 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
         var frameStore = new UpdateSettingsStore(frameSettingsPath);
         frameStore.Update(settings => settings.PreviewFrame = new PreviewFrameSettings
         {
-            Enabled = false, ThicknessDips = 30, Color = "#FF453A", Opacity = 0.4, Roundness = 0.25,
+            Enabled = false, ThicknessDips = 30, Color = "#FF453A", Opacity = 0.4,
             AutoColor = true, HomeButton = PreviewHomeButtonStyle.Pill,
             HomeButtonPosition = PreviewHomeButtonPosition.Right, AutoStartControl = false,
         });
@@ -1934,7 +1930,6 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
         Equal(30d, reloaded.ThicknessDips, "frame thickness persists");
         Equal("#FF453A", reloaded.Color, "frame color persists");
         Equal(0.4, reloaded.Opacity, "frame opacity persists");
-        Equal(0.25, reloaded.Roundness, "frame roundness persists");
         Equal(true, reloaded.AutoColor, "frame auto colour persists");
         Equal(PreviewHomeButtonStyle.Pill, reloaded.HomeButton, "home style persists");
         Equal(PreviewHomeButtonPosition.Right, reloaded.HomeButtonPosition, "home position persists");

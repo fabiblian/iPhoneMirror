@@ -324,7 +324,7 @@
     <system:String x:Key="ShortcutSettingsNotificationCenter">開啟通知中心</system:String>
     <system:String x:Key="ShortcutSettingsAppSwitcher">開啟多工</system:String>
     <system:String x:Key="ShortcutSettingsHome">返回主畫面</system:String>
-    <system:String x:Key="ShortcutSettingsBossKey">老闆鍵（隱藏 / 顯示視窗）</system:String>
+    <system:String x:Key="ShortcutSettingsBossKey">顯示應用程式</system:String>
     <system:String x:Key="ShortcutSettingsLockScreen">鎖定螢幕</system:String>
     <system:String x:Key="ShortcutSettingsVolumeUp">音量+</system:String>
     <system:String x:Key="ShortcutSettingsVolumeDown">音量-</system:String>
@@ -1180,7 +1180,6 @@
     <system:String x:Key="PreviewFrameColor">顏色</system:String>
     <system:String x:Key="PreviewFrameColorHex">十六進制顏色 (#RRGGBB)</system:String>
     <system:String x:Key="PreviewFrameOpacity">不透明度</system:String>
-    <system:String x:Key="PreviewFrameRoundness">圓角程度</system:String>
     <system:String x:Key="PreviewSettingsTitle">獨立視窗設定</system:String>
     <system:String x:Key="PreviewSettingsDescription">獨立視窗的邊框、主畫面按鈕和控制。變更會即時套用。</system:String>
     <system:String x:Key="PreviewSettingsMenu">獨立視窗設定…</system:String>
@@ -1620,4 +1619,13 @@
     <system:String x:Key="SetupCheckDisplay">投影偏好</system:String>
     <system:String x:Key="SetupCheckRunning">正在檢查</system:String>
     <system:String x:Key="SetupCheckWaiting">等待檢查</system:String>
+    <system:String x:Key="UsbAudioCaptureLabel">擷取 iPhone 音訊</system:String>
+    <system:String x:Key="UsbVideoOnlySelected">iPhone 音訊已關閉</system:String>
+    <system:String x:Key="UsbAudioCaptureSelected">iPhone 音訊已開啟</system:String>
+    <system:String x:Key="ShortcutSettingsStopMirroring">停止鏡像</system:String>
+    <system:String x:Key="ShowPreview">顯示預覽</system:String>
+    <system:String x:Key="ShowApp">顯示應用程式</system:String>
+    <system:String x:Key="ShortcutFilterPlaceholder">搜尋快捷鍵…</system:String>
+    <system:String x:Key="ShortcutFilterClear">清除搜尋</system:String>
+    <system:String x:Key="ShortcutFilterEmpty">找不到快捷鍵。</system:String>
 </ResourceDictionary>

@@ -438,7 +438,7 @@ bool valid_image_adjustments(float brightness, float contrast,
 }
 
 bool valid_capture_option_extensions(const iPhoneMirror::CaptureOptions& options) noexcept {
-    return options.reserved[2] <= 2 && options.reserved[3] <= 2 &&
+    return (options.reserved[2] & ~iPhoneMirror::UsbVideoOnlyFlag) <= 2 && options.reserved[3] <= 2 &&
         options.reserved[4] <= 2 &&
         valid_video_preferences(options.reserved[0], options.reserved[1], 0);
 }
@@ -454,7 +454,8 @@ iPhoneMirror::capture::CapturePreferences preferences_from_options(
         .usb_requested_width = options.reserved[0],
         .usb_requested_height = options.reserved[1],
         .usb_projection_mode = static_cast<iPhoneMirror::capture::UsbProjectionMode>(
-            options.reserved[2]),
+            options.reserved[2] & ~iPhoneMirror::UsbVideoOnlyFlag),
+        .request_usb_audio = (options.reserved[2] & iPhoneMirror::UsbVideoOnlyFlag) == 0,
         .decoder_preference = static_cast<iPhoneMirror::media::DecoderPreference>(
             options.reserved[3]),
         .color_output_preference = static_cast<iPhoneMirror::media::ColorOutputPreference>(
@@ -2101,7 +2102,7 @@ std::int32_t IM_CALL im_session_set_window_opacity(iPhoneMirror::SessionHandle h
     return static_cast<std::int32_t>(iPhoneMirror::Result::Ok);
 }
 
-std::int32_t IM_CALL im_session_set_window_frame(iPhoneMirror::SessionHandle handle,
+std::int32_t IM_CALL im_session_set_window_frame2(iPhoneMirror::SessionHandle handle,
     void* hwnd, const iPhoneMirror::WindowFrame* frame) {
     if (!frame || frame->struct_size < sizeof(iPhoneMirror::WindowFrame))
         return fail(iPhoneMirror::Result::InvalidArgument, L"Invalid window frame structure");

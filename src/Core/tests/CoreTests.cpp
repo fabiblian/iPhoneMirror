@@ -544,6 +544,19 @@ void test_session_protocol() {
     check(decode_framed(event.outbound[1]).kind == PacketKind::Reply, "CWPA sends clock RPLY");
     check(decode_framed(event.outbound[2]).subtype == fourcc('h', 'p', 'a', '1'), "CWPA sends HPA1");
 
+    SessionProtocol video_only(SessionOptions{.request_audio = false});
+    static_cast<void>(video_only.process(decode_framed(make_ping())));
+    const auto video_only_clock = video_only.process(cwpa);
+    check(video_only_clock.outbound.size() == 2 &&
+        decode_framed(video_only_clock.outbound[0]).subtype == fourcc('h', 'p', 'd', '1') &&
+        decode_framed(video_only_clock.outbound[1]).kind == PacketKind::Reply,
+        "video-only USB negotiates video and clocks without requesting HPA1 audio");
+    static_cast<void>(video_only.process(decode_framed(read_fixture("fixtures/quicktime_video_hack/cvrp-request"))));
+    const auto video_only_frame = video_only.process(
+        decode_framed(read_fixture("fixtures/quicktime_video_hack/asyn-feed")));
+    check(video_only_frame.state == SessionState::Streaming && video_only_frame.video_sample,
+        "video-only USB receives video without audio negotiation");
+
     const auto afmt = decode_framed(read_fixture("fixtures/quicktime_video_hack/afmt-request"));
     event = session.process(afmt);
     check(event.outbound.size() == 1 && session.negotiated_audio() &&
@@ -1851,6 +1864,22 @@ void test_image_adjustment_api_validation() {
         static_cast<std::int32_t>(iPhoneMirror::Result::InvalidArgument);
     const auto not_initialized =
         static_cast<std::int32_t>(iPhoneMirror::Result::NotInitialized);
+
+    iPhoneMirror::CaptureOptions options{};
+    options.struct_size = sizeof(options);
+    options.audio_volume = 1.0F;
+    iPhoneMirror::SessionHandle handle{};
+    for (std::uint32_t mode = 0; mode <= 2; ++mode) {
+        options.reserved[2] = mode | iPhoneMirror::UsbVideoOnlyFlag;
+        check(im_session_create(L"video-only-validation", &options, &handle) == not_initialized,
+            "video-only flag is accepted with each USB projection mode");
+    }
+    options.reserved[2] = iPhoneMirror::UsbVideoOnlyFlag | 3U;
+    check(im_session_create(L"video-only-validation", &options, &handle) == invalid_argument,
+        "video-only flag does not allow an invalid USB projection mode");
+    options.reserved[2] = 0x200U;
+    check(im_session_create(L"video-only-validation", &options, &handle) == invalid_argument,
+        "unassigned USB capture flags are rejected");
 
     check(im_set_image_adjustments(-1.0F, 0.0F, 0.0F, 0.5F) == not_initialized &&
         im_set_image_adjustments(1.0F, 2.0F, 2.0F, 2.0F) == not_initialized,

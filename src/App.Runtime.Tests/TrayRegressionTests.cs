@@ -8,7 +8,7 @@ namespace IPhoneMirror.App.Runtime.Tests;
 
 internal static partial class Program
 {
-    private static void TestTrayAudioSettings(App app, object vm, DeviceViewModel selected)
+    private static void TestTrayAudioSettings(App app, object vm, DeviceViewModel selected, string output)
     {
         var sessions = KeyboardField(vm, "_sessions");
         var other = TrayTestDevice("tray-audio-other", "Other device");
@@ -25,6 +25,62 @@ internal static partial class Program
                 Equals(KeyboardField(state, "FrameRate"), KeyboardField(vm, "SelectedFrameRate")),
                 "First tray projection did not preserve the selected device controls.");
 
+            vm.GetType().GetProperty("CaptureUsbAudio")!.SetValue(vm, false);
+            InteractionAssert((bool)KeyboardField(state, "UsbVideoOnly") &&
+                (bool)KeyboardField(KeyboardCall(vm, "CaptureSessionStartSettings", state)!, "UsbVideoOnly") &&
+                (bool)KeyboardField(state, "PlayAudio"),
+                "Video-only USB reaches captured start settings independently of local playback.");
+            var workspace = (MainWindow)app.MainWindow;
+            vm.GetType().GetProperty("SelectedApplicationDisplayMode")!.SetValue(vm, ApplicationDisplayMode.Complete);
+            try
+            {
+                KeyboardCall(workspace, "SetSettingsPanelVisible", true);
+                AdvanceDispatcher(TimeSpan.FromMilliseconds(550));
+                var workspaceChoice = FindVisualDescendant<System.Windows.Controls.CheckBox>(workspace,
+                    control => System.Windows.Automation.AutomationProperties.GetAutomationId(control) == "UsbAudioCaptureCheckBox");
+                InteractionAssert(workspaceChoice is { IsVisible: true, IsEnabled: true, IsChecked: false } &&
+                    !(bool)KeyboardField(vm, "HasCaptureSession"),
+                    "Main-window USB audio choice must be visible and editable BEFORE starting capture.");
+                var exitApp = (System.Windows.Controls.Button)workspace.FindName("ExitAppButton");
+                var captureAction = (System.Windows.Controls.Button)workspace.FindName("CaptureActionButton");
+                InteractionAssert(exitApp.IsVisible && exitApp.IsEnabled &&
+                    exitApp.TranslatePoint(new Point(), workspace).X >=
+                    captureAction.TranslatePoint(new Point(captureAction.ActualWidth, 0), workspace).X,
+                    "Exit app must remain visible immediately to the right of the capture action.");
+                SaveWindowRender(workspace, System.IO.Path.Combine(output, "usb-video-only-main.png"));
+            }
+            finally
+            {
+                KeyboardCall(workspace, "SetSettingsPanelVisible", false);
+                vm.GetType().GetProperty("SelectedApplicationDisplayMode")!.SetValue(vm, ApplicationDisplayMode.Tray);
+            }
+            var audioSettings = new IPhoneMirror.App.Windows.ProjectionSettingsWindow(vm,
+                () => Task.CompletedTask, () => Task.CompletedTask,
+                () => Task.CompletedTask, () => Task.CompletedTask, () => { }, previewOnly: true);
+            try
+            {
+                audioSettings.Show();
+                AdvanceDispatcher(TimeSpan.FromMilliseconds(160));
+                var audioChoice = FindVisualDescendant<System.Windows.Controls.CheckBox>(audioSettings,
+                    control => System.Windows.Automation.AutomationProperties.GetAutomationId(control) == "UsbAudioCaptureCheckBox");
+                InteractionAssert(audioChoice is { IsChecked: false, IsEnabled: true },
+                    "USB video-only selection must be visible, bound and editable before capture.");
+                vm.GetType().GetProperty("IsBusy")!.SetValue(vm, true);
+                InteractionAssert(!audioChoice!.IsEnabled,
+                    "USB audio negotiation cannot change while a capture operation is busy.");
+                vm.GetType().GetProperty("IsBusy")!.SetValue(vm, false);
+                for (var parent = System.Windows.Media.VisualTreeHelper.GetParent(audioChoice);
+                     parent is not null; parent = System.Windows.Media.VisualTreeHelper.GetParent(parent))
+                {
+                    if (parent is not System.Windows.Controls.ScrollViewer scroll) continue;
+                    scroll.ScrollToEnd();
+                    break;
+                }
+                AdvanceDispatcher(TimeSpan.FromMilliseconds(80));
+                SaveWindowRender(audioSettings, System.IO.Path.Combine(output, "usb-video-only-settings.png"));
+            }
+            finally { audioSettings.Close(); }
+            vm.GetType().GetProperty("CaptureUsbAudio")!.SetValue(vm, true);
             vm.GetType().GetProperty("PlayAudio")!.SetValue(vm, false);
             vm.GetType().GetProperty("PlaybackVolume")!.SetValue(vm, 37d);
             InteractionAssert(ReferenceEquals(state, KeyboardCall(vm, "GetOrCreateIndependentDeviceState", selected)) &&

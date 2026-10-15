@@ -84,6 +84,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         uint AdvancedUsbWidth,
         uint AdvancedUsbHeight,
         UsbProjectionMode UsbProjectionMode,
+        bool UsbVideoOnly,
         DecoderPreference DecoderPreference,
         double Brightness,
         double Contrast,
@@ -731,6 +732,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             MediaCastStopCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(UsbProjectionSettingsVisibility));
             OnPropertyChanged(nameof(CanChangeUsbProjectionMode));
+            OnPropertyChanged(nameof(CanChangeUsbAudioCapture));
             OnPropertyChanged(nameof(CanChangeVideoPipeline));
             OnPropertyChanged(nameof(CanChangeDecoderPipeline));
             OnPropertyChanged(nameof(CanOpenImageSettings));
@@ -924,6 +926,32 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             SetSettingsStatus(value ? "AudioPlaybackEnabled" : "AudioPlaybackMuted");
         }
     }
+
+    public bool CaptureUsbAudio
+    {
+        get => !UsbVideoOnly;
+        set => UsbVideoOnly = !value;
+    }
+
+    public bool UsbVideoOnly
+    {
+        get => CurrentDeviceSession?.UsbVideoOnly ?? false;
+        set
+        {
+            if (!CanChangeUsbAudioCapture || SelectedDevice is null) return;
+            var state = GetOrCreateDeviceState(SelectedDevice);
+            if (state.UsbVideoOnly == value) return;
+            state.UsbVideoOnly = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CaptureUsbAudio));
+            SetSettingsStatus(value ? "UsbVideoOnlySelected" : "UsbAudioCaptureSelected");
+            AddDiagnosticLog(AppLog.Event("usb_audio_capture_selected",
+                ("device", AppLog.Device(state.Udid)), ("video_only", value)));
+        }
+    }
+
+    public bool CanChangeUsbAudioCapture =>
+        CanChangeUsbProjectionMode && !HasCaptureSession && !IsBusy;
 
     private UsbProjectionMode CurrentUsbProjectionMode =>
         CurrentDeviceSession?.UsbProjectionMode ?? UsbProjectionMode.Demo;
@@ -4263,7 +4291,10 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(WirelessBottomSettingsVisibility));
         OnPropertyChanged(nameof(UsbProjectionSettingsVisibility));
         OnPropertyChanged(nameof(SelectedUsbProjectionMode));
+        OnPropertyChanged(nameof(UsbVideoOnly));
+        OnPropertyChanged(nameof(CaptureUsbAudio));
         OnPropertyChanged(nameof(CanChangeUsbProjectionMode));
+        OnPropertyChanged(nameof(CanChangeUsbAudioCapture));
         OnPropertyChanged(nameof(SelectedDecoderPreference));
         OnPropertyChanged(nameof(CanChangeVideoPipeline));
         OnPropertyChanged(nameof(CanChangeDecoderPipeline));
@@ -4283,6 +4314,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             _ = StopBluetoothControlAsync();
         OnPropertyChanged(nameof(CurrentSessionHandle));
         OnPropertyChanged(nameof(HasCaptureSession));
+        OnPropertyChanged(nameof(CanChangeUsbAudioCapture));
         OnPropertyChanged(nameof(PreviewAndObsVisibility));
         OnPropertyChanged(nameof(CanUseVisualPreviewTools));
         OnPropertyChanged(nameof(UsbProjectionSettingsVisibility));
@@ -6195,6 +6227,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             IsAdvancedMode ? state.AdvancedUsbWidth : 0,
             IsAdvancedMode ? state.AdvancedUsbHeight : 0,
             state.UsbProjectionMode,
+            state.UsbVideoOnly,
             state.DecoderPreference,
             state.Brightness,
             state.Contrast,
@@ -6218,7 +6251,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             settings.AdvancedUsbWidth, settings.AdvancedUsbHeight,
             (uint)settings.UsbProjectionMode,
             (uint)settings.DecoderPreference,
-            1U);
+            1U, settings.UsbVideoOnly);
         if (!created.Success) return created;
         var adjustments = _core.SetDeviceImageAdjustments(created.Handle!,
             settings.Brightness, settings.Contrast, settings.Saturation,
@@ -6519,6 +6552,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         ApplyVideoSettingsCommand.NotifyCanExecuteChanged();
         MoreImageSettingsCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanChangeUsbProjectionMode));
+        OnPropertyChanged(nameof(CanChangeUsbAudioCapture));
         OnPropertyChanged(nameof(CanChangeVideoPipeline));
         OnPropertyChanged(nameof(CanChangeDecoderPipeline));
         OnPropertyChanged(nameof(CanOpenImageSettings));

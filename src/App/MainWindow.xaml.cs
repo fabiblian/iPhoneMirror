@@ -311,7 +311,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private bool IsBluetoothControlActiveFor(string? udid)
     {
-        if (_bossKeyHidden || !_viewModel.BluetoothControlIsInputEnabled ||
+        if (_bossKeyHidden || _secondaryMirrors.IsVisibilityHidden(_secondaryMirrors.GetWindowHandle(udid)) || !_viewModel.BluetoothControlIsInputEnabled ||
             string.IsNullOrWhiteSpace(udid) ||
             !_viewModel.IsBluetoothControlTarget(udid)) return false;
         return _activeControlWindow != 0
@@ -319,7 +319,9 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             : DeviceViewModel.UdidEquals(_viewModel.SelectedDevice?.Udid, udid);
     }
 
-    private bool IsUsbControlActive => _viewModel.UsbControlIsInputEnabled &&
+    private bool IsUsbControlActive => !_bossKeyHidden &&
+        !_secondaryMirrors.IsVisibilityHidden(_secondaryMirrors.GetWindowHandle(_viewModel.SelectedDevice?.Udid)) &&
+        _viewModel.UsbControlIsInputEnabled &&
         _activeControlWindow == 0 &&
         _viewModel.IsUsbControlTarget(_viewModel.SelectedDevice?.Udid);
 
@@ -458,6 +460,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         BluetoothShortcutAction.BluetoothControl => BluetoothModeHotKeyId,
         BluetoothShortcutAction.WirelessControl => WirelessModeHotKeyId,
         BluetoothShortcutAction.WiredControl => WiredModeHotKeyId,
+        BluetoothShortcutAction.ShowPreview => 0x4995,
+        BluetoothShortcutAction.StopMirroring => 0x4994,
         BluetoothShortcutAction.ControlCenter => BluetoothControlCenterHotKeyId,
         BluetoothShortcutAction.NotificationCenter => BluetoothNotificationCenterHotKeyId,
         BluetoothShortcutAction.AppSwitcher => BluetoothAppSwitcherHotKeyId,
@@ -603,6 +607,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             app.UpdateSettings.BluetoothVolumeDownShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.VolumeDown].Modifiers;
             app.UpdateSettings.BluetoothLockScreenShortcutVirtualKey = (int)shortcuts[BluetoothShortcutAction.LockScreen].VirtualKey;
             app.UpdateSettings.BluetoothLockScreenShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.LockScreen].Modifiers;
+            app.UpdateSettings.ShowPreviewShortcutVirtualKey = (int)shortcuts[BluetoothShortcutAction.ShowPreview].VirtualKey;
+            app.UpdateSettings.ShowPreviewShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.ShowPreview].Modifiers;
+            app.UpdateSettings.StopMirroringShortcutVirtualKey = (int)shortcuts[BluetoothShortcutAction.StopMirroring].VirtualKey;
+            app.UpdateSettings.StopMirroringShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.StopMirroring].Modifiers;
             app.UpdateSettings.BluetoothShortcutSchema = 6;
             if (!app.SaveUpdateSettings())
             {
@@ -647,7 +655,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         string? sourceUdid)
     {
         if (e.Kind == Controls.PreviewPointerKind.Reset && !string.IsNullOrWhiteSpace(sourceUdid))
-            _ = ResetPreviewTouchesAsync(sourceUdid);
+            await ResetPreviewTouchesAsync(sourceUdid);
         var usbTargetActive = _viewModel.IsUsbControlTarget(sourceUdid);
         if (string.IsNullOrWhiteSpace(sourceUdid) ||
             (e.Kind != Controls.PreviewPointerKind.Reset && !usbTargetActive)) return;
@@ -1567,6 +1575,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         DisposeKeyboardInputSubscriptions();
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         DisposeKeyboardMapping();
+        _visibilityRestoreTrayIcon?.Dispose();
+        _visibilityRestoreTrayIcon = null;
         DisposeTray();
         _compactLaunchCancellation.Cancel();
         _secondaryMirrors.PreviewClosed -= OnCompactPreviewClosed;
@@ -2546,6 +2556,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             DiagnosticLogger.ReverseControlWarning("keyboard_input", "shutdown_release_timeout");
         }
+        _visibilityRestoreTrayIcon?.Dispose();
+        _visibilityRestoreTrayIcon = null;
         DisposeTray();
         _compactLaunchCancellation.Cancel();
         var shutdownTimer = Stopwatch.StartNew();
@@ -5668,7 +5680,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         var controlActive = IsBluetoothControlActive;
         var usbControlActive = IsUsbControlActive;
-        var usbControlConnected = _viewModel.IsUsbControlTarget(ActiveInputDeviceUdid);
+        var usbControlConnected = !_bossKeyHidden && !_secondaryMirrors.IsVisibilityHidden(_activeControlWindow) &&
+            _viewModel.IsUsbControlTarget(ActiveInputDeviceUdid);
         // Keyboard ownership follows the active device, including independent
         // USB/wireless previews. usbControlActive only describes the main host.
         if ((controlActive || usbControlConnected) && !IsKeyboardMappingInputModeActive)
@@ -6906,6 +6919,16 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private void HandleConfiguredShortcut(BluetoothShortcutAction action)
     {
         if (_shortcutSettingsWindow is not null) return;
+        if (action == BluetoothShortcutAction.ShowPreview)
+        {
+            _ = TogglePreviewVisibilityAsync();
+            return;
+        }
+        if (action == BluetoothShortcutAction.StopMirroring)
+        {
+            _ = StopMirroringFromShortcutAsync();
+            return;
+        }
         if (action == BluetoothShortcutAction.BossKey)
         {
             _ = ToggleBossKeyWindowsAsync();
@@ -6934,62 +6957,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
         else
             _ = SendConfiguredSystemShortcutAsync(action);
-    }
-
-    private async Task ToggleBossKeyWindowsAsync()
-    {
-        if (Interlocked.Exchange(ref _bossKeyChanging, 1) != 0) return;
-        var restoring = _bossKeyHidden;
-        var routeHeld = false;
-        Interlocked.Exchange(ref _bluetoothRouteChanging, 1);
-        try
-        {
-            if (restoring)
-            {
-                BossKeyWindowVisibility.RestoreAll();
-                NativePreviewWindow.SetAllBossKeyHidden(false);
-            }
-            else
-            {
-                _bossKeyHidden = true;
-                ApplyBluetoothControlInputState(activateIndependentWindow: false);
-                BossKeyWindowVisibility.HideAll();
-                NativePreviewWindow.SetAllBossKeyHidden(true);
-            }
-
-            await _bluetoothRouteGate.WaitAsync();
-            routeHeld = true;
-            if (restoring)
-            {
-                _bossKeyHidden = false;
-                ApplyBluetoothControlInputState();
-            }
-            else if (_viewModel.IsBluetoothControlEnabled)
-            {
-                try { await _viewModel.ReleaseBluetoothControlInputAsync(); }
-                catch (Exception error)
-                {
-                    _viewModel.AddDiagnosticLog(AppLog.Event(
-                        "boss_key_input_release_failed",
-                        ("error", AppLog.Error(error))));
-                }
-            }
-            _viewModel.AddDiagnosticLog(AppLog.Event("boss_key_toggled",
-                ("hidden", _bossKeyHidden),
-                ("wpf_windows", BossKeyWindowVisibility.HiddenWindowCount),
-                ("reverse_control", IsBluetoothControlActive)));
-        }
-        catch (Exception error)
-        {
-            _viewModel.AddDiagnosticLog(AppLog.Event("boss_key_toggle_failed",
-                ("hidden", _bossKeyHidden), ("error", AppLog.Error(error))));
-        }
-        finally
-        {
-            if (routeHeld) _bluetoothRouteGate.Release();
-            Volatile.Write(ref _bluetoothRouteChanging, 0);
-            Volatile.Write(ref _bossKeyChanging, 0);
-        }
     }
 
     private async Task SendConfiguredSystemShortcutAsync(

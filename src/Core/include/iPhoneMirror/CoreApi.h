@@ -207,9 +207,12 @@ struct AudioPacketInfo {
 // Versioned capture preferences used by im_start_capture_with_options.
 // requested_width/requested_height are local preview-render limits. The first
 // Reserved words 0/1 are the optional advanced USB HPD1 size. Reserved word 2
-// selects USB projection mode (0=demo, 1=AirPlay, 2=Aisi-compatible), word 3
-// selects decoder policy (0=auto, 1=hardware preferred, 2=software compatible),
+// selects USB projection mode (0=demo, 1=AirPlay, 2=Aisi-compatible) and
+// has an optional UsbVideoOnlyFlag bit to suppress USB audio negotiation;
+// word 3 selects decoder policy (0=auto, 1=hardware preferred, 2=software compatible),
 // and word 4 selects color output (0=auto, 1=SDR tone-map, 2=prefer HDR).
+inline constexpr std::uint32_t UsbVideoOnlyFlag = 0x100U;
+
 struct CaptureOptions {
     std::uint32_t struct_size;
     std::uint32_t api_version;
@@ -492,7 +495,7 @@ IM_API std::int32_t IM_CALL im_session_set_window_opacity(
     iPhoneMirror::SessionHandle handle, void* hwnd, float opacity);
 // Local composition preview only: outline and home pill around the video
 // (see WindowFrame). All insets zero removes the outline.
-IM_API std::int32_t IM_CALL im_session_set_window_frame(
+IM_API std::int32_t IM_CALL im_session_set_window_frame2(
     iPhoneMirror::SessionHandle handle, void* hwnd,
     const iPhoneMirror::WindowFrame* frame);
 

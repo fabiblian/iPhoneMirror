@@ -100,6 +100,7 @@ public partial class MainWindow
 
     private void ShowTrayPanel()
     {
+        if (_bossKeyHidden) { _ = SetAppShownAsync(true); return; }
         if (_shutdownStarted || !IsTrayMode || _trayPanel is null || _trayIcon is null) return;
         if (_trayPanel.IsVisible && _trayPanel.IsActive) { _trayPanel.Hide(); return; }
         _trayIcon.ShowPanel(_trayPanel);

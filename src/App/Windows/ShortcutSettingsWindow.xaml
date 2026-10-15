@@ -59,13 +59,58 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Text="{DynamicResource ShortcutSettingsDescription}"
-                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
-                       TextWrapping="Wrap" Margin="0,0,0,12"/>
-            <ScrollViewer Grid.Row="1" Margin="0,0,-25,0"
+            <StackPanel Margin="0,0,0,12">
+                <TextBlock Text="{DynamicResource ShortcutSettingsDescription}"
+                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
+                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <Grid>
+                    <TextBox x:Name="ShortcutSearchBox" Style="{StaticResource RoundedTextBox}"
+                             Padding="18,4,18,4" MinHeight="40" TextChanged="OnSearchChanged"
+                             PreviewKeyDown="OnSearchPreviewKeyDown"
+                             AutomationProperties.Name="{DynamicResource ShortcutFilterPlaceholder}"
+                             AutomationProperties.AutomationId="ShortcutSearchBox"
+                             shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    <ui:SymbolIcon Symbol="Search20" FontSize="16" Margin="12,0,0,0"
+                                   HorizontalAlignment="Left" VerticalAlignment="Center" IsHitTestVisible="False"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                    <TextBlock Text="{DynamicResource ShortcutFilterPlaceholder}" Margin="36,0,40,0"
+                               VerticalAlignment="Center" IsHitTestVisible="False"
+                               Foreground="{DynamicResource MutedTextBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text.Length, ElementName=ShortcutSearchBox}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <Button x:Name="ClearShortcutSearchButton" Click="OnClearSearchClick"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"
+                            ToolTip="{DynamicResource ShortcutFilterClear}"
+                            AutomationProperties.Name="{DynamicResource ShortcutFilterClear}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                <Setter Property="Width" Value="32"/><Setter Property="Height" Value="32"/>
+                                <Setter Property="MinWidth" Value="32"/><Setter Property="MinHeight" Value="32"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text.Length, ElementName=ShortcutSearchBox}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <ui:SymbolIcon Symbol="Dismiss20" FontSize="14"/>
+                    </Button>
+                </Grid>
+            </StackPanel>
+            <ScrollViewer x:Name="ShortcutListScrollViewer" Grid.Row="1" Margin="0,0,-25,0"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding Sections}">
+            <ItemsControl ItemsSource="{Binding FilteredSections}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Margin="0,0,0,14">
@@ -102,6 +147,20 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
             </ScrollViewer>
+            <TextBlock x:Name="NoShortcutResultsText" Grid.Row="1" Margin="0,18,0,0"
+                       Text="{DynamicResource ShortcutFilterEmpty}" TextWrapping="Wrap"
+                       VerticalAlignment="Top" Foreground="{DynamicResource MutedTextBrush}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasSearchResults}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
             <TextBlock Text="{DynamicResource ShortcutSettingsCaptureHint}"
                        Grid.Row="2"
                        Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"

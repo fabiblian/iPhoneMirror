@@ -88,6 +88,7 @@ struct CapturePreferences {
     std::uint32_t usb_requested_width{};
     std::uint32_t usb_requested_height{};
     UsbProjectionMode usb_projection_mode{UsbProjectionMode::Demo};
+    bool request_usb_audio{true};
     media::DecoderPreference decoder_preference{media::DecoderPreference::Auto};
     media::ColorOutputPreference color_output_preference{
         media::ColorOutputPreference::ForceSdrToneMap};

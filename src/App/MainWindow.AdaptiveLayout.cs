@@ -65,9 +65,9 @@ public partial class MainWindow
             WorkspaceSubtitle.Visibility = compactHeader ? Visibility.Collapsed : Visibility.Visible;
             Grid.SetRow(DetectionStatus, compactHeader && !shortHeader ? 1 : 0);
             Grid.SetColumn(DetectionStatus, compactHeader ? 0 : 1);
-            Grid.SetRow(CaptureActionButton, compactHeader && !shortHeader ? 1 : 0);
-            Grid.SetColumn(CaptureActionButton, compactHeader ? 1 : 3);
-            CaptureActionButton.Margin = compactHeader && !shortHeader ? new Thickness(0, 8, 0, 0) : new Thickness(0);
+            Grid.SetRow(HeaderCaptureActions, compactHeader && !shortHeader ? 1 : 0);
+            Grid.SetColumn(HeaderCaptureActions, compactHeader ? 1 : 3);
+            HeaderCaptureActions.Margin = compactHeader && !shortHeader ? new Thickness(0, 8, 0, 0) : new Thickness(0);
         }
         var stack = !_viewModel.IsLightweightApplicationMode &&
             MainContentGrid.ActualWidth < 960 &&

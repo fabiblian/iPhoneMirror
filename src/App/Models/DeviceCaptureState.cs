@@ -26,6 +26,7 @@ internal sealed class DeviceCaptureState
     internal uint RenderHeight { get; set; }
     internal int FrameRate { get; set; } = 60;
     internal bool PlayAudio { get; set; } = true;
+    internal bool UsbVideoOnly { get; set; }
     internal double Volume { get; set; } = 100;
     internal uint AdvancedUsbWidth { get; set; }
     internal uint AdvancedUsbHeight { get; set; }
