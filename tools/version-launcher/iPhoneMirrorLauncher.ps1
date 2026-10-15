@@ -607,6 +607,8 @@ elseif (@($State.Branches | Where-Object { Test-Path -LiteralPath (Get-CurrentEx
 }
 else { $status.Text = 'Version wählen und Starten. Update holt neue Stände von GitHub und baut sie.' }
 
+# Started from a hidden PowerShell, the window would otherwise open behind others.
+$form.Add_Shown({ $form.TopMost = $true; $form.Activate(); $form.TopMost = $false })
 $timer.Start()
 [void]$form.ShowDialog()
 $timer.Stop()

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using IPhoneMirror.App.Localization;
+using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
 
 namespace IPhoneMirror.App;
@@ -82,6 +83,60 @@ public partial class MainWindow
                 LocalizationService.Format("CompactLaunchFailed", error.Message), this);
         }
         finally { if (acquired) _compactLaunchGate.Release(); }
+    }
+
+    private bool _coldStartPreviewRunning;
+
+    private bool CanColdStartPreview => !_coldStartPreviewRunning && !_shutdownStarted &&
+        !_previewVisibilityChanging && !_secondaryMirrors.HasAnyOpen &&
+        !_compactLaunchCancellation.IsCancellationRequested;
+
+    // ShowPreview shortcut with no preview yet: open an independent preview
+    // without bringing up the main window.
+    private async Task ColdStartPreviewFromShortcutAsync()
+    {
+        if (!CanColdStartPreview) return;
+        _coldStartPreviewRunning = true;
+        var token = _compactLaunchCancellation.Token;
+        try
+        {
+            DeviceViewModel? PickDevice() =>
+                _viewModel.SelectedDevice is { IsMediaCast: false } selected ? selected
+                    : _viewModel.Devices.FirstOrDefault(device => !device.IsMediaCast);
+            var device = PickDevice();
+            var deadline = Stopwatch.StartNew();
+            while (device is null && deadline.Elapsed < TimeSpan.FromSeconds(10))
+            {
+                var remaining = TimeSpan.FromSeconds(10) - deadline.Elapsed;
+                if (remaining <= TimeSpan.Zero) break;
+                await _viewModel.RefreshAsync(forceDeviceEnumeration: true).WaitAsync(remaining, token);
+                device = PickDevice();
+                if (device is null) await Task.Delay(500, token);
+            }
+            if (device is null)
+                throw new InvalidOperationException(LocalizationService.Get("CompactLaunchDeviceUnavailable"));
+            var result = await _secondaryMirrors.ShowAsync(device);
+            token.ThrowIfCancellationRequested();
+            if (!result.Success) throw new InvalidOperationException(result.Message);
+            _secondaryMirrors.Activate(device.Udid);
+        }
+        catch (Exception) when (token.IsCancellationRequested) { }
+        catch (Exception error)
+        {
+            var message = LocalizationService.Format("CompactLaunchFailed", error.Message);
+            _viewModel.AddUiLog(message);
+            if (IsTrayMode)
+            {
+                _trayPanel?.ReportError(message);
+                ShowTrayPanel();
+                return;
+            }
+            if (IsVisible)
+                IPhoneMirror.App.Windows.AppPromptWindow.Inform(LocalizationService.Get("CompactLaunchTitle"), message, this);
+            else
+                IPhoneMirror.App.Windows.AppPromptWindow.InformStandalone(LocalizationService.Get("CompactLaunchTitle"), message);
+        }
+        finally { _coldStartPreviewRunning = false; }
     }
 
     private void OnCompactPreviewClosed(string deviceId)

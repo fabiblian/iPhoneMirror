@@ -542,8 +542,8 @@
     <system:String x:Key="AdvancedModeEnabled">高级模式已开启</system:String>
     <system:String x:Key="AdvancedModeDisabled">高级模式已关闭，恢复普通预设</system:String>
     <system:String x:Key="UsbProjectionModeTitle">有线投屏协议</system:String>
-    <system:String x:Key="UsbModeDemoLabel">A 演示模式（推荐）</system:String>
-    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay（实验）</system:String>
+    <system:String x:Key="UsbModeDemoLabel">A 演示模式（时间显示 9:41）</system:String>
+    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay（推荐）</system:String>
     <system:String x:Key="UsbModeAisiLabel">C 爱思模式</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">仅应用于当前选中的有线设备。</system:String>
     <system:String x:Key="UsbModeDetailsToolTip">查看该模式的优缺点</system:String>
@@ -553,8 +553,8 @@
     <system:String x:Key="UsbModeDemoAdvantage">发送 Valeria=true 和设备原生 DisplaySize，由 iOS 输出完整的手机镜像，并保持固定演示状态。兼容性和画面完整性最高，推荐日常使用。</system:String>
     <system:String x:Key="UsbModeDemoDisadvantage">iOS 会进入 Apple 演示状态，状态栏日期、时间和电量会锁定为演示值，不能反映手机当前状态。</system:String>
     <system:String x:Key="UsbModeDemoNotice">此模式不会启用视频 App 的 AirPlay 或外接播放画面。</system:String>
-    <system:String x:Key="UsbModeAirPlayAdvantage">发送 Valeria=false，使用设备原生尺寸，并保留当前的首帧探测、横竖屏识别和自适应重配。视频 App 可以切换到 AirPlay 或外接播放。</system:String>
-    <system:String x:Key="UsbModeAirPlayDisadvantage">外接内容的分辨率无法保证与手机和窗口完美自适应，可能出现裁切、比例异常或画面显示不全。</system:String>
+    <system:String x:Key="UsbModeAirPlayAdvantage">状态栏显示手机的真实时间、日期和电量。发送 Valeria=false，使用设备原生尺寸，并保留当前的首帧探测、横竖屏识别和自适应重配。视频 App 可以切换到 AirPlay 或外接播放。</system:String>
+    <system:String x:Key="UsbModeAirPlayDisadvantage">主要影响视频 App：外接内容的分辨率无法保证与手机和窗口完美自适应，可能出现裁切、比例异常或画面显示不全。</system:String>
     <system:String x:Key="UsbModeAirPlayNotice">需要自定义时，连续点击右下角版本号 5 次开启高级模式。自定义 HPD1 尺寸存在风险，错误参数可能导致黑屏、裁切或 USB 重连失败。</system:String>
     <system:String x:Key="UsbModeAisiAdvantage">采用爱思同类方案，发送 Valeria=false 并固定请求 1565×1565，减少不同设备之间的分辨率协商差异。</system:String>
     <system:String x:Key="UsbModeAisiDisadvantage">方形目标会限制源画面的清晰度，不适合画质优先；横屏内容还可能出现缩放、黑边或比例不理想。</system:String>

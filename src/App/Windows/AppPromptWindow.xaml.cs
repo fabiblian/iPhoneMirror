@@ -60,6 +60,12 @@ public partial class AppPromptWindow : IPhoneMirror.UI.Controls.RoundedWindow, I
         new AppPromptWindow(title, body, false) { Owner = owner ?? Application.Current.MainWindow }
             .ShowDialog();
 
+    // For messages raised while the main window is hidden (global shortcuts).
+    internal static void InformStandalone(string title, string body) =>
+        new AppPromptWindow(title, body, false)
+            { Topmost = true, WindowStartupLocation = WindowStartupLocation.CenterScreen }
+            .ShowDialog();
+
     internal static bool ConfirmDestructive(string title, string body, string confirmText, Window owner) =>
         new AppPromptWindow(title, body, true, confirmText: confirmText, destructive: true)
             { Owner = owner }.ShowDialog() == true;

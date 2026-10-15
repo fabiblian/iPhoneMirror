@@ -31,7 +31,8 @@ public partial class MainWindow
             {
                 bool VisibilityAvailable() => !_mappingClosing &&
                     (_bossKeyHidden || (_shortcutSettingsWindow is null && !_mappingCapture.Waiting)) &&
-                    (action == BluetoothShortcutAction.BossKey || CanTogglePreviewVisibility);
+                    (action == BluetoothShortcutAction.BossKey || CanTogglePreviewVisibility ||
+                        (action == BluetoothShortcutAction.ShowPreview && CanColdStartPreview));
                 bindings.Add(new(shortcut, action.ToString(), VisibilityAvailable, () =>
                 {
                     var version = _keyboardShortcutGeneration;
@@ -39,9 +40,10 @@ public partial class MainWindow
                     Dispatcher.BeginInvoke(() =>
                     {
                         if (version != _keyboardShortcutGeneration || !VisibilityAvailable()) return;
-                        if (action == BluetoothShortcutAction.ShowPreview)
+                        if (action != BluetoothShortcutAction.ShowPreview) _ = ToggleBossKeyWindowsAsync();
+                        else if (target is not null || CanTogglePreviewVisibility)
                             _ = TogglePreviewVisibilityAsync(target);
-                        else _ = ToggleBossKeyWindowsAsync();
+                        else _ = ColdStartPreviewFromShortcutAsync();
                     }, DispatcherPriority.Input);
                 }));
                 continue;

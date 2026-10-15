@@ -6921,7 +6921,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (_shortcutSettingsWindow is not null) return;
         if (action == BluetoothShortcutAction.ShowPreview)
         {
-            _ = TogglePreviewVisibilityAsync();
+            if (CanTogglePreviewVisibility) _ = TogglePreviewVisibilityAsync();
+            else if (CanColdStartPreview) _ = ColdStartPreviewFromShortcutAsync();
             return;
         }
         if (action == BluetoothShortcutAction.StopMirroring)

@@ -30,7 +30,7 @@ internal sealed class DeviceCaptureState
     internal double Volume { get; set; } = 100;
     internal uint AdvancedUsbWidth { get; set; }
     internal uint AdvancedUsbHeight { get; set; }
-    internal UsbProjectionMode UsbProjectionMode { get; set; } = UsbProjectionMode.Demo;
+    internal UsbProjectionMode UsbProjectionMode { get; set; } = UsbProjectionMode.AirPlay;
     internal DecoderPreference DecoderPreference { get; set; } = DecoderPreference.Auto;
     internal double Brightness { get; set; }
     internal double Contrast { get; set; } = 100;

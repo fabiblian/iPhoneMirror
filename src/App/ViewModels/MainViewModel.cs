@@ -954,7 +954,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         CanChangeUsbProjectionMode && !HasCaptureSession && !IsBusy;
 
     private UsbProjectionMode CurrentUsbProjectionMode =>
-        CurrentDeviceSession?.UsbProjectionMode ?? UsbProjectionMode.Demo;
+        CurrentDeviceSession?.UsbProjectionMode ?? UsbProjectionMode.AirPlay;
 
     public UsbProjectionModeOption? SelectedUsbProjectionMode
     {
@@ -967,6 +967,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             var state = GetOrCreateDeviceState(device);
             if (state.UsbProjectionMode == value.Mode) return;
             state.UsbProjectionMode = value.Mode;
+            PersistDeviceVideoPreferences(state);
             OnPropertyChanged();
             OnPropertyChanged(nameof(AdvancedSettingsVisibility));
             SetSettingsStatus("UsbProjectionModeSelectedFormat", value.Label);
