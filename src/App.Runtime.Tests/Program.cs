@@ -1524,8 +1524,10 @@ internal static partial class Program
         try
         {
             shortcutWindow.UpdateLayout();
+            // The search field precedes the rows; select the first capture field.
+            var captureStyle = shortcutWindow.FindResource("ShortcutCaptureBox");
             var captureBox = FindVisualDescendants<System.Windows.Controls.TextBox>(shortcutWindow)
-                .FirstOrDefault();
+                .FirstOrDefault(box => ReferenceEquals(box.Style, captureStyle));
             if (!shortcutWindow.IsVisible || shortcutWindow.Owner != owner ||
                 captureBox is null || !captureBox.IsReadOnly ||
                 string.IsNullOrWhiteSpace(captureBox.Text))

@@ -406,10 +406,21 @@ Run("reparse path components are rejected", () =>
                                       (error is IOException &&
                                        (error.HResult & 0xffff) == 1314))
         {
-            var fallback = Path.Combine(Environment.GetFolderPath(
-                Environment.SpecialFolder.UserProfile), "Application Data");
-            if (File.Exists(fallback) || Directory.Exists(fallback) ||
-                (File.GetAttributes(fallback) & FileAttributes.ReparsePoint) != 0)
+            // Legacy profile junctions are localized ("Application Data",
+            // "Anwendungsdaten", ...), so use whichever one this profile has.
+            var fallback = new DirectoryInfo(Environment.GetFolderPath(
+                    Environment.SpecialFolder.UserProfile))
+                .EnumerateDirectories("*", new EnumerationOptions
+                {
+                    AttributesToSkip = 0,
+                    IgnoreInaccessible = true,
+                })
+                .Where(directory =>
+                    (directory.Attributes & FileAttributes.ReparsePoint) != 0 &&
+                    directory.LinkTarget is not null)
+                .Select(directory => directory.FullName)
+                .FirstOrDefault();
+            if (fallback is not null)
             {
                 Throws<IOException>(() => DriverPayload.EnsureNoReparsePoints(fallback));
                 Throws<IOException>(() => DriverPayload.EnsureNoReparsePoints(

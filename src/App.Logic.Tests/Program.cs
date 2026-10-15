@@ -1378,6 +1378,11 @@ var bluetoothRoutesSource = File.ReadAllText(Path.Combine(sourceDirectory,
     "App", "Services", "BluetoothClientRouteTable.cs"));
 var bossKeyWindowVisibilityCode = File.ReadAllText(Path.Combine(sourceDirectory,
     "App", "Services", "BossKeyWindowVisibility.cs"));
+var mainWindowVisibilityCode = File.ReadAllText(Path.Combine(sourceDirectory,
+    "App", "MainWindow.Visibility.cs"));
+var mainWindowPartialsCode = string.Concat(Directory
+    .GetFiles(Path.Combine(sourceDirectory, "App"), "MainWindow*.cs")
+    .Order(StringComparer.Ordinal).Select(File.ReadAllText));
 Equal(true,
     mainWindowCode.Contains("app.RestoreUpdateSettings(snapshot);",
         StringComparison.Ordinal) &&
@@ -1539,36 +1544,80 @@ Equal(true,
         StringComparison.Ordinal),
     "Bluetooth app switching uses the dedicated iOS Consumer Control usage while Back remains unavailable");
 Equal(true,
-    mainWindowCode.Contains("if (_bossKeyHidden ||",
+    mainWindowVisibilityCode.Contains(
+        "_bossKeyHidden && !_secondaryMirrors.ContainsWindow(window);",
+        StringComparison.Ordinal) &&
+    mainWindowCode.Contains("if (AppHiddenBlocks(_activeControlWindow) ||",
         StringComparison.Ordinal) &&
     mainWindowCode.Contains("ApplyBluetoothControlInputState",
         StringComparison.Ordinal) &&
-    mainWindowCode.Contains("await _viewModel.ReleaseBluetoothControlInputAsync()",
+    mainWindowVisibilityCode.Contains(
+        "releaseBluetooth = _viewModel.IsBluetoothControlEnabled && AppHiddenBlocks(_activeControlWindow);",
+        StringComparison.Ordinal) &&
+    mainWindowVisibilityCode.Contains(
+        ".Where(udid => AppHiddenBlocks(_secondaryMirrors.GetWindowHandle(udid)))",
+        StringComparison.Ordinal) &&
+    mainWindowVisibilityCode.Contains("await _viewModel.ReleaseBluetoothControlInputAsync()",
         StringComparison.Ordinal) &&
     mainViewModelSource.Contains("ReleaseBluetoothControlInputAsync",
         StringComparison.Ordinal) &&
-    mainWindowCode.Contains("boss_key_input_release_failed",
+    mainWindowVisibilityCode.Contains("visibility_input_release_failed",
         StringComparison.Ordinal),
-    "boss key suspends process-wide reverse-control input and releases remote HID state before remaining hidden");
-var bossToggleIndex = mainWindowCode.IndexOf(
+    "boss key suspends reverse-control input aimed at hidden app windows and releases remote HID state while independent previews keep input");
+var bossToggleIndex = mainWindowVisibilityCode.IndexOf(
     "private async Task ToggleBossKeyWindowsAsync", StringComparison.Ordinal);
-var bossLocalSuspendIndex = mainWindowCode.IndexOf(
-    "ApplyBluetoothControlInputState(activateIndependentWindow: false);",
-    bossToggleIndex, StringComparison.Ordinal);
-var bossWindowHideIndex = mainWindowCode.IndexOf(
-    "BossKeyWindowVisibility.HideAll();", bossLocalSuspendIndex,
-    StringComparison.Ordinal);
-var bossRouteWaitIndex = mainWindowCode.IndexOf(
-    "await _bluetoothRouteGate.WaitAsync();", bossWindowHideIndex,
-    StringComparison.Ordinal);
-Equal(true, bossToggleIndex >= 0 && bossLocalSuspendIndex > bossToggleIndex &&
-            bossWindowHideIndex > bossLocalSuspendIndex &&
-            bossRouteWaitIndex > bossWindowHideIndex &&
-            bossKeyWindowVisibilityCode.Contains("if (!_hidden || !window.IsVisible) return;",
+var bossHiddenIndex = bossToggleIndex >= 0
+    ? mainWindowVisibilityCode.IndexOf("_bossKeyHidden = true;", bossToggleIndex,
+        StringComparison.Ordinal)
+    : -1;
+var bossLocalSuspendIndex = bossHiddenIndex >= 0
+    ? mainWindowVisibilityCode.IndexOf(
+        "ApplyBluetoothControlInputState(activateIndependentWindow: false);",
+        bossHiddenIndex, StringComparison.Ordinal)
+    : -1;
+var bossKeepVisibleIndex = bossLocalSuspendIndex >= 0
+    ? mainWindowVisibilityCode.IndexOf(
+        "BossKeyWindowVisibility.KeepVisible ??= KeepVisibleWhileAppHidden;",
+        bossLocalSuspendIndex, StringComparison.Ordinal)
+    : -1;
+var bossWindowHideIndex = bossKeepVisibleIndex >= 0
+    ? mainWindowVisibilityCode.IndexOf("BossKeyWindowVisibility.HideAll();",
+        bossKeepVisibleIndex, StringComparison.Ordinal)
+    : -1;
+var bossReleaseIndex = bossWindowHideIndex >= 0
+    ? mainWindowVisibilityCode.IndexOf(
+        "await ReleaseVisibilityInputAsync(releaseTargets, releaseBluetooth);",
+        bossWindowHideIndex, StringComparison.Ordinal)
+    : -1;
+var visibilityReleaseIndex = mainWindowVisibilityCode.IndexOf(
+    "private async Task ReleaseVisibilityInputAsync", StringComparison.Ordinal);
+var bossRouteWaitIndex = visibilityReleaseIndex >= 0
+    ? mainWindowVisibilityCode.IndexOf("await _bluetoothRouteGate.WaitAsync();",
+        visibilityReleaseIndex, StringComparison.Ordinal)
+    : -1;
+Equal(true, bossToggleIndex >= 0 && bossHiddenIndex > bossToggleIndex &&
+            bossLocalSuspendIndex > bossHiddenIndex &&
+            bossKeepVisibleIndex > bossLocalSuspendIndex &&
+            bossWindowHideIndex > bossKeepVisibleIndex &&
+            bossReleaseIndex > bossWindowHideIndex &&
+            bossRouteWaitIndex > visibilityReleaseIndex &&
+            bossKeyWindowVisibilityCode.Contains(
+                "private static bool ShouldHide(Window window) => _hidden && KeepVisible?.Invoke(window) != true;",
+                StringComparison.Ordinal) &&
+            bossKeyWindowVisibilityCode.Contains("if (window.IsVisible && ShouldHide(window))",
                 StringComparison.Ordinal) &&
             bossKeyWindowVisibilityCode.Contains("HiddenWindows.Add(window);",
                 StringComparison.Ordinal),
-    "boss key hides existing and newly created WPF windows before waiting on a blocked BLE route");
+    "boss key hides existing and newly created app WPF windows before waiting on a blocked BLE route");
+Equal(true,
+    mainWindowVisibilityCode.Contains("window is PreviewSettingsWindow ||",
+        StringComparison.Ordinal) &&
+    mainWindowVisibilityCode.Contains(
+        "_secondaryMirrors.ContainsWindow(new WindowInteropHelper(window).Owner);",
+        StringComparison.Ordinal) &&
+    bossKeyWindowVisibilityCode.Contains("KeepVisible?.Invoke(window) != true)",
+        StringComparison.Ordinal),
+    "boss key keeps preview settings and preview-owned WPF windows visible alongside independent previews");
 Equal(true, mainWindowCode.Contains("_mediaControlsHideTimer",
                 StringComparison.Ordinal) &&
             mainWindowCode.Contains("SetMediaCastControlsVisible",
@@ -1960,11 +2009,12 @@ Equal(true,
         StringComparison.Ordinal),
     "native previews apply final bounds while hidden and become visible in one step");
 Equal(true,
-    nativePreviewWindowCode.Contains("Volatile.Write(ref BossKeyHidden, hidden ? 1 : 0)",
-        StringComparison.Ordinal) &&
-    nativePreviewWindowCode.Contains("candidate.SetBossKeyHidden(true);",
+    !mainWindowPartialsCode.Contains("SetAllBossKeyHidden(", StringComparison.Ordinal) &&
+    !mainWindowPartialsCode.Contains(".SetBossKeyHidden(", StringComparison.Ordinal) &&
+    mainWindowVisibilityCode.Contains(
+        "_bossKeyHidden && !_secondaryMirrors.ContainsWindow(window);",
         StringComparison.Ordinal),
-    "native previews created while the boss key is active inherit the hidden state");
+    "hiding the app leaves independent native previews visible and accepting input");
 Equal(true,
     nativePreviewWindowCode.Contains("private bool _isTopMost;",
         StringComparison.Ordinal) &&
@@ -2378,9 +2428,9 @@ Equal(true, mainWindowXaml.Contains("OpenShortcutSettingsButton",
      keyboardRoutingSource.Contains("IsGlobalControlShortcut(action)",
          StringComparison.Ordinal) &&
      mainWindowCode.Contains("BluetoothShortcutAction.BossKey", StringComparison.Ordinal) &&
-     File.ReadAllText(Path.Combine(sourceDirectory, "App", "Windows",
-         "NativePreviewWindow.cs")).Contains("SetAllBossKeyHidden",
-             StringComparison.Ordinal) &&
+     mainWindowVisibilityCode.Contains("BossKeyWindowVisibility.HideAll();",
+         StringComparison.Ordinal) &&
+     !mainWindowPartialsCode.Contains("SetAllBossKeyHidden(", StringComparison.Ordinal) &&
      File.ReadAllText(Path.Combine(sourceDirectory, "App", "Windows",
          "BluetoothClientBindingWindow.xaml")).Contains(
              "BluetoothClientBindingUnbind", StringComparison.Ordinal) &&
