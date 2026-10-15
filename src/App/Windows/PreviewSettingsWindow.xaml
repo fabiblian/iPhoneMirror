@@ -5,7 +5,7 @@
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="{DynamicResource PreviewSettingsTitle}"
-        Width="500" Height="680" MinWidth="440" MinHeight="460"
+        Width="600" Height="680" MinWidth="480" MinHeight="460"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
         ShowInTaskbar="False" PreviewKeyDown="OnPreviewKeyDown"
         Foreground="{DynamicResource TextBrush}"
@@ -26,9 +26,10 @@
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
             </Button>
         </Grid>
-        <Border Grid.Row="2" Style="{StaticResource SettingsSection}" Padding="20,16">
+        <!-- Right padding lives inside the scroller so the scrollbar sits at the edge, clear of text. -->
+        <Border Grid.Row="2" Style="{StaticResource SettingsSection}" Padding="20,16,4,16">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel>
+                <StackPanel Margin="0,0,16,0">
                     <CheckBox x:Name="ShowPreviewCheckBox" Content="{DynamicResource ShowPreview}"
                               Checked="OnShowPreviewChanged" Unchecked="OnShowPreviewChanged"
                               AutomationProperties.AutomationId="ShowPreviewCheckBox"/>

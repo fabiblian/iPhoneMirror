@@ -311,7 +311,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private bool IsBluetoothControlActiveFor(string? udid)
     {
-        if (_bossKeyHidden || _secondaryMirrors.IsVisibilityHidden(_secondaryMirrors.GetWindowHandle(udid)) || !_viewModel.BluetoothControlIsInputEnabled ||
+        if (AppHiddenBlocks(_activeControlWindow) || _secondaryMirrors.IsVisibilityHidden(_secondaryMirrors.GetWindowHandle(udid)) || !_viewModel.BluetoothControlIsInputEnabled ||
             string.IsNullOrWhiteSpace(udid) ||
             !_viewModel.IsBluetoothControlTarget(udid)) return false;
         return _activeControlWindow != 0
@@ -368,7 +368,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             CaptureMediaCastNv12Frame, CaptureMediaCastVideoFrame,
             afterSequence => _mediaCastAudioDecoder.GetPacket(afterSequence));
         _secondaryMirrors = new MultiDevicePreviewManager(_viewModel,
-            (udid, window) => !_bossKeyHidden &&
+            (udid, window) => !AppHiddenBlocks(window) &&
                 (_viewModel.IsUsbControlTarget(udid) ||
                  (_activeControlWindow == window && IsBluetoothControlActiveFor(udid))));
         _secondaryMirrors.ReverseControlRequested += OnIndependentReverseControlRequested;
@@ -5680,7 +5680,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         var controlActive = IsBluetoothControlActive;
         var usbControlActive = IsUsbControlActive;
-        var usbControlConnected = !_bossKeyHidden && !_secondaryMirrors.IsVisibilityHidden(_activeControlWindow) &&
+        var usbControlConnected = !AppHiddenBlocks(_activeControlWindow) && !_secondaryMirrors.IsVisibilityHidden(_activeControlWindow) &&
             _viewModel.IsUsbControlTarget(ActiveInputDeviceUdid);
         // Keyboard ownership follows the active device, including independent
         // USB/wireless previews. usbControlActive only describes the main host.

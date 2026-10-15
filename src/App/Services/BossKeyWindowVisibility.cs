@@ -13,6 +13,11 @@ internal static class BossKeyWindowVisibility
     private static bool _hidden;
     private static bool _scanning;
     internal static int HiddenWindowCount => HiddenWindows.Count;
+    // Windows that belong to an independent preview (its settings, overlays)
+    // stay visible: hiding the app leaves the previews on screen.
+    internal static Func<Window, bool>? KeepVisible { get; set; }
+
+    private static bool ShouldHide(Window window) => _hidden && KeepVisible?.Invoke(window) != true;
 
     internal static void Apply(Window window)
     {
@@ -24,7 +29,7 @@ internal static class BossKeyWindowVisibility
             {
                 // Prevent a tracked dialog or activation callback from showing
                 // a window while the app is hidden, including during ShowDialog.
-                if (_hidden && message == 0x46 && lParam != 0) // WM_WINDOWPOSCHANGING
+                if (message == 0x46 && lParam != 0 && ShouldHide(window)) // WM_WINDOWPOSCHANGING
                 {
                     var position = Marshal.PtrToStructure<WindowPosition>(lParam);
                     if ((position.Flags & 0x40) != 0) // SWP_SHOWWINDOW
@@ -34,7 +39,7 @@ internal static class BossKeyWindowVisibility
                         Marshal.StructureToPtr(position, lParam, false);
                     }
                 }
-                if (_hidden && message == 0x47 && IsWindowVisible(hwnd)) // WM_WINDOWPOSCHANGED
+                if (message == 0x47 && IsWindowVisible(hwnd) && ShouldHide(window)) // WM_WINDOWPOSCHANGED
                 {
                     HiddenWindows.Add(window);
                     ShowWindow(hwnd, 0);
@@ -43,7 +48,7 @@ internal static class BossKeyWindowVisibility
             });
             window.Closed += OnWindowClosed;
         }
-        if (_hidden && window.IsVisible)
+        if (window.IsVisible && ShouldHide(window))
         {
             if (TrackedWindows.TryGetValue(window, out var trackedSource))
             {
@@ -62,7 +67,8 @@ internal static class BossKeyWindowVisibility
         InitialWindows.Clear();
         foreach (var window in Application.Current?.Windows.Cast<Window>().ToArray() ?? []) InitialWindows.Add(window);
         var visible = InitialWindows
-            .Where(window => window.IsVisible && IsWindowVisible(new WindowInteropHelper(window).Handle))
+            .Where(window => window.IsVisible && IsWindowVisible(new WindowInteropHelper(window).Handle) &&
+                KeepVisible?.Invoke(window) != true)
             .ToArray();
         _hidden = true;
         foreach (var window in visible)

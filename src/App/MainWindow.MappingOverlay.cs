@@ -14,7 +14,7 @@ public partial class MainWindow
     {
         var result = new List<MappingPreviewSurface>();
         var device = _viewModel.SelectedDevice;
-        if (_mappingClosing || _bossKeyHidden || device is null || !_viewModel.IsCapturing ||
+        if (_mappingClosing || device is null || !_viewModel.IsCapturing ||
             _viewModel.IsAudioOnlyAirPlay || _viewModel.IsVideoProtected ||
             _viewModel.CurrentSessionHandle == 0 || _viewModel.SourceVideoWidth == 0 || _viewModel.SourceVideoHeight == 0)
             return result;
@@ -24,7 +24,8 @@ public partial class MainWindow
                 _viewModel.AppliedBluetoothPortraitMouseDirection, _viewModel.AppliedBluetoothLandscapeMouseDirection,
                 _viewModel.AppliedBluetoothMouseReverseHorizontal, _viewModel.AppliedBluetoothMouseReverseVertical,
                 inset);
-        if (MainPreviewHost.IsVisible && MainPreviewHost.WindowHandle != 0 && _windowSource is not null)
+        // A hidden app keeps the overlays of independent previews only.
+        if (!_bossKeyHidden && MainPreviewHost.IsVisible && MainPreviewHost.WindowHandle != 0 && _windowSource is not null)
             result.Add(Surface(MainPreviewHost.WindowHandle, _windowSource.Handle,
                 _viewModel.SourceVideoWidth, _viewModel.SourceVideoHeight, 0));
         var independent = _secondaryMirrors.GetWindowHandle(device.Udid);

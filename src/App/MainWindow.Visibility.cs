@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Interop;
 using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Services;
 using IPhoneMirror.App.Windows;
@@ -16,6 +17,15 @@ public partial class MainWindow
     internal bool IsAppShown => !_bossKeyHidden;
     private static bool IsVisibilityShortcut(BluetoothShortcutAction action) =>
         action is BluetoothShortcutAction.BossKey or BluetoothShortcutAction.ShowPreview;
+
+    // Hiding the app hides only its own windows; independent previews stay on
+    // screen and keep their input. Blocks input aimed at anything else.
+    private bool AppHiddenBlocks(nint window) =>
+        _bossKeyHidden && !_secondaryMirrors.ContainsWindow(window);
+
+    private bool KeepVisibleWhileAppHidden(Window window) =>
+        window is PreviewSettingsWindow ||
+        _secondaryMirrors.ContainsWindow(new WindowInteropHelper(window).Owner);
 
     private PreviewVisibilityTarget? CurrentVisibilityTarget(PreviewVisibilityTarget? target) =>
         target is not null && _secondaryMirrors.IsCurrent(target) ? target : null;
@@ -60,7 +70,7 @@ public partial class MainWindow
             {
                 _hiddenVisibilityPreview = null;
                 target!.Window.SetPreviewHidden(false);
-                if (!_bossKeyHidden) target.Window.Activate();
+                target.Window.Activate();
             }
         }
         finally
@@ -87,13 +97,13 @@ public partial class MainWindow
         if (_shutdownStarted || Interlocked.Exchange(ref _bossKeyChanging, 1) != 0) return;
         var restoring = _bossKeyHidden;
         string[] releaseTargets = [];
+        var releaseBluetooth = false;
         try
         {
             if (restoring)
             {
                 _bossKeyHidden = false;
                 BossKeyWindowVisibility.RestoreAll();
-                NativePreviewWindow.SetAllBossKeyHidden(false);
                 _visibilityRestoreTrayIcon?.Dispose();
                 _visibilityRestoreTrayIcon = null;
                 ApplyBluetoothControlInputState(activateIndependentWindow: false);
@@ -106,9 +116,12 @@ public partial class MainWindow
                 _bossKeyHidden = true;
                 ResetKeyboardOwnership();
                 ApplyBluetoothControlInputState(activateIndependentWindow: false);
-                releaseTargets = _usbTouchStates.Keys.Concat(_previewTouches.Keys).Distinct().ToArray();
+                // Only the main window's preview disappears; visible previews keep their touches.
+                releaseTargets = _usbTouchStates.Keys.Concat(_previewTouches.Keys).Distinct()
+                    .Where(udid => AppHiddenBlocks(_secondaryMirrors.GetWindowHandle(udid))).ToArray();
+                releaseBluetooth = _viewModel.IsBluetoothControlEnabled && AppHiddenBlocks(_activeControlWindow);
+                BossKeyWindowVisibility.KeepVisible ??= KeepVisibleWhileAppHidden;
                 BossKeyWindowVisibility.HideAll();
-                NativePreviewWindow.SetAllBossKeyHidden(true);
             }
             _viewModel.AddDiagnosticLog(AppLog.Event("boss_key_toggled",
                 ("hidden", _bossKeyHidden), ("wpf_windows", BossKeyWindowVisibility.HiddenWindowCount)));
@@ -124,7 +137,7 @@ public partial class MainWindow
             WindowVisibilityChanged?.Invoke();
         }
         if (!restoring && _bossKeyHidden)
-            await ReleaseVisibilityInputAsync(releaseTargets, _viewModel.IsBluetoothControlEnabled);
+            await ReleaseVisibilityInputAsync(releaseTargets, releaseBluetooth);
     }
 
     private async Task ReleaseVisibilityInputAsync(string[] targets, bool bluetooth)

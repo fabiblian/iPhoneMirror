@@ -61,7 +61,8 @@ public partial class MainWindow
             IsDeviceClipboardShortcutAvailable, () => QueueDeviceClipboardShortcut(copy: false)));
         void Local(int vk, uint modifiers, string name, Action execute, Func<bool>? condition = null, bool anyPreview = false)
         {
-            bool Available() => !_mappingClosing && _mappingWindow?.IsEditing != true && !_bossKeyHidden && _shortcutSettingsWindow is null &&
+            bool Available() => !_mappingClosing && _mappingWindow?.IsEditing != true &&
+                !AppHiddenBlocks(_keyboardForegroundWindow()) && _shortcutSettingsWindow is null &&
                 !_mappingCapture.Waiting && (IsLocalShortcutForeground ||
                     (anyPreview && _secondaryMirrors.ContainsWindow(_keyboardForegroundWindow()))) && condition?.Invoke() != false;
             bindings.Add(new(new(modifiers, (uint)vk), name, Available,
@@ -77,7 +78,7 @@ public partial class MainWindow
         Local(0x4C, KeyboardShortcut.Control, "Diagnostics", () =>
         {
             if (Application.Current is App app) app.ShowAboutWindow(this, _viewModel, showDiagnostics: true);
-        });
+        }, () => !_bossKeyHidden);
         Local(0x4D, KeyboardShortcut.Control, "Audio", () => _viewModel.PlayAudio = !_viewModel.PlayAudio);
         Local(0x53, KeyboardShortcut.Control, "Screenshot", () => _ = CaptureScreenshotAsync());
         _keyboardRouter.Shortcuts.Configure(bindings);
@@ -85,8 +86,8 @@ public partial class MainWindow
 
     private bool CanStopMirroringFromShortcut()
     {
-        if (_bossKeyHidden) return false;
         var foreground = _keyboardForegroundWindow();
+        if (AppHiddenBlocks(foreground)) return false;
         if (_secondaryMirrors.GetSessionForWindow(foreground) is { } preview)
             return preview.Handle != 0;
         return IsLocalShortcutForeground &&

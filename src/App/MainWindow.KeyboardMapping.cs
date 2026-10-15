@@ -214,7 +214,7 @@ public partial class MainWindow
 
     private bool MappingFocusAllows()
     {
-        if (_visibilityInputReleases != 0 || _bossKeyHidden || _secondaryMirrors.IsVisibilityHidden(_keyboardForegroundWindow()) || _mappingWindow?.IsEditing == true || _mappingCapture.Waiting || _mappingPick is not null) return false;
+        if (_visibilityInputReleases != 0 || AppHiddenBlocks(_keyboardForegroundWindow()) || _secondaryMirrors.IsVisibilityHidden(_keyboardForegroundWindow()) || _mappingWindow?.IsEditing == true || _mappingCapture.Waiting || _mappingPick is not null) return false;
         var foreground = _keyboardForegroundWindow();
         if (_viewModel.SelectedDevice is { } device && foreground != 0 &&
             foreground == _secondaryMirrors.GetWindowHandle(device.Udid)) return true;
