@@ -1056,7 +1056,7 @@ internal static partial class Program
             BindingFlags.Static | BindingFlags.NonPublic) ??
             throw new MissingMethodException(overlayType.FullName, "ShowFor");
         var ownerHandle = new System.Windows.Interop.WindowInteropHelper(owner).Handle;
-        var overlay = showFor.Invoke(null, [ownerHandle, "No audio samples received"])
+        var overlay = showFor.Invoke(null, [ownerHandle, "No audio samples received", null])
             as Window ?? throw new InvalidOperationException(
                 "Protected-content overlay was not created.");
         try

@@ -1064,6 +1064,14 @@
                                 <TextBlock Text="{DynamicResource SeparateWindow}" Margin="9,0,0,0"/>
                             </StackPanel>
                         </Button>
+                        <Button Click="OnPreviewSettingsClick" Style="{StaticResource ToolButton}" Margin="0,0,0,8"
+                                ToolTip="{DynamicResource PreviewSettingsDescription}"
+                                AutomationProperties.AutomationId="PreviewSettingsButton">
+                            <StackPanel Orientation="Horizontal">
+                                <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Settings20" FontSize="15"/>
+                                <TextBlock Text="{DynamicResource PreviewSettingsTitle}" Margin="9,0,0,0"/>
+                            </StackPanel>
+                        </Button>
                         <Button Click="OnScreenshotClick" IsEnabled="{Binding CanUseVisualPreviewTools}"
                                 Style="{StaticResource ToolButton}" Margin="0,0,0,8">
                             <StackPanel Orientation="Horizontal">

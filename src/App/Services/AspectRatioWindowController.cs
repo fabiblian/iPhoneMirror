@@ -25,6 +25,10 @@ internal sealed class AspectRatioWindowController : IDisposable
     private readonly Func<bool> _canResize;
     private readonly double _minWidthDips;
     private readonly double _minHeightDips;
+    // Total pixels between the client edges and the video, horizontally and
+    // vertically (preview frame). The video, not the client, keeps the source
+    // aspect ratio.
+    private readonly Func<(int Horizontal, int Vertical)>? _contentInset;
     private HwndSource? _source;
     private nint _handle;
     private double _aspectRatio;
@@ -50,10 +54,12 @@ internal sealed class AspectRatioWindowController : IDisposable
     /// The controller observes the supplied HwndSource but never owns it.
     /// </summary>
     internal AspectRatioWindowController(HwndSource source, uint sourceWidth, uint sourceHeight,
-        Func<bool> canResize, double minWidthDips = 320, double minHeightDips = 240)
+        Func<bool> canResize, double minWidthDips = 320, double minHeightDips = 240,
+        Func<(int Horizontal, int Vertical)>? contentInset = null)
     {
         _dispatcher = source.Dispatcher;
         _canResize = canResize;
+        _contentInset = contentInset;
         _minWidthDips = minWidthDips;
         _minHeightDips = minHeightDips;
         _aspectRatio = ValidAspect(sourceWidth, sourceHeight) ?? (201.0 / 437.0);
@@ -307,6 +313,9 @@ internal sealed class AspectRatioWindowController : IDisposable
             windowRectangle.Right - windowRectangle.Left - clientRectangle.Right + clientRectangle.Left);
         frameHeight = Math.Max(0,
             windowRectangle.Bottom - windowRectangle.Top - clientRectangle.Bottom + clientRectangle.Top);
+        var inset = _contentInset?.Invoke() ?? default;
+        frameWidth += Math.Max(0, inset.Horizontal);
+        frameHeight += Math.Max(0, inset.Vertical);
     }
 
     private bool TryGetWorkArea(out WindowRect workArea)

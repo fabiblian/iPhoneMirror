@@ -2,8 +2,10 @@ namespace IPhoneMirror.App.Services;
 
 internal sealed record MappingPreviewSurface(nint Window, nint Owner, string Device, ulong Session,
     uint Width, uint Height, int Rotation, BluetoothMouseDirection Portrait,
-    BluetoothMouseDirection Landscape, bool ReverseX, bool ReverseY)
+    BluetoothMouseDirection Landscape, bool ReverseX, bool ReverseY,
+    IPhoneMirror.App.Models.PreviewFrameInsets Inset = default)
 {
+    // Inset: preview-frame pixels between the Window client edges and the video.
     internal (double X, double Y) ToDevice(double x, double y) =>
         BluetoothMouseOrientationMapper.MapNormalized(x, y, Width, Height, Rotation,
             Portrait, Landscape, ReverseX, ReverseY);

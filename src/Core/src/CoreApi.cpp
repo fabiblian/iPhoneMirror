@@ -2101,4 +2101,49 @@ std::int32_t IM_CALL im_session_set_window_opacity(iPhoneMirror::SessionHandle h
     return static_cast<std::int32_t>(iPhoneMirror::Result::Ok);
 }
 
+std::int32_t IM_CALL im_session_set_window_frame(iPhoneMirror::SessionHandle handle,
+    void* hwnd, const iPhoneMirror::WindowFrame* frame) {
+    if (!frame || frame->struct_size < sizeof(iPhoneMirror::WindowFrame))
+        return fail(iPhoneMirror::Result::InvalidArgument, L"Invalid window frame structure");
+    const auto valid_inset = [](std::int32_t value) { return value >= 0 && value <= 512; };
+    if (!valid_inset(frame->left) || !valid_inset(frame->top) ||
+        !valid_inset(frame->right) || !valid_inset(frame->bottom))
+        return fail(iPhoneMirror::Result::InvalidArgument, L"Invalid window frame thickness");
+    if (!std::isfinite(frame->roundness) || frame->roundness < 0.0F || frame->roundness > 1.0F)
+        return fail(iPhoneMirror::Result::InvalidArgument, L"Invalid window frame roundness");
+    const auto align = static_cast<std::int32_t>(frame->button_align);
+    const auto valid_length = [](std::int32_t value) { return value >= 0 && value <= 4096; };
+    if (align < 0 || align > 3 || !valid_length(frame->button_offset) ||
+        !valid_length(frame->button_width) || !valid_length(frame->button_height) ||
+        !valid_length(frame->button_center_y))
+        return fail(iPhoneMirror::Result::InvalidArgument, L"Invalid window frame button");
+    iPhoneMirror::renderer::FrameOptions options;
+    options.left = static_cast<std::uint32_t>(frame->left);
+    options.top = static_cast<std::uint32_t>(frame->top);
+    options.right = static_cast<std::uint32_t>(frame->right);
+    options.bottom = static_cast<std::uint32_t>(frame->bottom);
+    options.argb = frame->argb;
+    options.roundness = frame->roundness;
+    options.auto_color = (frame->flags &
+        static_cast<std::uint32_t>(iPhoneMirror::WindowFrameFlags::AutoColor)) != 0;
+    options.button_hover = (frame->flags &
+        static_cast<std::uint32_t>(iPhoneMirror::WindowFrameFlags::ButtonHover)) != 0;
+    options.button_align = align;
+    options.button_offset = frame->button_offset;
+    options.button_width = frame->button_width;
+    options.button_height = frame->button_height;
+    options.button_center_y = frame->button_center_y;
+    auto context = find_multi_session(handle);
+    if (!context) return fail(iPhoneMirror::Result::InvalidArgument, L"Unknown session handle");
+    std::scoped_lock lock(context->renderers_mutex);
+    const auto window = static_cast<HWND>(hwnd);
+    const auto found = context->renderers.find(window);
+    if (found == context->renderers.end() ||
+        (GetWindowLongPtrW(window, GWL_EXSTYLE) & WS_EX_NOREDIRECTIONBITMAP) == 0)
+        return fail(iPhoneMirror::Result::InvalidArgument, L"Unknown composition preview window");
+    found->second->set_frame(options);
+    last_error.clear();
+    return static_cast<std::int32_t>(iPhoneMirror::Result::Ok);
+}
+
 const wchar_t* IM_CALL im_last_error() { return last_error.c_str(); }

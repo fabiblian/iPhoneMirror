@@ -14,8 +14,10 @@ internal static class NativeTouchInput
 
     internal static void Dispatch(nint hwnd, nint wParam, nint handle, bool enabled,
         int width, int height, uint sourceWidth, uint sourceHeight, int rotation,
-        Action<PreviewPointerEventArgs> send)
+        Action<PreviewPointerEventArgs> send, int contentLeft = 0, int contentTop = 0)
     {
+        // width/height describe the video area; contentLeft/contentTop is the
+        // frame outline between the client origin and that area.
         try
         {
             var count = (int)(wParam.ToInt64() & 0xffff);
@@ -29,7 +31,8 @@ internal static class NativeTouchInput
                 var kind = (input.Flags & 4) != 0 ? PreviewPointerKind.TouchUp :
                     (input.Flags & 2) != 0 ? PreviewPointerKind.TouchDown : PreviewPointerKind.TouchMove;
                 if ((input.Flags & 7) == 0) continue;
-                send(new PreviewPointerEventArgs(kind, point.X, point.Y, 0, 0,
+                send(new PreviewPointerEventArgs(kind, point.X - contentLeft,
+                    point.Y - contentTop, 0, 0,
                     width, height, sourceWidth, sourceHeight, rotation, input.Id, hwnd));
             }
         }

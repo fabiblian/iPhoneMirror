@@ -14,6 +14,12 @@ internal static class NativeCursor
         if (arrow != 0) _ = SetCursor(arrow);
     }
 
+    internal static void SetHand()
+    {
+        var hand = LoadCursorW(0, 32649); // IDC_HAND
+        if (hand != 0) _ = SetCursor(hand);
+    }
+
     [DllImport("user32.dll", ExactSpelling = true)]
     private static extern nint LoadCursorW(nint instance, nint cursorName);
 

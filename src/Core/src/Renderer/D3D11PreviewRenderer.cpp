@@ -367,6 +367,50 @@ float4 copyMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGE
 float4 maskMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
     return premultiplyForCorner(float3(0.0, 0.0, 0.0), position.xy);
 }
+
+// Display-referred sRGB colour of one NV12 source position.
+float3 ambientSample(float2 uv) {
+    float y = max(0.0, yPlane.SampleLevel(linearSampler, uv, 0) - yOffset) * yScale;
+    float2 chroma = (uvPlane.SampleLevel(linearSampler, uv, 0) -
+        float2(chromaOffset, chromaOffset)) * chromaScale;
+    float3 rgb;
+    rgb.r = y + redCr * chroma.y;
+    rgb.g = y + greenCb * chroma.x + greenCr * chroma.y;
+    rgb.b = y + blueCb * chroma.x;
+    float3 color = applyColorOutput(rgb);
+    if (hdrSurface > 0.5) color = encodeSrgb(saturate(color));
+    return applyImageAdjustments(saturate(color));
+}
+
+// Average colour along all four edges of the source, just inside them. The
+// set of edges does not depend on the preview rotation.
+float4 ambientMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
+    float3 sum = float3(0.0, 0.0, 0.0);
+    [unroll] for (int i = 0; i < 8; ++i) {
+        float t = (i + 0.5) / 8.0;
+        sum += ambientSample(float2(t, 0.02));
+        sum += ambientSample(float2(t, 0.98));
+        sum += ambientSample(float2(0.02, t));
+        sum += ambientSample(float2(0.98, t));
+    }
+    return float4(sum / 32.0, 1.0);
+}
+
+// Outline: the running ambient colour, premultiplied by the frame opacity.
+float4 ambientOutMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
+    float3 rgb = image.SampleLevel(linearSampler, float2(0.5, 0.5), 0).rgb;
+    float alpha = shapePadding.x;
+    return float4(rgb * alpha, alpha);
+}
+
+// Home pill: black on light outlines, white on dark ones.
+float4 ambientPillMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
+    float3 rgb = image.SampleLevel(linearSampler, float2(0.5, 0.5), 0).rgb;
+    float luminance = dot(rgb, float3(0.2126, 0.7152, 0.0722));
+    float3 pill = luminance > 0.6 ? float3(0.0, 0.0, 0.0) : float3(1.0, 1.0, 1.0);
+    float alpha = shapePadding.x;
+    return float4(pill * alpha, alpha);
+}
 )";
 
 } // namespace
@@ -425,8 +469,42 @@ struct D3D11PreviewRenderer::Impl {
     ComPtr<IDCompositionTarget> composition_target;
     ComPtr<IDCompositionVisual> composition_visual;
     ComPtr<IDCompositionEffectGroup> composition_effect;
+    // Composition tree: root (opacity effect) -> [frame clip -> frame fill,
+    // pill clip -> pill fill, video swap chain]. Each 1x1 fill surface is
+    // scaled to its area while its parent applies a rounded clip in pixels.
+    ComPtr<IDCompositionVisual> composition_root;
+    ComPtr<IDCompositionVisual> frame_clip_visual;
+    ComPtr<IDCompositionVisual> frame_fill_visual;
+    ComPtr<IDCompositionSurface> frame_surface;
+    ComPtr<IDCompositionRectangleClip> frame_clip;
+    ComPtr<IDCompositionVisual> pill_clip_visual;
+    ComPtr<IDCompositionVisual> pill_fill_visual;
+    ComPtr<IDCompositionSurface> pill_surface;
+    ComPtr<IDCompositionRectangleClip> pill_clip;
     std::atomic<float> opacity{1.0F};
     float applied_opacity{1.0F};
+    // set_frame publishes under frame_mutex; the render thread copies the
+    // newest generation into frame_options before using it.
+    std::mutex frame_mutex;
+    FrameOptions requested_frame;
+    std::uint64_t requested_frame_generation{1};
+    std::uint64_t applied_frame_generation{};
+    FrameOptions frame_options;
+    bool frame_colors_valid{};
+    LONG applied_frame_client_width{-1};
+    LONG applied_frame_client_height{-1};
+    float applied_frame_radius{-1.0F};
+    // Automatic outline colour: a GPU-only running average of the video's
+    // edge colour in a 1x1 texture, written into the frame/pill surfaces.
+    ComPtr<ID3D11PixelShader> ambient_pixel_shader;
+    ComPtr<ID3D11PixelShader> ambient_out_pixel_shader;
+    ComPtr<ID3D11PixelShader> ambient_pill_pixel_shader;
+    ComPtr<ID3D11Texture2D> ambient_texture;
+    ComPtr<ID3D11RenderTargetView> ambient_target;
+    ComPtr<ID3D11ShaderResourceView> ambient_view;
+    ComPtr<ID3D11BlendState> ambient_blend;
+    bool ambient_valid{};
+    std::chrono::steady_clock::time_point next_ambient_sample{};
     ComPtr<ID3D11RenderTargetView> target;
     ComPtr<ID3D11VertexShader> vertex_shader;
     ComPtr<ID3D11PixelShader> pixel_shader;
@@ -518,12 +596,23 @@ struct D3D11PreviewRenderer::Impl {
     void initialize() {
         RECT rect{};
         GetClientRect(window, &rect);
-        target_width = std::max<LONG>(1, rect.right - rect.left);
-        target_height = std::max<LONG>(1, rect.bottom - rect.top);
         const auto window_style = GetWindowLongPtrW(window, GWL_STYLE);
         const auto extended_style = GetWindowLongPtrW(window, GWL_EXSTYLE);
         composition_mode = (window_style & WS_CHILD) == 0 &&
             (extended_style & WS_EX_NOREDIRECTIONBITMAP) != 0;
+        // Force the outline to be re-applied to the (re)created tree.
+        {
+            std::scoped_lock lock(frame_mutex);
+            applied_frame_generation = 0;
+        }
+        (void)sync_frame_options();
+        const auto insets = frame_insets();
+        target_width = std::max<LONG>(1, rect.right - rect.left - insets.left - insets.right);
+        target_height = std::max<LONG>(1, rect.bottom - rect.top - insets.top - insets.bottom);
+        frame_colors_valid = false;
+        applied_frame_client_width = applied_frame_client_height = -1;
+        ambient_valid = false;
+        next_ambient_sample = {};
 
         constexpr D3D_FEATURE_LEVEL levels[] = {
             D3D_FEATURE_LEVEL_11_1,
@@ -621,9 +710,53 @@ struct D3D11PreviewRenderer::Impl {
             applied_opacity = opacity.load(std::memory_order_relaxed);
             check(composition_effect->SetOpacity(applied_opacity),
                 "IDCompositionEffectGroup SetOpacity");
-            check(composition_visual->SetEffect(composition_effect.Get()),
+            check(composition_device->CreateVisual(&composition_root),
+                "IDCompositionDevice CreateVisual root");
+            check(composition_root->SetEffect(composition_effect.Get()),
                 "IDCompositionVisual SetEffect");
-            check(composition_target->SetRoot(composition_visual.Get()),
+            check(composition_device->CreateVisual(&frame_clip_visual),
+                "IDCompositionDevice CreateVisual frame clip");
+            check(composition_device->CreateVisual(&frame_fill_visual),
+                "IDCompositionDevice CreateVisual frame fill");
+            check(composition_device->CreateSurface(1, 1, DXGI_FORMAT_B8G8R8A8_UNORM,
+                DXGI_ALPHA_MODE_PREMULTIPLIED, &frame_surface),
+                "IDCompositionDevice CreateSurface frame");
+            check(frame_fill_visual->SetContent(frame_surface.Get()),
+                "IDCompositionVisual SetContent frame");
+            check(frame_fill_visual->SetBitmapInterpolationMode(
+                DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR),
+                "IDCompositionVisual SetBitmapInterpolationMode frame");
+            check(composition_device->CreateRectangleClip(&frame_clip),
+                "IDCompositionDevice CreateRectangleClip frame");
+            check(frame_clip_visual->SetClip(frame_clip.Get()),
+                "IDCompositionVisual SetClip frame");
+            check(frame_clip_visual->AddVisual(frame_fill_visual.Get(), FALSE, nullptr),
+                "IDCompositionVisual AddVisual frame fill");
+            check(composition_device->CreateVisual(&pill_clip_visual),
+                "IDCompositionDevice CreateVisual pill clip");
+            check(composition_device->CreateVisual(&pill_fill_visual),
+                "IDCompositionDevice CreateVisual pill fill");
+            check(composition_device->CreateSurface(1, 1, DXGI_FORMAT_B8G8R8A8_UNORM,
+                DXGI_ALPHA_MODE_PREMULTIPLIED, &pill_surface),
+                "IDCompositionDevice CreateSurface pill");
+            check(pill_fill_visual->SetContent(pill_surface.Get()),
+                "IDCompositionVisual SetContent pill");
+            check(pill_fill_visual->SetBitmapInterpolationMode(
+                DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR),
+                "IDCompositionVisual SetBitmapInterpolationMode pill");
+            check(composition_device->CreateRectangleClip(&pill_clip),
+                "IDCompositionDevice CreateRectangleClip pill");
+            check(pill_clip_visual->SetClip(pill_clip.Get()),
+                "IDCompositionVisual SetClip pill");
+            check(pill_clip_visual->AddVisual(pill_fill_visual.Get(), FALSE, nullptr),
+                "IDCompositionVisual AddVisual pill fill");
+            check(composition_root->AddVisual(frame_clip_visual.Get(), FALSE, nullptr),
+                "IDCompositionVisual AddVisual frame");
+            check(composition_root->AddVisual(pill_clip_visual.Get(), TRUE,
+                frame_clip_visual.Get()), "IDCompositionVisual AddVisual pill");
+            check(composition_root->AddVisual(composition_visual.Get(), TRUE,
+                pill_clip_visual.Get()), "IDCompositionVisual AddVisual video");
+            check(composition_target->SetRoot(composition_root.Get()),
                 "IDCompositionTarget SetRoot");
             check(composition_device->Commit(), "IDCompositionDevice Commit");
         } else {
@@ -644,6 +777,17 @@ struct D3D11PreviewRenderer::Impl {
         check(device->CreatePixelShader(mask_pixel_blob->GetBufferPointer(),
             mask_pixel_blob->GetBufferSize(), nullptr, &mask_pixel_shader),
             "Create mask PixelShader");
+        if (composition_mode) {
+            const auto create_pixel_shader = [&](const char* entry,
+                ComPtr<ID3D11PixelShader>& shader) {
+                const auto blob = compile_shader(PreviewPixelShaders, entry, "ps_5_0");
+                check(device->CreatePixelShader(blob->GetBufferPointer(),
+                    blob->GetBufferSize(), nullptr, &shader), "Create ambient PixelShader");
+            };
+            create_pixel_shader("ambientMain", ambient_pixel_shader);
+            create_pixel_shader("ambientOutMain", ambient_out_pixel_shader);
+            create_pixel_shader("ambientPillMain", ambient_pill_pixel_shader);
+        }
 
         D3D11_BUFFER_DESC constant_description{};
         constant_description.ByteWidth = sizeof(ShapeConstantData);
@@ -690,6 +834,8 @@ struct D3D11PreviewRenderer::Impl {
             if (context) context->Flush();
         }
         if (composition_visual) (void)composition_visual->SetContent(nullptr);
+        if (frame_fill_visual) (void)frame_fill_visual->SetContent(nullptr);
+        if (pill_fill_visual) (void)pill_fill_visual->SetContent(nullptr);
         if (composition_device) (void)composition_device->Commit();
 
         release_shared_gpu_frame();
@@ -708,6 +854,23 @@ struct D3D11PreviewRenderer::Impl {
         pixel_shader.Reset();
         vertex_shader.Reset();
         composition_visual.Reset();
+        frame_clip.Reset();
+        frame_surface.Reset();
+        frame_fill_visual.Reset();
+        frame_clip_visual.Reset();
+        pill_clip.Reset();
+        pill_surface.Reset();
+        pill_fill_visual.Reset();
+        pill_clip_visual.Reset();
+        ambient_blend.Reset();
+        ambient_view.Reset();
+        ambient_target.Reset();
+        ambient_texture.Reset();
+        ambient_pill_pixel_shader.Reset();
+        ambient_out_pixel_shader.Reset();
+        ambient_pixel_shader.Reset();
+        ambient_valid = false;
+        composition_root.Reset();
         composition_effect.Reset();
         composition_target.Reset();
         composition_device.Reset();
@@ -937,11 +1100,13 @@ struct D3D11PreviewRenderer::Impl {
         return result.applied || result.needs_redraw;
     }
 
+    // shape_alpha is exposed to shaders as shapePadding.x (ambient outputs).
     void update_shape_constants(UINT width, UINT height, bool enabled, int rotation = 0,
-        const media::DecodedFrame* frame = nullptr) {
+        const media::DecodedFrame* frame = nullptr, float shape_alpha = 0.0F) {
         ShapeConstantData values{};
         values.output_width = static_cast<float>(width);
         values.output_height = static_cast<float>(height);
+        values.padding[0] = shape_alpha;
         const auto packed_profile = corner_profile.load(std::memory_order_relaxed);
         const auto normalized_radius = std::bit_cast<float>(
             static_cast<std::uint32_t>(packed_profile >> 32U));
@@ -999,6 +1164,289 @@ struct D3D11PreviewRenderer::Impl {
         context->PSSetConstantBuffers(0, 1, shape_constants.GetAddressOf());
     }
 
+    // Copies the newest set_frame request; true when it changed.
+    bool sync_frame_options() {
+        std::scoped_lock lock(frame_mutex);
+        if (requested_frame_generation == applied_frame_generation) return false;
+        applied_frame_generation = requested_frame_generation;
+        if (requested_frame == frame_options) return false;
+        frame_options = requested_frame;
+        return true;
+    }
+
+    struct Insets {
+        LONG left{};
+        LONG top{};
+        LONG right{};
+        LONG bottom{};
+    };
+
+    Insets frame_insets() const noexcept {
+        if (!composition_mode) return {};
+        return {static_cast<LONG>(frame_options.left), static_cast<LONG>(frame_options.top),
+            static_cast<LONG>(frame_options.right), static_cast<LONG>(frame_options.bottom)};
+    }
+
+    bool frame_visible() const noexcept {
+        const auto insets = frame_insets();
+        return insets.left > 0 || insets.top > 0 || insets.right > 0 || insets.bottom > 0;
+    }
+
+    bool pill_visible() const noexcept {
+        return frame_visible() && frame_options.button_align != 0 &&
+            frame_options.button_width > 0 && frame_options.button_height > 0;
+    }
+
+    float pill_alpha() const noexcept { return frame_options.button_hover ? 1.0F : 0.72F; }
+
+    // Clears one 1x1 premultiplied DComp surface. The surface may live inside
+    // a shared atlas, so only its own texel at the returned offset is cleared.
+    void fill_surface(IDCompositionSurface* surface, const float (&premultiplied)[4]) {
+        POINT offset{};
+        ComPtr<ID3D11Texture2D> texture;
+        check(surface->BeginDraw(nullptr, IID_PPV_ARGS(&texture), &offset),
+            "IDCompositionSurface BeginDraw");
+        ComPtr<ID3D11RenderTargetView> view;
+        auto result = device->CreateRenderTargetView(texture.Get(), nullptr, &view);
+        ComPtr<ID3D11DeviceContext1> context1;
+        if (SUCCEEDED(result)) result = context.As(&context1);
+        if (SUCCEEDED(result)) {
+            const D3D11_RECT texel{offset.x, offset.y, offset.x + 1, offset.y + 1};
+            context1->ClearView(view.Get(), premultiplied, &texel, 1);
+        }
+        const auto end_result = surface->EndDraw();
+        check(result, "clear composition surface");
+        check(end_result, "IDCompositionSurface EndDraw");
+    }
+
+    // Fixed colours: the outline from argb and a contrasting pill.
+    void fill_fixed_frame_colors() {
+        const auto argb = frame_options.argb;
+        const auto channel = [argb](unsigned shift) {
+            return static_cast<float>((argb >> shift) & 0xFFU) / 255.0F;
+        };
+        const auto red = channel(16);
+        const auto green = channel(8);
+        const auto blue = channel(0);
+        const auto alpha = channel(24);
+        const float frame_color[] = {red * alpha, green * alpha, blue * alpha, alpha};
+        fill_surface(frame_surface.Get(), frame_color);
+        const auto luminance = 0.2126F * red + 0.7152F * green + 0.0722F * blue;
+        const auto pill = luminance > 0.6F ? 0.0F : 1.0F;
+        const auto pill_opacity = pill_alpha();
+        const float pill_color[] = {
+            pill * pill_opacity, pill * pill_opacity, pill * pill_opacity, pill_opacity};
+        fill_surface(pill_surface.Get(), pill_color);
+    }
+
+    void ensure_ambient_resources() {
+        if (ambient_texture) return;
+        D3D11_TEXTURE2D_DESC description{};
+        description.Width = description.Height = 1;
+        description.MipLevels = description.ArraySize = 1;
+        description.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        description.SampleDesc.Count = 1;
+        description.Usage = D3D11_USAGE_DEFAULT;
+        description.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+        check(device->CreateTexture2D(&description, nullptr, &ambient_texture),
+            "Create ambient texture");
+        check(device->CreateRenderTargetView(ambient_texture.Get(), nullptr, &ambient_target),
+            "Create ambient target");
+        check(device->CreateShaderResourceView(ambient_texture.Get(), nullptr, &ambient_view),
+            "Create ambient view");
+        // new = edge * factor + previous * (1 - factor): a smooth transition.
+        D3D11_BLEND_DESC blend{};
+        blend.RenderTarget[0].BlendEnable = TRUE;
+        blend.RenderTarget[0].SrcBlend = D3D11_BLEND_BLEND_FACTOR;
+        blend.RenderTarget[0].DestBlend = D3D11_BLEND_INV_BLEND_FACTOR;
+        blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+        blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+        blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+        blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        blend.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        check(device->CreateBlendState(&blend, &ambient_blend), "Create ambient blend state");
+    }
+
+    // Renders a 1x1 premultiplied colour derived from the ambient texture
+    // into a DComp surface with the given pixel shader.
+    void draw_from_ambient(IDCompositionSurface* surface, ID3D11PixelShader* shader,
+        float alpha) {
+        POINT offset{};
+        ComPtr<ID3D11Texture2D> texture;
+        check(surface->BeginDraw(nullptr, IID_PPV_ARGS(&texture), &offset),
+            "IDCompositionSurface BeginDraw ambient");
+        ComPtr<ID3D11RenderTargetView> view;
+        auto result = device->CreateRenderTargetView(texture.Get(), nullptr, &view);
+        if (SUCCEEDED(result)) {
+            D3D11_VIEWPORT viewport{};
+            viewport.TopLeftX = static_cast<float>(offset.x);
+            viewport.TopLeftY = static_cast<float>(offset.y);
+            viewport.Width = viewport.Height = 1.0F;
+            viewport.MaxDepth = 1.0F;
+            context->OMSetRenderTargets(1, view.GetAddressOf(), nullptr);
+            context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFFU);
+            context->RSSetViewports(1, &viewport);
+            context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+            context->PSSetShader(shader, nullptr, 0);
+            update_shape_constants(1, 1, false, 0, nullptr, alpha);
+            ID3D11ShaderResourceView* views[] = {ambient_view.Get()};
+            context->PSSetShaderResources(2, 1, views);
+            context->PSSetSamplers(0, 1, sampler.GetAddressOf());
+            context->Draw(3, 0);
+            ID3D11ShaderResourceView* empty[] = {nullptr};
+            context->PSSetShaderResources(2, 1, empty);
+            context->OMSetRenderTargets(0, nullptr, nullptr);
+        }
+        const auto end_result = surface->EndDraw();
+        check(result, "draw ambient surface");
+        check(end_result, "IDCompositionSurface EndDraw ambient");
+    }
+
+    // Writes the current automatic colour into the outline and pill surfaces.
+    void write_ambient_colors() {
+        const auto alpha = static_cast<float>((frame_options.argb >> 24U) & 0xFFU) / 255.0F;
+        draw_from_ambient(frame_surface.Get(), ambient_out_pixel_shader.Get(), alpha);
+        draw_from_ambient(pill_surface.Get(), ambient_pill_pixel_shader.Get(), pill_alpha());
+    }
+
+    // Samples the video's edge colour about ten times per second and blends it
+    // into the running average; the first sample is taken as is.
+    void update_ambient_color(const media::DecodedFrame& frame,
+        std::chrono::steady_clock::time_point now) {
+        if (!composition_mode || !frame_options.auto_color || !frame_visible() ||
+            !ambient_pixel_shader || now < next_ambient_sample)
+            return;
+        next_ambient_sample = now + std::chrono::milliseconds(100);
+        ensure_ambient_resources();
+        D3D11_VIEWPORT viewport{};
+        viewport.Width = viewport.Height = 1.0F;
+        viewport.MaxDepth = 1.0F;
+        context->OMSetRenderTargets(1, ambient_target.GetAddressOf(), nullptr);
+        const auto factor = ambient_valid ? 0.25F : 1.0F;
+        const float blend_factor[] = {factor, factor, factor, factor};
+        context->OMSetBlendState(ambient_blend.Get(), blend_factor, 0xFFFFFFFFU);
+        context->RSSetViewports(1, &viewport);
+        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+        context->PSSetShader(ambient_pixel_shader.Get(), nullptr, 0);
+        update_shape_constants(1, 1, false, 0, &frame);
+        ID3D11ShaderResourceView* nv12_views[] = {
+            shared_gpu_frame ? shared_gpu_y_view.Get() : y_view.Get(),
+            shared_gpu_frame ? shared_gpu_uv_view.Get() : uv_view.Get()};
+        context->PSSetShaderResources(0, 2, nv12_views);
+        context->PSSetSamplers(0, 1, sampler.GetAddressOf());
+        context->Draw(3, 0);
+        ID3D11ShaderResourceView* empty[] = {nullptr, nullptr};
+        context->PSSetShaderResources(0, 2, empty);
+        context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFFU);
+        context->OMSetRenderTargets(0, nullptr, nullptr);
+        ambient_valid = true;
+        write_ambient_colors();
+        check(composition_device->Commit(), "Commit preview ambient colour");
+    }
+
+    // Applies the outline and pill geometry/colour and the video offset.
+    // Returns true when the composition tree changed and needs a Commit.
+    bool update_frame_layout() {
+        if (!composition_mode || !frame_clip_visual || !composition_visual) return false;
+        const bool options_changed = sync_frame_options();
+        RECT rect{};
+        if (!GetClientRect(window, &rect)) return false;
+        const auto width = std::max<LONG>(0, rect.right - rect.left);
+        const auto height = std::max<LONG>(0, rect.bottom - rect.top);
+        const auto insets = frame_insets();
+        const bool visible = frame_visible() && width > 0 && height > 0;
+        auto radius = 0.0F;
+        if (visible) {
+            // Start concentric with the video's rounded corners (or its square
+            // corners when rounding is off), then add the requested extra.
+            const auto thinnest = std::min({insets.left, insets.top, insets.right, insets.bottom});
+            auto content_radius = 0.0F;
+            if (rounded_window_enabled()) {
+                const auto packed_profile = corner_profile.load(std::memory_order_relaxed);
+                const auto normalized_radius = std::bit_cast<float>(
+                    static_cast<std::uint32_t>(packed_profile >> 32U));
+                const auto content_short_edge = std::max<LONG>(1, std::min(
+                    width - insets.left - insets.right, height - insets.top - insets.bottom));
+                content_radius = static_cast<float>(content_short_edge) * normalized_radius;
+            }
+            // Along the diagonal the outer arc stays outside the video's arc
+            // while radius <= content_radius + inset / (1 - 1/sqrt(2))
+            // (~3.41 x inset); 3.3 x inset keeps a small safety margin.
+            const auto roundness = std::clamp(frame_options.roundness, 0.0F, 1.0F);
+            const auto thickness = static_cast<float>(thinnest);
+            radius = content_radius + thickness + roundness * 2.3F * thickness;
+            radius = std::min(radius, static_cast<float>(std::min(width, height)) / 2.0F);
+        }
+        if (!options_changed && frame_colors_valid && width == applied_frame_client_width &&
+            height == applied_frame_client_height && radius == applied_frame_radius)
+            return false;
+
+        if (options_changed || !frame_colors_valid) {
+            if (frame_options.auto_color && ambient_valid && ambient_out_pixel_shader)
+                write_ambient_colors();
+            else
+                fill_fixed_frame_colors();
+            if (options_changed && frame_options.auto_color) next_ambient_sample = {};
+            frame_colors_valid = true;
+        }
+        const auto set_rounded_clip = [](IDCompositionRectangleClip* clip, float clip_width,
+            float clip_height, float corner) {
+            check(clip->SetLeft(0.0F), "clip left");
+            check(clip->SetTop(0.0F), "clip top");
+            check(clip->SetRight(clip_width), "clip right");
+            check(clip->SetBottom(clip_height), "clip bottom");
+            check(clip->SetTopLeftRadiusX(corner), "clip radius");
+            check(clip->SetTopLeftRadiusY(corner), "clip radius");
+            check(clip->SetTopRightRadiusX(corner), "clip radius");
+            check(clip->SetTopRightRadiusY(corner), "clip radius");
+            check(clip->SetBottomLeftRadiusX(corner), "clip radius");
+            check(clip->SetBottomLeftRadiusY(corner), "clip radius");
+            check(clip->SetBottomRightRadiusX(corner), "clip radius");
+            check(clip->SetBottomRightRadiusY(corner), "clip radius");
+        };
+        set_rounded_clip(frame_clip.Get(), visible ? static_cast<float>(width) : 0.0F,
+            visible ? static_cast<float>(height) : 0.0F, radius);
+        D2D_MATRIX_3X2_F scale{};
+        scale._11 = static_cast<float>(std::max<LONG>(1, width));
+        scale._22 = static_cast<float>(std::max<LONG>(1, height));
+        check(frame_fill_visual->SetTransform(scale), "frame fill transform");
+
+        const bool pill = visible && pill_visible();
+        const auto pill_width = pill ? frame_options.button_width : 0;
+        const auto pill_height = pill ? frame_options.button_height : 0;
+        LONG pill_center_x = width / 2;
+        if (frame_options.button_align == 1)
+            pill_center_x = insets.left + frame_options.button_offset;
+        else if (frame_options.button_align == 3)
+            pill_center_x = width - insets.right - frame_options.button_offset;
+        const auto pill_center_y = height - frame_options.button_center_y;
+        check(pill_clip_visual->SetOffsetX(static_cast<float>(pill_center_x - pill_width / 2)),
+            "pill offset x");
+        check(pill_clip_visual->SetOffsetY(static_cast<float>(pill_center_y - pill_height / 2)),
+            "pill offset y");
+        set_rounded_clip(pill_clip.Get(), static_cast<float>(pill_width),
+            static_cast<float>(pill_height), static_cast<float>(pill_height) / 2.0F);
+        D2D_MATRIX_3X2_F pill_scale{};
+        pill_scale._11 = static_cast<float>(std::max(1, pill_width));
+        pill_scale._22 = static_cast<float>(std::max(1, pill_height));
+        check(pill_fill_visual->SetTransform(pill_scale), "pill fill transform");
+
+        check(composition_visual->SetOffsetX(static_cast<float>(insets.left)), "video offset x");
+        check(composition_visual->SetOffsetY(static_cast<float>(insets.top)), "video offset y");
+        if (options_changed) {
+            logging::write(std::format(
+                "d3d_preview frame insets={},{},{},{} argb=0x{:08X} auto={} button={}",
+                insets.left, insets.top, insets.right, insets.bottom, frame_options.argb,
+                frame_options.auto_color, frame_options.button_align));
+        }
+        applied_frame_client_width = width;
+        applied_frame_client_height = height;
+        applied_frame_radius = radius;
+        return true;
+    }
+
     bool rounded_window_enabled() const noexcept {
         // The main compact preview is a child HWND and therefore cannot use a
         // transparent DComp swap chain. It still needs the shader's
@@ -1039,8 +1487,15 @@ struct D3D11PreviewRenderer::Impl {
     bool resize_if_needed(std::chrono::steady_clock::time_point now) {
         RECT rect{};
         if (!GetClientRect(window, &rect)) return false;
-        const auto width = static_cast<UINT>(std::max<LONG>(0, rect.right - rect.left));
-        const auto height = static_cast<UINT>(std::max<LONG>(0, rect.bottom - rect.top));
+        const auto client_width = rect.right - rect.left;
+        const auto client_height = rect.bottom - rect.top;
+        if (client_width <= 0 || client_height <= 0) return false;
+        // The swap chain covers only the video area inside the outline.
+        const auto insets = frame_insets();
+        const auto width = static_cast<UINT>(std::max<LONG>(1,
+            client_width - insets.left - insets.right));
+        const auto height = static_cast<UINT>(std::max<LONG>(1,
+            client_height - insets.top - insets.bottom));
         if (width == 0 || height == 0 || (width == target_width && height == target_height))
             return false;
         // Coalesce WM_SIZE bursts by sampling the newest client size at most
@@ -1473,6 +1928,7 @@ struct D3D11PreviewRenderer::Impl {
             context->Draw(3, 0);
             context->PSSetShaderResources(0, 3, empty);
         }
+        update_ambient_color(frame, std::chrono::steady_clock::now());
         // The render loop applies the requested frame-rate cap. A nonblocking
         // flip presentation must not hold up the newest landscape frame when
         // DWM is late with a vblank; skip that presentation and keep capture
@@ -1561,6 +2017,8 @@ struct D3D11PreviewRenderer::Impl {
                     check(composition_device->Commit(), "Commit preview opacity");
                     applied_opacity = requested_opacity;
                 }
+                if (update_frame_layout())
+                    check(composition_device->Commit(), "Commit preview frame");
                 const bool target_resized = resize_if_needed(
                     std::chrono::steady_clock::now());
                 if (clear_requested.exchange(false, std::memory_order_acq_rel)) {
@@ -1716,6 +2174,23 @@ void D3D11PreviewRenderer::set_corner_profile(float normalized_radius,
 void D3D11PreviewRenderer::set_opacity(float opacity) noexcept {
     if (!impl_ || !std::isfinite(opacity)) return;
     impl_->opacity.store(std::clamp(opacity, 0.1F, 1.0F), std::memory_order_relaxed);
+}
+
+void D3D11PreviewRenderer::set_frame(const FrameOptions& options) noexcept {
+    if (!impl_) return;
+    auto sanitized = options;
+    sanitized.left = std::min<std::uint32_t>(sanitized.left, 512);
+    sanitized.top = std::min<std::uint32_t>(sanitized.top, 512);
+    sanitized.right = std::min<std::uint32_t>(sanitized.right, 512);
+    sanitized.bottom = std::min<std::uint32_t>(sanitized.bottom, 512);
+    sanitized.roundness = std::isfinite(sanitized.roundness)
+        ? std::clamp(sanitized.roundness, 0.0F, 1.0F) : 0.0F;
+    {
+        std::scoped_lock lock(impl_->frame_mutex);
+        impl_->requested_frame = sanitized;
+        ++impl_->requested_frame_generation;
+    }
+    impl_->refresh_requested.store(true, std::memory_order_release);
 }
 
 void D3D11PreviewRenderer::set_rotation(std::int32_t quarter_turns) noexcept {

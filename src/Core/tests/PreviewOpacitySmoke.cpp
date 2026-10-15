@@ -24,15 +24,21 @@ void pump() {
     DwmFlush();
 }
 
-int sample(HWND window) {
+COLORREF sample_at(HWND window, int dx, int dy) {
     RECT bounds{};
     GetWindowRect(window, &bounds);
     const auto dc = GetDC(nullptr);
-    const auto pixel = GetPixel(dc, (bounds.left + bounds.right) / 2,
-        (bounds.top + bounds.bottom) / 2);
+    const auto pixel = GetPixel(dc, bounds.left + dx, bounds.top + dy);
     ReleaseDC(nullptr, dc);
     if (pixel == CLR_INVALID) throw std::runtime_error("Cannot sample the test window");
-    return GetRValue(pixel);
+    return pixel;
+}
+
+int sample(HWND window) {
+    RECT bounds{};
+    GetWindowRect(window, &bounds);
+    return GetRValue(sample_at(window, (bounds.right - bounds.left) / 2,
+        (bounds.bottom - bounds.top) / 2));
 }
 
 struct TestWindow {
@@ -99,6 +105,93 @@ int run_preview_opacity_smoke() {
         for (const auto invalid : {0.0F, 1.1F, NAN})
             if (im_session_set_window_opacity(0, first.handle, invalid) == 0)
                 throw std::runtime_error("Opacity API accepted invalid input");
+
+        // Outline: an opaque red frame fills the band around the inset video,
+        // the video stays dark, and removing the frame restores the edge.
+        using iPhoneMirror::renderer::FrameOptions;
+        const auto uniform = [](std::uint32_t inset, std::uint32_t argb, float roundness) {
+            FrameOptions options;
+            options.left = options.top = options.right = options.bottom = inset;
+            options.argb = argb;
+            options.roundness = roundness;
+            return options;
+        };
+        preview.set_frame(uniform(20, 0xFFFF0000U, 1.0F)); pump();
+        const auto edge = sample_at(first.handle, 6, 65);
+        const auto centre = sample(first.handle);
+        // Maximum roundness leaves the outermost corner pixel transparent.
+        const auto corner = sample_at(first.handle, 1, 1);
+        preview.set_frame(uniform(0, 0xFFFF0000U, 0.0F)); pump();
+        const auto edge_removed = sample_at(first.handle, 6, 65);
+        std::cout << "frame: edge=" << static_cast<int>(GetRValue(edge)) << ','
+            << static_cast<int>(GetGValue(edge)) << ',' << static_cast<int>(GetBValue(edge))
+            << " centre=" << centre << " removed=" << static_cast<int>(GetRValue(edge_removed))
+            << ',' << static_cast<int>(GetGValue(edge_removed)) << '\n';
+        if (GetRValue(edge) < 200 || GetGValue(edge) > 60 || GetBValue(edge) > 60 ||
+            centre > 30 || GetRValue(edge_removed) > 60)
+            throw std::runtime_error("Composition frame did not draw around the inset video");
+        // The background window is white; a red corner means no rounding.
+        if (GetGValue(corner) < 200)
+            throw std::runtime_error("Composition frame corners are not rounded");
+
+        // Home bar: a taller bottom band moves the video up; the centred pill
+        // is light on the dark-red outline.
+        auto bar = uniform(10, 0xFFFF0000U, 0.0F);
+        bar.bottom = 40;
+        bar.button_align = 2;
+        bar.button_width = 40;
+        bar.button_height = 6;
+        bar.button_center_y = 20;
+        preview.set_frame(bar); pump();
+        const auto band = sample_at(first.handle, 30, 95);
+        const auto pill = sample_at(first.handle, 65, 110);
+        const auto video = sample_at(first.handle, 65, 60);
+        std::cout << "home bar: band=" << static_cast<int>(GetRValue(band)) << ','
+            << static_cast<int>(GetGValue(band)) << " pill=" << static_cast<int>(GetRValue(pill))
+            << ',' << static_cast<int>(GetGValue(pill)) << " video="
+            << static_cast<int>(GetRValue(video)) << '\n';
+        if (GetRValue(band) < 200 || GetGValue(band) > 60 || GetGValue(pill) < 150 ||
+            GetRValue(video) > 30)
+            throw std::runtime_error("Composition home bar or pill was not drawn");
+
+        // Automatic colour: a bright video turns the outline bright and the
+        // pill dark, replacing the configured red.
+        auto bright = std::make_shared<iPhoneMirror::media::DecodedFrame>();
+        bright->width = bright->height = 64;
+        bright->stride = 64;
+        bright->timestamp_100ns = 2;
+        bright->nv12.assign(64 * 64, 235);
+        bright->nv12.resize(64 * 64 * 3 / 2, 128);
+        frame.store(bright);
+        auto automatic = bar;
+        automatic.auto_color = true;
+        preview.set_frame(automatic); pump(); pump();
+        const auto auto_band = sample_at(first.handle, 30, 95);
+        const auto auto_pill = sample_at(first.handle, 65, 110);
+        std::cout << "auto colour: band=" << static_cast<int>(GetRValue(auto_band)) << ','
+            << static_cast<int>(GetGValue(auto_band)) << ',' << static_cast<int>(GetBValue(auto_band))
+            << " pill=" << static_cast<int>(GetGValue(auto_pill)) << '\n';
+        if (GetGValue(auto_band) < 200 || GetBValue(auto_band) < 200 || GetGValue(auto_pill) > 120)
+            throw std::runtime_error("Automatic frame colour did not follow the video");
+        preview.set_frame(FrameOptions{}); pump();
+
+        iPhoneMirror::WindowFrame invalid{};
+        invalid.struct_size = sizeof(invalid);
+        if (im_session_set_window_frame(0, first.handle, nullptr) == 0)
+            throw std::runtime_error("Frame API accepted a null structure");
+        auto too_small = invalid;
+        too_small.struct_size = 4;
+        auto thick = invalid;
+        thick.bottom = 513;
+        auto negative = invalid;
+        negative.left = -1;
+        auto round = invalid;
+        round.roundness = NAN;
+        auto align = invalid;
+        align.button_align = static_cast<iPhoneMirror::WindowFrameButtonAlign>(4);
+        for (const auto& candidate : {too_small, thick, negative, round, align})
+            if (im_session_set_window_frame(0, first.handle, &candidate) == 0)
+                throw std::runtime_error("Frame API accepted invalid input");
         std::cout << "Native preview opacity smoke passed.\n";
         return 0;
     } catch (const std::exception& error) {

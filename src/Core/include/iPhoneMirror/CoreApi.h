@@ -249,6 +249,43 @@ struct MediaCastRequest {
     wchar_t url[MaxMediaUrl];
 };
 
+enum class WindowFrameFlags : std::uint32_t {
+    None = 0,
+    // Follow the colour at the edge of the video instead of argb's RGB.
+    AutoColor = 1,
+    // Highlight the home pill (pointer over it).
+    ButtonHover = 2,
+};
+
+enum class WindowFrameButtonAlign : std::int32_t {
+    None = 0,
+    Left = 1,
+    Center = 2,
+    Right = 3,
+};
+
+// Outline around the video of a top-level composition preview. All lengths
+// are physical pixels. The video is inset by left/top/right/bottom (0..512).
+// The home pill is button_width x button_height, its centre button_center_y
+// pixels above the client bottom; horizontally it is centred in the client
+// (Center) or its centre is button_offset pixels inside the video's left or
+// right edge (Left/Right).
+struct WindowFrame {
+    std::uint32_t struct_size;
+    std::int32_t left;
+    std::int32_t top;
+    std::int32_t right;
+    std::int32_t bottom;
+    std::uint32_t argb;            // straight-alpha 0xAARRGGBB; alpha = opacity
+    float roundness;               // 0 concentric with the video .. 1 maximum
+    std::uint32_t flags;           // WindowFrameFlags
+    WindowFrameButtonAlign button_align;
+    std::int32_t button_offset;
+    std::int32_t button_width;
+    std::int32_t button_height;
+    std::int32_t button_center_y;
+};
+
 } // namespace iPhoneMirror
 
 IM_API std::int32_t IM_CALL im_initialize();
@@ -453,6 +490,11 @@ IM_API std::int32_t IM_CALL im_session_set_window_rotation(
 // Does not modify captured frames, recordings, or other session windows.
 IM_API std::int32_t IM_CALL im_session_set_window_opacity(
     iPhoneMirror::SessionHandle handle, void* hwnd, float opacity);
+// Local composition preview only: outline and home pill around the video
+// (see WindowFrame). All insets zero removes the outline.
+IM_API std::int32_t IM_CALL im_session_set_window_frame(
+    iPhoneMirror::SessionHandle handle, void* hwnd,
+    const iPhoneMirror::WindowFrame* frame);
 
 
 IM_API const wchar_t* IM_CALL im_last_error();

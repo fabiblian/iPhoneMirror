@@ -18,16 +18,19 @@ public partial class MainWindow
             _viewModel.IsAudioOnlyAirPlay || _viewModel.IsVideoProtected ||
             _viewModel.CurrentSessionHandle == 0 || _viewModel.SourceVideoWidth == 0 || _viewModel.SourceVideoHeight == 0)
             return result;
-        MappingPreviewSurface Surface(nint window, nint owner, uint width, uint height, int rotation) =>
+        MappingPreviewSurface Surface(nint window, nint owner, uint width, uint height, int rotation,
+            Models.PreviewFrameInsets inset = default) =>
             new(window, owner, device.Udid, _viewModel.CurrentSessionHandle, width, height, rotation,
                 _viewModel.AppliedBluetoothPortraitMouseDirection, _viewModel.AppliedBluetoothLandscapeMouseDirection,
-                _viewModel.AppliedBluetoothMouseReverseHorizontal, _viewModel.AppliedBluetoothMouseReverseVertical);
+                _viewModel.AppliedBluetoothMouseReverseHorizontal, _viewModel.AppliedBluetoothMouseReverseVertical,
+                inset);
         if (MainPreviewHost.IsVisible && MainPreviewHost.WindowHandle != 0 && _windowSource is not null)
             result.Add(Surface(MainPreviewHost.WindowHandle, _windowSource.Handle,
                 _viewModel.SourceVideoWidth, _viewModel.SourceVideoHeight, 0));
         var independent = _secondaryMirrors.GetWindowHandle(device.Udid);
         if (independent != 0 && _secondaryMirrors.TryGetControlGeometry(device.Udid, out var width, out var height, out var rotation))
-            result.Add(Surface(independent, independent, width, height, rotation));
+            result.Add(Surface(independent, independent, width, height, rotation,
+                _secondaryMirrors.GetFrameInset(device.Udid)));
         return result;
     }
 

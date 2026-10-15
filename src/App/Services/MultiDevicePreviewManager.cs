@@ -29,6 +29,10 @@ internal sealed class MultiDevicePreviewManager : IDisposable
     internal event Action<string, PreviewPointerEventArgs>? PointerInput;
     internal event Action<string, PreviewKeyboardEventArgs>? KeyboardInput;
     internal event Action<string, nint, bool>? KeyboardFocusChanged;
+    // The frame's home pill was clicked (device UDID, preview window).
+    internal event Action<string, nint>? HomeRequested;
+    // A device preview window was created and shown (device UDID, window).
+    internal event Action<string, nint>? PreviewOpened;
 
     internal MultiDevicePreviewManager(MainViewModel viewModel,
         Func<string, nint, bool>? isReverseControlEnabledForWindow = null)
@@ -87,6 +91,10 @@ internal sealed class MultiDevicePreviewManager : IDisposable
         (width, height, rotation) = window.ControlGeometry;
         return width != 0 && height != 0;
     }
+
+    internal Models.PreviewFrameInsets GetFrameInset(string? udid) =>
+        !string.IsNullOrWhiteSpace(udid) && _windows.TryGetValue(udid, out var window)
+            ? window.FrameInsets : default;
 
     internal bool IsFullScreen(string udid) =>
         _windows.TryGetValue(udid, out var window) && window.IsFullScreen;
@@ -192,6 +200,7 @@ internal sealed class MultiDevicePreviewManager : IDisposable
         _windows[device.Udid] = window;
         window.ActivationChanged += active =>
             KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, active);
+        window.HomeRequested += () => HomeRequested?.Invoke(device.Udid, window.Handle);
         KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, true);
         if (_protectionStates.TryGetValue(device.Udid, out var protection))
             window.SetProtectedContent(protection.IsProtected,
@@ -227,6 +236,7 @@ internal sealed class MultiDevicePreviewManager : IDisposable
                     "StopFailedFormat", error.Message));
             }
         };
+        PreviewOpened?.Invoke(device.Udid, window.Handle);
         return (true, string.Empty);
     }
 

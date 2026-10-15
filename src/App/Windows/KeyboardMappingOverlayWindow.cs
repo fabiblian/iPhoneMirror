@@ -180,9 +180,10 @@ internal sealed class KeyboardMappingOverlayWindow : Window
     private bool UpdateBounds()
     {
         if (!IsWindowVisible(Surface.Window) || IsIconic(Surface.Owner) || !GetClientRect(Surface.Window, out var rect)) return false;
-        var origin = new NativePoint();
+        var inset = Surface.Inset;
+        var origin = new NativePoint { X = inset.Left, Y = inset.Top };
         if (!ClientToScreen(Surface.Window, ref origin)) return false;
-        _pixelWidth = rect.Right - rect.Left; _pixelHeight = rect.Bottom - rect.Top;
+        _pixelWidth = rect.Right - rect.Left - inset.Horizontal; _pixelHeight = rect.Bottom - rect.Top - inset.Vertical;
         if (_pixelWidth <= 0 || _pixelHeight <= 0) return false;
         // Native pixels avoid mixed-monitor DIP origin errors. WPF handles the
         // overlay's per-monitor DPI after Windows positions the owned HWND.

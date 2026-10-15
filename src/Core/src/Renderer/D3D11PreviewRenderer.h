@@ -36,6 +36,33 @@ struct PreviewTestHooks {
 };
 #endif
 
+// Outline around the video of a top-level composition preview, in physical
+// pixels. The video is inset by left/top/right/bottom; all zero removes the
+// outline. argb is a straight-alpha 0xAARRGGBB colour (alpha = opacity);
+// auto_color replaces its RGB with the colour at the video's edges.
+// roundness 0 keeps the outer corners concentric with the video; 1 rounds
+// them as far as possible without exposing the video's corners.
+// The home pill is button_width x button_height with its centre
+// button_center_y above the client bottom; button_align 0 = none, 1 = left,
+// 2 = centre, 3 = right (left/right: centre button_offset inside the video edge).
+struct FrameOptions {
+    std::uint32_t left{};
+    std::uint32_t top{};
+    std::uint32_t right{};
+    std::uint32_t bottom{};
+    std::uint32_t argb{};
+    float roundness{};
+    bool auto_color{};
+    bool button_hover{};
+    std::int32_t button_align{};
+    std::int32_t button_offset{};
+    std::int32_t button_width{};
+    std::int32_t button_height{};
+    std::int32_t button_center_y{};
+
+    bool operator==(const FrameOptions&) const = default;
+};
+
 class D3D11PreviewRenderer {
 public:
     using FrameProvider = std::function<std::shared_ptr<const media::DecodedFrame>()>;
@@ -68,6 +95,9 @@ public:
     void set_rotation(std::int32_t quarter_turns) noexcept;
     // Applies to this composition visual only, including its black background.
     void set_opacity(float opacity) noexcept;
+    // Draws an outline around the video inside a top-level composition
+    // preview (see FrameOptions). Child/main-window previews ignore it.
+    void set_frame(const FrameOptions& options) noexcept;
     void set_color_output_preference(media::ColorOutputPreference preference) noexcept;
     void set_image_adjustments(float brightness, float contrast,
         float saturation, float gamma) noexcept;

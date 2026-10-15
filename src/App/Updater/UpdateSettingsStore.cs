@@ -24,6 +24,7 @@ internal sealed class UpdateSettings
     public Services.Automation.AutomationSettings AutomationApi { get; set; } = new();
     public Dictionary<string, DeviceVideoPreferences> DeviceVideoPreferences { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public KeyboardMappingSettings KeyboardMapping { get; set; } = new();
+    public PreviewFrameSettings PreviewFrame { get; set; } = new();
     public bool CheckOnStartup { get; set; } = true;
     public bool AutoDownload { get; set; }
     public bool AllowMirrorFallback { get; set; } = false;
@@ -106,6 +107,7 @@ internal sealed class UpdateSettings
         AutomationApi = (AutomationApi ?? new()).Clone(),
         DeviceVideoPreferences = new(DeviceVideoPreferences ?? [], StringComparer.OrdinalIgnoreCase),
         KeyboardMapping = KeyboardMapping.Clone(),
+        PreviewFrame = (PreviewFrame ?? new()).Clone(),
         CheckOnStartup = CheckOnStartup,
         AutoDownload = AutoDownload,
         AllowMirrorFallback = AllowMirrorFallback,
@@ -253,6 +255,7 @@ internal sealed class UpdateSettingsStore
             }
             settings.BluetoothControlDeviceBindings = NormalizeBluetoothBindings(
                 settings.BluetoothControlDeviceBindings);
+            settings.PreviewFrame = (settings.PreviewFrame ?? new()).Normalized();
             if (settings.BluetoothMouseSensitivitySchema < 1)
             {
                 settings.BluetoothMouseSensitivity = 500;

@@ -5,6 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using IPhoneMirror.App.Localization;
+using IPhoneMirror.App.Models;
 using SymbolIcon = Wpf.Ui.Controls.SymbolIcon;
 using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 
@@ -18,6 +19,8 @@ internal sealed class ProtectedContentOverlayWindow : Window
     private const long WsExTransparent = 0x00000020L;
     private const long WsExNoActivate = 0x08000000L;
     private readonly nint _owner;
+    // Preview frame insets in owner pixels; the overlay covers only the video.
+    private readonly Func<PreviewFrameInsets>? _contentInset;
     private readonly DispatcherTimer _positionTimer;
     private HwndSource? _source;
     private TextBlock _titleText = null!;
@@ -26,8 +29,15 @@ internal sealed class ProtectedContentOverlayWindow : Window
     private bool _compact;
 
     private ProtectedContentOverlayWindow(nint owner, string audioDisplay)
+        : this(owner, audioDisplay, null)
+    {
+    }
+
+    private ProtectedContentOverlayWindow(nint owner, string audioDisplay,
+        Func<PreviewFrameInsets>? contentInset)
     {
         _owner = owner;
+        _contentInset = contentInset;
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
@@ -50,9 +60,9 @@ internal sealed class ProtectedContentOverlayWindow : Window
     }
 
     internal static ProtectedContentOverlayWindow ShowFor(nint owner,
-        string audioDisplay)
+        string audioDisplay, Func<PreviewFrameInsets>? contentInset = null)
     {
-        var overlay = new ProtectedContentOverlayWindow(owner, audioDisplay);
+        var overlay = new ProtectedContentOverlayWindow(owner, audioDisplay, contentInset);
         var helper = new WindowInteropHelper(overlay) { Owner = owner };
         overlay.SourceInitialized += (_, _) =>
         {
@@ -186,13 +196,21 @@ internal sealed class ProtectedContentOverlayWindow : Window
         return root;
     }
 
-    private void UpdateBounds()
+    internal void UpdateBounds()
     {
         if (_owner == 0 || !IsWindowVisible(_owner) || IsIconic(_owner) ||
             !GetWindowRect(_owner, out var rect))
         {
             Hide();
             return;
+        }
+        var inset = _contentInset?.Invoke() ?? default;
+        if (rect.Right - rect.Left > inset.Horizontal && rect.Bottom - rect.Top > inset.Vertical)
+        {
+            rect.Left += inset.Left;
+            rect.Top += inset.Top;
+            rect.Right -= inset.Right;
+            rect.Bottom -= inset.Bottom;
         }
         var dpi = GetDpiForWindow(_owner);
         var scale = dpi == 0 ? 1.0 : dpi / 96.0;

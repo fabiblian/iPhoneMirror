@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Interop;
 using IPhoneMirror.App.Localization;
+using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
 
 namespace IPhoneMirror.App.Windows;
@@ -27,6 +28,11 @@ internal sealed class NativePreviewWindow : IDisposable
     private const int WmNcHitTest = 0x0084;
     private const int WmContextMenu = 0x007B;
     private const int WmNcLeftButtonDoubleClick = 0x00A3;
+    private const int WmNcLeftButtonDown = 0x00A1;
+    private const int WmNcMouseMove = 0x00A0;
+    private const int WmNcMouseLeave = 0x02A2;
+    private const uint TmeLeave = 0x00000002;
+    private const uint TmeNonClient = 0x00000010;
     private const int WmNcRightButtonDown = 0x00A4;
     private const int WmNcRightButtonUp = 0x00A5;
     private const int WmRightButtonDown = 0x0204;
@@ -61,14 +67,6 @@ internal sealed class NativePreviewWindow : IDisposable
     private const int VkMenu = 0x12;
     private const int HtClient = 1;
     private const int HtCaption = 2;
-    private const int HtLeft = 10;
-    private const int HtRight = 11;
-    private const int HtTop = 12;
-    private const int HtTopLeft = 13;
-    private const int HtTopRight = 14;
-    private const int HtBottom = 15;
-    private const int HtBottomLeft = 16;
-    private const int HtBottomRight = 17;
     private const int GwlStyle = -16;
     private const int GwlExStyle = -20;
     private const int WsExLayered = 0x00080000;
@@ -116,6 +114,8 @@ internal sealed class NativePreviewWindow : IDisposable
     private readonly MenuItem _displayMenuItem;
     private readonly MenuItem _topMostItem;
     private readonly MenuItem _fixedItem;
+    private readonly MenuItem? _frameItem;
+    private readonly MenuItem? _previewSettingsItem;
     private readonly MenuItem _styleItem;
     private readonly MenuItem? _reverseControlMenuItem;
     private readonly MenuItem? _bluetoothControlItem;
@@ -162,6 +162,11 @@ internal sealed class NativePreviewWindow : IDisposable
     private bool _isFixed;
     private bool _cornersEnabled = true;
     private int _rotation;
+    // Physical-pixel outline between the client edges and the video; empty
+    // when the frame is hidden, unsupported, or the window is full screen.
+    private PreviewFrameInsets _frameInsets;
+    private PreviewFrameSettings _frameSettings = new();
+    private bool _homeHover;
     private byte _capturedMouseButtons;
     private nint _largeIcon;
     private nint _smallIcon;
@@ -261,6 +266,16 @@ internal sealed class NativePreviewWindow : IDisposable
         }
         _windowMenuItem.Items.Add(_topMostItem);
         _windowMenuItem.Items.Add(_fixedItem);
+        if (managedContent is null)
+        {
+            _frameItem = new MenuItem { Style = itemStyle };
+            _frameItem.Click += (_, _) => PreviewFrameService.Update(
+                settings => settings.Enabled = !settings.Enabled);
+            _windowMenuItem.Items.Add(_frameItem);
+            _previewSettingsItem = new MenuItem { Style = itemStyle };
+            _previewSettingsItem.Click += (_, _) => PreviewSettingsWindow.ShowOrActivate();
+            _windowMenuItem.Items.Add(_previewSettingsItem);
+        }
         _windowMenuItem.Items.Add(_styleItem);
         _displayMenuItem = new MenuItem { Style = submenuStyle };
         _muteMenuItem = new MenuItem { Style = submenuStyle };
@@ -368,12 +383,14 @@ internal sealed class NativePreviewWindow : IDisposable
             sourceWidth, sourceHeight,
             () => !_disposed && !_isFullScreen && _handle != 0 &&
                 !IsIconic(_handle) && !IsZoomed(_handle),
-            minWidthDips: 96, minHeightDips: 96);
+            minWidthDips: 96, minHeightDips: 96,
+            contentInset: () => (_frameInsets.Horizontal, _frameInsets.Vertical));
         // Install the instance hook only after every callback dependency is
         // initialized; HwndSource construction itself dispatches messages.
         _source.AddHook(WindowProcedure);
         OpenWindows.Add(this);
         ThemeService.ThemeChanged += OnThemeChanged;
+        if (managedContent is null) PreviewFrameService.Changed += OnPreviewFrameChanged;
         if (managedContent is null)
         {
             // Preserve the original borderless DirectComposition window for
@@ -389,6 +406,8 @@ internal sealed class NativePreviewWindow : IDisposable
 
     internal event EventHandler? Closed;
     internal event Action<bool>? ActivationChanged;
+    // Raised on the UI thread when the home pill in the frame is clicked.
+    internal event Action? HomeRequested;
     internal ulong SessionHandle => _sessionHandle;
     internal nint Handle => _handle;
     internal (uint Width, uint Height, int Rotation) ControlGeometry =>
@@ -426,6 +445,7 @@ internal sealed class NativePreviewWindow : IDisposable
             _cornersEnabled ? _cornerRadius : 0, _cornerExponent);
         if (_rotation != 0)
             _ = NativeCore.SetDeviceWindowRotation(sessionHandle, _handle, _rotation);
+        ApplyFrame();
         _ = ApplyWindowOpacity(EffectiveWindowOpacity, force: true);
         Log("independent_window_rebound",
             ("mode", WindowMode), ("old_handle", AppLog.Handle(previousHandle)),
@@ -487,6 +507,9 @@ internal sealed class NativePreviewWindow : IDisposable
                 return false;
             }
             candidate._attached = true;
+            // Apply the frame while hidden so the first visible bounds
+            // already include it.
+            candidate.ApplyFrame(reflow: false);
             candidate.ShowInitially();
             if (Volatile.Read(ref BossKeyHidden) != 0)
                 candidate.SetBossKeyHidden(true);
@@ -639,7 +662,7 @@ internal sealed class NativePreviewWindow : IDisposable
         }
         if (_protectedOverlay is null)
             _protectedOverlay = ProtectedContentOverlayWindow.ShowFor(_handle,
-                audioDisplay);
+                audioDisplay, () => _frameInsets);
         else
             _protectedOverlay.UpdateAudioDisplay(audioDisplay);
         _protectedOverlay.Opacity = _appliedOpacity;
@@ -670,6 +693,7 @@ internal sealed class NativePreviewWindow : IDisposable
                 Math.Max(1, _restoreRectangle.Right - _restoreRectangle.Left),
                 Math.Max(1, _restoreRectangle.Bottom - _restoreRectangle.Top),
                 SwpNoZOrder | SwpFrameChanged | SwpShowWindow);
+            ApplyFrame(reflow: false);
             _aspectController.Reflow();
             _ = SetForegroundWindow(_handle);
             Log("independent_window_fullscreen",
@@ -690,6 +714,7 @@ internal sealed class NativePreviewWindow : IDisposable
             ? (nint)(_restoreStyle.ToInt64() & ~WsThickFrame)
             : (nint)(_restoreStyle.ToInt64() & ~(WsCaption | WsThickFrame));
         _ = SetWindowLongPtrW(_handle, GwlStyle, fullScreenStyle);
+        ApplyFrame(reflow: false);
         _ = SetWindowPos(_handle, 0, monitorInfo.Monitor.Left, monitorInfo.Monitor.Top,
             monitorInfo.Monitor.Right - monitorInfo.Monitor.Left,
             monitorInfo.Monitor.Bottom - monitorInfo.Monitor.Top,
@@ -717,10 +742,11 @@ internal sealed class NativePreviewWindow : IDisposable
         {
             GetClientRect(hwnd, out var touchRect);
             NativeTouchInput.Dispatch(hwnd, wParam, lParam, IsPointerInputActive && IsUsbControlEnabledForWindow,
-                Math.Max(1, touchRect.Right - touchRect.Left), Math.Max(1, touchRect.Bottom - touchRect.Top),
+                Math.Max(1, touchRect.Right - touchRect.Left - _frameInsets.Horizontal),
+                Math.Max(1, touchRect.Bottom - touchRect.Top - _frameInsets.Vertical),
                 (_rotation & 1) == 0 ? _sourceWidth : _sourceHeight,
                 (_rotation & 1) == 0 ? _sourceHeight : _sourceWidth, _rotation,
-                input => _pointerInput?.Invoke(input));
+                input => _pointerInput?.Invoke(input), _frameInsets.Left, _frameInsets.Top);
             handled = true;
             return 0;
         }
@@ -829,6 +855,26 @@ internal sealed class NativePreviewWindow : IDisposable
                     unchecked((short)(wParam.ToInt64() >> 16)));
                 handled = true;
                 return 0;
+            case WmSetCursor when (lParam.ToInt64() & 0xFFFF) == PreviewFrameHitTest.HtHomeButton:
+                NativeCursor.SetHand();
+                ShowSystemCursor();
+                handled = true;
+                return 1;
+            case WmNcLeftButtonDown when wParam.ToInt32() == PreviewFrameHitTest.HtHomeButton:
+            case WmNcLeftButtonDoubleClick when wParam.ToInt32() == PreviewFrameHitTest.HtHomeButton:
+                // A second quick press arrives as a double click; both press Home.
+                handled = true;
+                if (HomeRequested is { } home)
+                    _source.Dispatcher.BeginInvoke(DispatcherPriority.Input, home);
+                Log("independent_window_home", ("mode", WindowMode));
+                return 0;
+            case WmNcMouseMove:
+                SetHomeHover(wParam.ToInt32() == PreviewFrameHitTest.HtHomeButton);
+                if (_homeHover) TrackNonClientLeave();
+                break;
+            case WmNcMouseLeave:
+                SetHomeHover(false);
+                break;
             case WmSetCursor when IsUsbControlEnabledForWindow:
                 // USB touch control never captures the Windows pointer. A
                 // previous reverse-control route may have left the process
@@ -871,7 +917,7 @@ internal sealed class NativePreviewWindow : IDisposable
                 return 0;
             case WmNcHitTest when _managedContent is null:
                 handled = true;
-                return _isFullScreen || _isFixed ? HtClient : HitTestWindow(lParam);
+                return _isFullScreen ? HtClient : HitTestWindow(lParam);
             case WmContextMenu:
             case WmRightButtonUp:
                 handled = true;
@@ -907,8 +953,12 @@ internal sealed class NativePreviewWindow : IDisposable
                 ToggleFullScreen();
                 return 0;
             case WmDpiChanged:
-                _source.Dispatcher.BeginInvoke(DispatcherPriority.Loaded,
-                    _aspectController.Reflow);
+                _source.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+                {
+                    // The frame thickness is specified in DIPs.
+                    ApplyFrame(reflow: false);
+                    _aspectController.Reflow();
+                });
                 break;
         }
         return 0;
@@ -922,20 +972,17 @@ internal sealed class NativePreviewWindow : IDisposable
         var y = (short)((packed >> 16) & 0xFFFF);
         var dpi = GetDpiForWindow(_handle);
         var border = Math.Max(6, (int)Math.Round(8.0 * (dpi == 0 ? 1.0 : dpi / 96.0)));
-
-        var left = x < bounds.Left + border;
-        var right = x >= bounds.Right - border;
-        var top = y < bounds.Top + border;
-        var bottom = y >= bounds.Bottom - border;
-        if (top && left) return HtTopLeft;
-        if (top && right) return HtTopRight;
-        if (bottom && left) return HtBottomLeft;
-        if (bottom && right) return HtBottomRight;
-        if (left) return HtLeft;
-        if (right) return HtRight;
-        if (top) return HtTop;
-        if (bottom) return HtBottom;
-        return HtCaption;
+        var home = _frameInsets.IsEmpty ? default : _frameSettings.Layout(dpi,
+            bounds.Right - bounds.Left, bounds.Bottom - bounds.Top).HomeHitArea;
+        // A locked window neither moves nor resizes, but Home stays usable.
+        if (_isFixed)
+            return home.Contains(x - bounds.Left, y - bounds.Top)
+                ? PreviewFrameHitTest.HtHomeButton : HtClient;
+        // While touch control is on, the image belongs to the phone; the
+        // frame still moves and resizes the window.
+        return PreviewFrameHitTest.Classify(x, y, bounds.Left, bounds.Top,
+            bounds.Right, bounds.Bottom, border, _frameInsets, home,
+            contentIsClient: IsPointerInputEnabledForWindow);
     }
 
     private void QueueClose()
@@ -983,6 +1030,15 @@ internal sealed class NativePreviewWindow : IDisposable
         _fixedItem.Header = LocalizationService.Get(
             _isFixed ? "IndependentWindowUnfix" : "IndependentWindowFix");
         _fixedItem.IsEnabled = !_isFullScreen;
+        if (_frameItem is not null)
+        {
+            _frameItem.Header = LocalizationService.Get(
+                PreviewFrameService.Current.Enabled ? "IndependentWindowHideFrame" :
+                    "IndependentWindowShowFrame");
+            _frameItem.IsEnabled = !_isFullScreen;
+        }
+        if (_previewSettingsItem is not null)
+            _previewSettingsItem.Header = LocalizationService.Get("PreviewSettingsMenu");
         if (_reverseControlMenuItem is not null)
         {
             _reverseControlMenuItem.Header = LocalizationService.Get(
@@ -1260,7 +1316,9 @@ internal sealed class NativePreviewWindow : IDisposable
     internal void PrepareForUsbControl()
     {
         if (_disposed || _handle == 0) return;
-        if (!_isFixed) ToggleFixedWindow();
+        // With a frame, clicks on the image reach the phone while the frame
+        // keeps moving/resizing the window, so locking it is unnecessary.
+        if (!_isFixed && _frameInsets.IsEmpty) ToggleFixedWindow();
         if (!_isTopMost) ToggleTopMost();
         _ = SetForegroundWindow(_handle);
         UpdateContextMenuLabels();
@@ -1275,9 +1333,94 @@ internal sealed class NativePreviewWindow : IDisposable
         var y = unchecked((short)((packed >> 16) & 0xFFFF));
         var sourceWidth = (_rotation & 1) == 0 ? _sourceWidth : _sourceHeight;
         var sourceHeight = (_rotation & 1) == 0 ? _sourceHeight : _sourceWidth;
-        _pointerInput(new PreviewPointerEventArgs(kind, x, y, button, wheel,
-            Math.Max(1, rect.Right - rect.Left), Math.Max(1, rect.Bottom - rect.Top),
+        // Report coordinates relative to the video area inside the frame.
+        _pointerInput(new PreviewPointerEventArgs(kind,
+            unchecked((short)(x - _frameInsets.Left)), unchecked((short)(y - _frameInsets.Top)),
+            button, wheel,
+            Math.Max(1, rect.Right - rect.Left - _frameInsets.Horizontal),
+            Math.Max(1, rect.Bottom - rect.Top - _frameInsets.Vertical),
             sourceWidth, sourceHeight, _rotation));
+    }
+
+    internal PreviewFrameInsets FrameInsets => _frameInsets;
+
+    private void SetHomeHover(bool hover)
+    {
+        if (_homeHover == hover) return;
+        _homeHover = hover;
+        ApplyFrame(reflow: false);
+    }
+
+    private void TrackNonClientLeave()
+    {
+        var track = new TrackMouseEventData
+        {
+            Size = (uint)Marshal.SizeOf<TrackMouseEventData>(),
+            Flags = TmeLeave | TmeNonClient,
+            Window = _handle,
+        };
+        _ = TrackMouseEvent(ref track);
+    }
+
+    private void OnPreviewFrameChanged()
+    {
+        if (_disposed) return;
+        if (!_source.Dispatcher.CheckAccess())
+        {
+            _source.Dispatcher.BeginInvoke(DispatcherPriority.Normal, OnPreviewFrameChanged);
+            return;
+        }
+        ApplyFrame();
+        UpdateContextMenuLabels();
+    }
+
+    private void ApplyFrame(bool reflow = true)
+    {
+        if (_disposed || _handle == 0 || _managedContent is not null) return;
+        var settings = PreviewFrameService.Current;
+        _frameSettings = settings;
+        _ = GetClientRect(_handle, out var client);
+        var layout = _isFullScreen ? PreviewFrameLayout.None : settings.Layout(
+            GetDpiForWindow(_handle), client.Right - client.Left, client.Bottom - client.Top);
+        var frame = new NativeCore.NativeWindowFrame
+        {
+            Left = layout.Insets.Left,
+            Top = layout.Insets.Top,
+            Right = layout.Insets.Right,
+            Bottom = layout.Insets.Bottom,
+            Argb = settings.ToArgb(),
+            Roundness = (float)settings.Roundness,
+            Flags = (settings.AutoColor ? NativeCore.NativeWindowFrame.AutoColorFlag : 0) |
+                (_homeHover ? NativeCore.NativeWindowFrame.ButtonHoverFlag : 0),
+        };
+        if (!layout.HomePill.IsEmpty)
+        {
+            frame.ButtonAlign = settings.HomeButtonPosition switch
+            {
+                PreviewHomeButtonPosition.Left => NativeCore.NativeWindowFrame.AlignLeft,
+                PreviewHomeButtonPosition.Right => NativeCore.NativeWindowFrame.AlignRight,
+                _ => NativeCore.NativeWindowFrame.AlignCenter,
+            };
+            // Same anchoring as PreviewFrameSettings.Layout, so the pill follows
+            // live resizing without a round trip.
+            frame.ButtonOffset = layout.HomeHitArea.Width / 2;
+            frame.ButtonWidth = layout.HomePill.Width;
+            frame.ButtonHeight = layout.HomePill.Height;
+            frame.ButtonCenterY = layout.Insets.Bottom / 2;
+        }
+        // Only offset input/aspect when the renderer actually draws the
+        // outline (an older native core lacks the export).
+        var applied = _sessionHandle != 0 && _attached &&
+            NativeCore.SetDeviceWindowFrame(_sessionHandle, _handle, frame)
+            ? layout.Insets : default;
+        if (applied == _frameInsets) return;
+        _frameInsets = applied;
+        _pointerInput?.Invoke(new PreviewPointerEventArgs(PreviewPointerKind.Reset, 0, 0, 0, 0));
+        _protectedOverlay?.UpdateBounds();
+        if (reflow) _aspectController.Reflow();
+        Log("independent_window_frame",
+            ("mode", WindowMode), ("insets", $"{applied.Left},{applied.Top},{applied.Right},{applied.Bottom}"),
+            ("enabled", settings.Enabled), ("home", settings.HomeButton));
     }
 
     private static nint DrainQueuedMouseMoves(nint hwnd, nint currentLParam)
@@ -1341,6 +1484,7 @@ internal sealed class NativePreviewWindow : IDisposable
         _hoverOpacityTimer.Stop();
         OpenWindows.Remove(this);
         ThemeService.ThemeChanged -= OnThemeChanged;
+        PreviewFrameService.Changed -= OnPreviewFrameChanged;
         _styleWindow?.Close();
         _styleWindow = null;
         _protectedOverlay?.Close();
@@ -1394,6 +1538,19 @@ internal sealed class NativePreviewWindow : IDisposable
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetLayeredWindowAttributes(nint hwnd, uint colorKey, byte alpha, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TrackMouseEventData
+    {
+        internal uint Size;
+        internal uint Flags;
+        internal nint Window;
+        internal uint HoverTime;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TrackMouseEvent(ref TrackMouseEventData data);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct HoverPoint { public int X, Y; }

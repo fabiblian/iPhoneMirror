@@ -20,6 +20,27 @@ internal sealed partial class MainViewModel
     }
     internal bool IsDeviceControlEnabled(string? udid) => FindControl(udid)?.Enabled == true;
 
+    // A framed preview starts touch control on open unless the device cannot
+    // be controlled or another control already owns it (or is starting).
+    internal bool CanAutoStartDeviceControl(string? udid)
+    {
+        var device = Devices.FirstOrDefault(d => DeviceViewModel.UdidEquals(d.Udid, udid));
+        return device is not null && !device.IsMediaCast && !IsDeviceControlBusy(udid) &&
+            CanEnableUsbControlFor(device);
+    }
+
+    // Wired control when the picture comes over USB or the same iPhone is
+    // also connected by cable; otherwise wireless control.
+    internal bool PrefersWiredControl(string udid)
+    {
+        var device = Devices.FirstOrDefault(d => DeviceViewModel.UdidEquals(d.Udid, udid));
+        if (device is null) return false;
+        if (!device.IsWireless) return true;
+        var appleUdid = ResolveAppleUdid(udid);
+        return appleUdid is not null && Devices.Any(d => !d.IsWireless && !d.IsMediaCast &&
+            DeviceViewModel.UdidEquals(ResolveAppleUdid(d.Udid), appleUdid));
+    }
+
     private DeviceControlSession? FindControl(string? udid) =>
         udid is not null && _deviceControls.TryGetValue(udid, out var control) ? control : null;
 

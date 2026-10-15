@@ -1844,6 +1844,105 @@ var previewRendererCode = File.ReadAllText(Path.Combine(sourceDirectory,
     "Core", "src", "Renderer", "D3D11PreviewRenderer.cpp"));
 var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
     "App", "Services", "MultiDevicePreviewManager.cs"));
+// Preview-window frame: the outer half resizes, the rest of the frame moves,
+// and the image only becomes a client area while touch control is enabled.
+{
+    const int L = 100, T = 200, R = 400, B = 800;
+    int Hit(int x, int y, int inset, bool control) =>
+        PreviewFrameHitTest.Classify(x, y, L, T, R, B, 8,
+            new PreviewFrameInsets(inset, inset, inset, inset), default, control);
+    Equal(PreviewFrameHitTest.HtLeft, Hit(L + 2, 500, 12, true), "frame outer edge resizes");
+    Equal(PreviewFrameHitTest.HtCaption, Hit(L + 9, 500, 12, true), "frame inner band moves");
+    Equal(PreviewFrameHitTest.HtClient, Hit(250, 500, 12, true), "image is client during control");
+    Equal(PreviewFrameHitTest.HtCaption, Hit(250, 500, 12, false), "image moves without control");
+    Equal(PreviewFrameHitTest.HtTopLeft, Hit(L + 20, T + 3, 12, true), "frame corner span resizes diagonally");
+    Equal(PreviewFrameHitTest.HtBottomRight, Hit(R - 3, B - 20, 12, true), "bottom-right corner span");
+    Equal(PreviewFrameHitTest.HtTop, Hit(250, T + 1, 12, true), "top edge resizes");
+    // Without a frame the classic 8 px band applies and only exact corners are diagonal.
+    Equal(PreviewFrameHitTest.HtLeft, Hit(L + 7, T + 20, 0, false), "no-frame edge band");
+    Equal(PreviewFrameHitTest.HtTopLeft, Hit(L + 7, T + 7, 0, false), "no-frame corner");
+    Equal(PreviewFrameHitTest.HtCaption, Hit(L + 8, 500, 0, false), "no-frame interior moves");
+
+    // Home button layout (96 DPI, 400 x 900 client).
+    var bar = new PreviewFrameSettings().Layout(96, 400, 900);
+    Equal(new PreviewFrameInsets(12, 12, 12, 40), bar.Insets, "home bar adds a taller bottom band");
+    Equal(new PreviewPixelRect(120, 860, 160, 40), bar.HomeHitArea, "home bar hit area is centred");
+    Equal(new PreviewPixelRect(140, 877, 120, 6), bar.HomePill, "home bar pill is centred in the band");
+    var pill = new PreviewFrameSettings { HomeButton = PreviewHomeButtonStyle.Pill }.Layout(96, 400, 900);
+    Equal(new PreviewFrameInsets(12, 12, 12, 12), pill.Insets, "home pill keeps the regular frame");
+    Equal(new PreviewPixelRect(160, 892, 80, 4), pill.HomePill, "home pill sits in the bottom frame");
+    Equal(new PreviewPixelRect(12, 860, 160, 40), new PreviewFrameSettings
+        { HomeButtonPosition = PreviewHomeButtonPosition.Left }.Layout(96, 400, 900).HomeHitArea,
+        "home bar can sit at the left");
+    Equal(new PreviewPixelRect(228, 860, 160, 40), new PreviewFrameSettings
+        { HomeButtonPosition = PreviewHomeButtonPosition.Right }.Layout(96, 400, 900).HomeHitArea,
+        "home bar can sit at the right");
+    var off = new PreviewFrameSettings { HomeButton = PreviewHomeButtonStyle.Off }.Layout(96, 400, 900);
+    Equal(true, off.HomeHitArea.IsEmpty && off.Insets == new PreviewFrameInsets(12, 12, 12, 12),
+        "home button can be switched off");
+    Equal(PreviewFrameLayout.None, new PreviewFrameSettings { Enabled = false }.Layout(96, 400, 900),
+        "disabled frame has no layout");
+    int HomeHit(int x, int y) => PreviewFrameHitTest.Classify(x, y, 100, 200, 500, 1100, 8,
+        bar.Insets, bar.HomeHitArea, contentIsClient: true);
+    Equal(PreviewFrameHitTest.HtHomeButton, HomeHit(300, 1070), "home pill area presses Home");
+    Equal(PreviewFrameHitTest.HtCaption, HomeHit(150, 1070), "rest of the home bar moves");
+    Equal(PreviewFrameHitTest.HtBottom, HomeHit(300, 1098), "bottom edge still resizes");
+    Equal(PreviewFrameHitTest.HtClient, HomeHit(300, 700), "image above the bar controls the phone");
+
+    var defaults = new PreviewFrameSettings();
+    Equal(true, defaults.Enabled, "frame enabled by default");
+    Equal(12d, defaults.ThicknessDips, "frame default thickness");
+    Equal("#2B2B2B", defaults.Color, "frame default color");
+    Equal(false, defaults.AutoColor, "fixed frame colour by default");
+    Equal(PreviewHomeButtonStyle.Bar, defaults.HomeButton, "home bar by default");
+    Equal(PreviewHomeButtonPosition.Center, defaults.HomeButtonPosition, "home centred by default");
+    Equal(true, defaults.AutoStartControl, "control starts automatically by default");
+    Equal(PreviewHomeButtonStyle.Bar, new PreviewFrameSettings
+        { HomeButton = (PreviewHomeButtonStyle)42 }.Normalized().HomeButton, "invalid home style falls back");
+    Equal(0xFF2B2B2Bu, defaults.ToArgb(), "frame default ARGB");
+    Equal(18, defaults.ThicknessPixels(144), "frame thickness scales with DPI");
+    Equal(0, new PreviewFrameSettings { Enabled = false }.ThicknessPixels(96), "disabled frame has no inset");
+    var clamped = new PreviewFrameSettings
+    {
+        ThicknessDips = 500, Color = "nonsense", Opacity = double.NaN,
+    }.Normalized();
+    Equal(48d, clamped.ThicknessDips, "frame thickness clamps");
+    Equal("#2B2B2B", clamped.Color, "invalid frame color falls back");
+    Equal(1d, clamped.Opacity, "invalid frame opacity falls back");
+    Equal(0.7, defaults.Roundness, "frame default roundness");
+    Equal(1d, new PreviewFrameSettings { Roundness = 3 }.Normalized().Roundness, "frame roundness clamps");
+    Equal(0.7, new PreviewFrameSettings { Roundness = double.NaN }.Normalized().Roundness,
+        "invalid frame roundness falls back");
+    Equal("#0A84FF", new PreviewFrameSettings { Color = "0a84ff" }.Normalized().Color,
+        "frame color normalizes hex");
+    Equal(0x800A84FFu, new PreviewFrameSettings { Color = "#0A84FF", Opacity = 0.5 }.ToArgb(),
+        "frame opacity becomes alpha");
+
+    var frameSettingsPath = Path.Combine(Path.GetTempPath(),
+        $"iPhoneMirror-frame-{Guid.NewGuid():N}.json");
+    try
+    {
+        var frameStore = new UpdateSettingsStore(frameSettingsPath);
+        frameStore.Update(settings => settings.PreviewFrame = new PreviewFrameSettings
+        {
+            Enabled = false, ThicknessDips = 30, Color = "#FF453A", Opacity = 0.4, Roundness = 0.25,
+            AutoColor = true, HomeButton = PreviewHomeButtonStyle.Pill,
+            HomeButtonPosition = PreviewHomeButtonPosition.Right, AutoStartControl = false,
+        });
+        var reloaded = frameStore.Load().PreviewFrame;
+        Equal(false, reloaded.Enabled, "frame enabled persists");
+        Equal(30d, reloaded.ThicknessDips, "frame thickness persists");
+        Equal("#FF453A", reloaded.Color, "frame color persists");
+        Equal(0.4, reloaded.Opacity, "frame opacity persists");
+        Equal(0.25, reloaded.Roundness, "frame roundness persists");
+        Equal(true, reloaded.AutoColor, "frame auto colour persists");
+        Equal(PreviewHomeButtonStyle.Pill, reloaded.HomeButton, "home style persists");
+        Equal(PreviewHomeButtonPosition.Right, reloaded.HomeButtonPosition, "home position persists");
+        Equal(false, reloaded.AutoStartControl, "auto control persists");
+        Equal(30d, frameStore.Load().Clone().PreviewFrame.ThicknessDips, "settings clone keeps frame");
+    }
+    finally { File.Delete(frameSettingsPath); }
+}
 Equal(true,
     nativePreviewWindowCode.Contains("internal void HideForShutdown()",
         StringComparison.Ordinal) &&

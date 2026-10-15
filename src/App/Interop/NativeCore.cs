@@ -406,6 +406,50 @@ internal sealed class NativeCore : IDisposable
         }
     }
 
+    /// <summary>Mirrors iPhoneMirror::WindowFrame in CoreApi.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NativeWindowFrame
+    {
+        internal const uint AutoColorFlag = 1;
+        internal const uint ButtonHoverFlag = 2;
+        internal const int AlignNone = 0;
+        internal const int AlignLeft = 1;
+        internal const int AlignCenter = 2;
+        internal const int AlignRight = 3;
+
+        internal uint StructSize;
+        internal int Left;
+        internal int Top;
+        internal int Right;
+        internal int Bottom;
+        internal uint Argb;
+        internal float Roundness;
+        internal uint Flags;
+        internal int ButtonAlign;
+        internal int ButtonOffset;
+        internal int ButtonWidth;
+        internal int ButtonHeight;
+        internal int ButtonCenterY;
+    }
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int im_session_set_window_frame(ulong handle, nint hwnd,
+        ref NativeWindowFrame frame);
+
+    internal static bool SetDeviceWindowFrame(ulong handle, nint hwnd, NativeWindowFrame frame)
+    {
+        if (handle == 0 || hwnd == 0) return false;
+        frame.StructSize = (uint)Marshal.SizeOf<NativeWindowFrame>();
+        frame.Roundness = float.IsFinite(frame.Roundness) ? Math.Clamp(frame.Roundness, 0, 1) : 0;
+        try { return im_session_set_window_frame(handle, hwnd, ref frame) == 0; }
+        catch (Exception error) when (error is EntryPointNotFoundException or DllNotFoundException)
+        {
+            DiagnosticLogger.ExceptionOnce("native-window-frame", "native",
+                "window_frame_unavailable", error);
+            return false;
+        }
+    }
+
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
     private static extern int im_session_create([MarshalAs(UnmanagedType.LPWStr)] string udid,
         ref NativeCaptureOptions options, out ulong handle);
