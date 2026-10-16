@@ -433,6 +433,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         // when the workspace opens. Bind input to the already-created HWND.
         _windowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
         _windowSource?.AddHook(WindowMessageHook);
+        RegisterClipboardListener();
         RegisterBluetoothControlHotkey();
         _viewModel.AddDiagnosticLog(AppLog.Event("main_window_input_source_initialized",
             ("attached", _windowSource is not null), ("visible", IsVisible)));
@@ -1610,6 +1611,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void OnClosed(object? sender, EventArgs e)
     {
+        UnregisterClipboardListener();
         DisposeKeyboardInputSubscriptions();
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         DisposeKeyboardMapping();
@@ -1640,6 +1642,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private nint WindowMessageHook(nint hwnd, int message, nint wParam, nint lParam,
         ref bool handled)
     {
+        if (message == WmClipboardUpdate) OnWindowsClipboardUpdate();
         if ((IsBluetoothControlActive || IsUsbControlActive) && _activeControlWindow == 0 &&
             (message == WmKillFocus || message == WmCancelMode ||
              message == WmCaptureChanged ||

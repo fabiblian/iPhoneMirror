@@ -1294,6 +1294,7 @@
     <system:String x:Key="KeyboardInputModeDirect">直连键盘输入已启用，键盘映射暂不可用。</system:String>
     <system:String x:Key="ArrowKeysSwipe">方向键滑动</system:String>
     <system:String x:Key="ArrowKeysSwipeHelp">方向键在屏幕中央滑动（↓ 下一个视频，→ 下一页）。Ctrl+方向键发送普通方向键。仅限有线或无线控制；蓝牙不支持触控手势。</system:String>
+    <system:String x:Key="ClipboardAutoSyncHelp">启用有线或无线控制时，复制的文本会自动双向同步。蓝牙控制无法访问剪贴板。</system:String>
     <system:String x:Key="MappingPaused">键盘映射已暂停。点击当前投屏画面后恢复；编辑或文字输入期间不执行映射。</system:String>
     <system:String x:Key="MappingNoDevice">等待设备：请选择并连接 iPhone/iPad。</system:String>
     <system:String x:Key="MappingUnsupportedDevice">当前设备不支持触控反控。请选择 iPhone/iPad 投屏设备。</system:String>

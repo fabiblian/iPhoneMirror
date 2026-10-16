@@ -42,6 +42,8 @@ internal sealed class UsbTouchBridgeHost : IAsyncDisposable
     internal bool InputWritePending => _bridge.InputWritePending;
     internal Task<string?> AutomationClipboardAsync(string kind, string? text, Func<bool> current,
         CancellationToken cancellation) => _bridge.AutomationClipboardAsync(kind, text, current, cancellation);
+    internal Task SetDeviceClipboardAsync(string text, Func<bool> current, CancellationToken cancellation) =>
+        _bridge.AutomationClipboardAsync("write_clipboard", text, current, cancellation, hostSync: true);
     internal long InputGeneration => _bridge.InputGeneration;
     internal string? Udid => _bridge.Udid;
     internal bool GateOpen => _bridge.GateOpen;

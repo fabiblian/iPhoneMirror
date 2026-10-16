@@ -1997,6 +1997,8 @@
                                           AutomationProperties.AutomationId="ArrowKeysSwipeCheckBox"/>
                                 <TextBlock Text="{DynamicResource ArrowKeysSwipeHelp}" TextWrapping="Wrap" Margin="0,4,0,0"
                                            Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                                <TextBlock Text="{DynamicResource ClipboardAutoSyncHelp}" TextWrapping="Wrap" Margin="0,10,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
                             </StackPanel>
                         </Border>
 

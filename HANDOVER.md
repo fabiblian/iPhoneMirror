@@ -23,8 +23,8 @@ Testen über den Launcher (`tools/version-launcher`, Start mit `Start-iPhoneMirr
 | 2 – Schärferes Bild bei kleinem Fenster | umgesetzt (Mip-Zwei-Pass, LOD-Bias −0.5, ohne Nachschärfung), Build ok – **Test am iPhone offen**. Log zeigt `mode=mipmapped`. |
 | 3 – Tippen mit Schweizer Layout | umgesetzt (`SwissKeyboardLayout.cs`, `MainWindow.KeyboardLayout.cs`), Logik-Tests ok, Build ok – **Test am iPhone offen**. Dabei prüfen: `~` (⌥N ist am Mac evtl. eine Tottaste) und ob `§`/`<` vertauscht sind. |
 | 4 – Pfeiltasten wischen | umgesetzt (`ArrowKeySwipe.cs`, Dispatch in `MainWindow.xaml.cs`, Schalter in der Karte „Keyboard mapping“), Logik-Tests ok, Build ok – **Test am iPhone offen**. Nur ohne Modifier wird gewischt; Shift/Alt/Cmd+Pfeil bleiben normale Tasten. |
-| 5 – Zwischenablage beide Richtungen, Text | offen – **als Nächstes** |
-| 6 – Bilder in der Zwischenablage | offen |
+| 5 – Zwischenablage beide Richtungen, Text | umgesetzt: PC → iPhone über `WM_CLIPBOARDUPDATE` (`MainWindow.ClipboardSync.cs`) und den **vorhandenen** Bridge-Frame `write_clipboard` (kein neuer `set_clipboard` nötig, Bridge unverändert). Echo-Schutz: `ClipboardPushPolicy` (Hash + Sequenznummer). Logik-Tests ok, Build ok – **Test am iPhone offen**. |
+| 6 – Bilder in der Zwischenablage | offen – **als Nächstes**. Hinweis: Etappe 5 nutzt `write_clipboard`; für Bilder dort erweitern statt `set_clipboard` neu bauen. |
 
 Veraltete Logik-Tests wurden in Commit `75421d0` repariert. Auf dem alten PC lag zuletzt noch eine **uncommittete** Änderung an `src/App.Runtime.Tests/ReverseControlCountdownTests.cs` aus der Session „stabilize flaky reverse“. Sie ist **nicht** auf GitHub. Bis das geklärt ist, weiter mit `-SkipTests` bauen.
 

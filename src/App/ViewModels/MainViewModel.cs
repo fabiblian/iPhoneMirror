@@ -1479,7 +1479,12 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
     }
 
     private ClipboardSyncState ClipboardSync => _clipboardSyncState ??= new(
-        text => System.Windows.Clipboard.SetDataObject(text, copy: true),
+        text =>
+        {
+            System.Windows.Clipboard.SetDataObject(text, copy: true);
+            // The listener sees this write too; it must not go back to the phone.
+            _clipboardPush.RecordWindowsWrite(text, GetClipboardSequenceNumber());
+        },
         GetClipboardSequenceNumber,
         (device, source) => !_disposed && FindControl(device) is { } control &&
             (ReferenceEquals(control.WiredBridge, source) ||
@@ -1495,6 +1500,35 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
 
     [DllImport("user32.dll")]
     private static extern uint GetClipboardSequenceNumber();
+
+    private readonly ClipboardPushPolicy _clipboardPush = new();
+
+    // Windows -> iPhone: called on the dispatcher after a (debounced)
+    // WM_CLIPBOARDUPDATE. Sets the phone's pasteboard without pasting.
+    internal async Task PushWindowsClipboardToDeviceAsync(Func<string> readText)
+    {
+        if (_disposed || SelectedDevice?.Udid is not { } udid || !CanUseDeviceClipboard(udid)) return;
+        var bridge = GetReadyUsbControlBridge(udid);
+        if (bridge is null || !bridge.SupportsAutomationClipboard) return;
+        var sequence = GetClipboardSequenceNumber();
+        var text = await ClipboardTextReader.ReadAsync(readText, () => !_disposed);
+        if (!_clipboardPush.ShouldPush(text, sequence)) return;
+        var generation = bridge.InputGeneration;
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            await bridge.SetDeviceClipboardAsync(text!,
+                () => !_disposed && bridge.IsReady && bridge.InputGeneration == generation, timeout.Token);
+            AddDiagnosticLog(AppLog.Event("clipboard_synced_to_device",
+                ("device", AppLog.Device(udid)), ("length", text!.Length)));
+        }
+        catch (Exception error)
+        {
+            _clipboardPush.PushFailed(text!);
+            AddDiagnosticLog(AppLog.Event("clipboard_sync_to_device_failed",
+                ("device", AppLog.Device(udid)), ("error", AppLog.Error(error))));
+        }
+    }
 
     // Called by the bridge event handlers after dispatching to the UI thread.
     internal void HandleClipboardTextFromDevice(string device, UsbTouchBridgeHost bridge, string? text,

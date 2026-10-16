@@ -22,13 +22,17 @@ public sealed partial class DirectUsbInputBridge
         else pending.Result.TrySetException(new AutomationException("CLIPBOARD_UNAVAILABLE", "The device clipboard operation failed or was cancelled.", 503));
     }
 
+    // hostSync: the app's own Windows -> iPhone clipboard sync. It is not
+    // automation input, so it skips input admission and queues behind another
+    // clipboard request instead of failing.
     internal async Task<string?> AutomationClipboardAsync(string kind, string? text, Func<bool> current,
-        CancellationToken cancellation)
+        CancellationToken cancellation, bool hostSync = false)
     {
         if (!SupportsAutomationClipboard)
             throw new AutomationException("CAPABILITY_NOT_SUPPORTED", "The installed bridge does not support clipboard requests.", 422);
         if (kind is not ("read_clipboard" or "write_clipboard" or "paste_text")) throw new ArgumentException(nameof(kind));
-        if (!await _clipboardRequestGate.WaitAsync(0, cancellation))
+        if (hostSync) await _clipboardRequestGate.WaitAsync(cancellation);
+        else if (!await _clipboardRequestGate.WaitAsync(0, cancellation))
             throw new AutomationException("CONTROL_LOCKED", "Another clipboard request is in progress.");
         var id = Guid.NewGuid().ToString("N");
         var generation = InputGeneration;
@@ -39,7 +43,7 @@ public sealed partial class DirectUsbInputBridge
         IDisposable? inputAdmission = null;
         try
         {
-            inputAdmission = kind == "read_clipboard" ? null : InputAdmission?.Invoke();
+            inputAdmission = kind == "read_clipboard" || hostSync ? null : InputAdmission?.Invoke();
             await _sendLock.WaitAsync(cancellation);
             try
             {
