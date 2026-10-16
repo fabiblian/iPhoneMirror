@@ -64,5 +64,23 @@ internal static class SwissKeyboardLayoutTests
 
         Check(SwissKeyboardLayout.ModifierUsages(commandShift).SequenceEqual(new byte[] { 0xE1, 0xE3 }),
             "modifier mask expands to HID modifier usages");
+
+        // Arrow keys: one swipe through the middle, 35 % long.
+        static ((double X, double Y) Start, (double X, double Y) End) Swipe(byte usage) =>
+            ArrowKeySwipe.TryGetSwipe(usage, out var start, out var end) ? (start, end) : default;
+        static bool Near(double a, double b) => Math.Abs(a - b) < 1e-9;
+        var down = Swipe(0x51);
+        Check(Near(down.Start.X, 0.5) && down.Start.Y > down.End.Y &&
+              Near(down.Start.Y - down.End.Y, ArrowKeySwipe.Distance), "↓ moves the finger up");
+        var up = Swipe(0x52);
+        Check(up.Start.Y < up.End.Y && Near(up.Start.X, 0.5), "↑ moves the finger down");
+        var right = Swipe(0x4F);
+        Check(right.Start.X > right.End.X && Near(right.Start.Y, 0.5) &&
+              Near(right.Start.X - right.End.X, ArrowKeySwipe.Distance), "→ moves the finger left");
+        var left = Swipe(0x50);
+        Check(left.Start.X < left.End.X, "← moves the finger right");
+        Check(!ArrowKeySwipe.TryGetSwipe(0x28, out _, out _) && !ArrowKeySwipe.IsArrow(0x4E),
+            "only the four arrow keys swipe");
+        Check(ArrowKeySwipe.DurationMs == 250, "swipe takes about 250 ms");
     }
 }

@@ -61,6 +61,7 @@ public partial class MainWindow
         _controlModifierKeys.Clear();
         _controlKeyboardModifiers = 0;
         _pasteVPending = false;
+        _arrowSwipeKeys.Clear();
         var oldRoute = _directKeyboardRoute;
         _directKeyboardRoute = null;
         var pending = Task.WhenAll(_keyboardSends.ToArray());

@@ -26,6 +26,7 @@ internal sealed class UpdateSettings
     public KeyboardMappingSettings KeyboardMapping { get; set; } = new();
     public PreviewFrameSettings PreviewFrame { get; set; } = new();
     public bool CheckOnStartup { get; set; } = true;
+    public bool ArrowKeysSwipe { get; set; } = true;
     public bool AutoDownload { get; set; }
     public bool AllowMirrorFallback { get; set; } = false;
     public bool NotifyStableReleases { get; set; } = true;
@@ -113,6 +114,7 @@ internal sealed class UpdateSettings
         KeyboardMapping = KeyboardMapping.Clone(),
         PreviewFrame = (PreviewFrame ?? new()).Clone(),
         CheckOnStartup = CheckOnStartup,
+        ArrowKeysSwipe = ArrowKeysSwipe,
         AutoDownload = AutoDownload,
         AllowMirrorFallback = AllowMirrorFallback,
         NotifyStableReleases = NotifyStableReleases,

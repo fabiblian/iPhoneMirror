@@ -247,6 +247,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly RawMouseDeltaTracker _rawMouseDeltaTracker = new();
     private double _controlRemainderY;
     private readonly HashSet<byte> _controlKeyboardUsages = [];
+    private readonly HashSet<byte> _arrowSwipeKeys = [];
     private readonly HashSet<int> _controlModifierKeys = [];
     private byte _controlKeyboardModifiers;
     private bool _pasteVPending;
@@ -1487,6 +1488,31 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             if (Volatile.Read(ref _bluetoothRouteChanging) != 0 || !canSend() || !route.IsCurrent()) return;
             if (!DeviceKeyMap.TryMapKey(e.VirtualKey, e.ScanCode, out var usage, out var modifier)) return;
             var bluetooth = route.Transport == "BluetoothDirect";
+            if (modifier == 0 && ArrowKeySwipe.IsArrow(usage))
+            {
+                // A swiped arrow owns its whole lifetime: repeats and the
+                // release must not reach the phone as a key.
+                if (!down && _arrowSwipeKeys.Remove(usage)) return;
+                if (down && _arrowSwipeKeys.Contains(usage)) return;
+                var held = ModifierMask(_controlModifierKeys);
+                const byte control = 0x11; // left/right Ctrl
+                if (down && held == 0 && !bluetooth && _viewModel.ArrowKeysSwipe)
+                {
+                    _arrowSwipeKeys.Add(usage);
+                    ReleaseRoute();
+                    await TrackKeyboardSendAsync(SendArrowSwipeAsync(usage, routeUdid, canSend));
+                    return;
+                }
+                if (down && (held & control) != 0 && _viewModel.ArrowKeysSwipe)
+                {
+                    // Ctrl+arrow is the escape hatch: a plain arrow key
+                    // (Shift etc. kept, Ctrl dropped).
+                    ReleaseRoute();
+                    await TrackKeyboardSendAsync(SendKeyTapAsync(
+                        route, (byte)(held & ~control), usage, bluetooth, canSend));
+                    return;
+                }
+            }
             if (down && modifier == 0 && usage != 0 &&
                 TryTranslateLayoutKey(e.VirtualKey, e.ScanCode, bluetooth,
                     out var tapUsage, out var tapModifiers, out var insertText))
@@ -6281,6 +6307,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         _controlModifierKeys.Clear();
         _controlKeyboardModifiers = 0;
         _pasteVPending = false;
+        _arrowSwipeKeys.Clear();
         StopControlPointerTimer();
     }
 

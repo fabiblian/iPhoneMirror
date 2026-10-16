@@ -87,6 +87,40 @@ public partial class MainWindow
         }
     }
 
+    private (uint Width, uint Height, int Rotation) ControlGeometry(string? targetUdid) =>
+        _secondaryMirrors.TryGetControlGeometry(targetUdid, out var width, out var height, out var rotation)
+            ? (width, height, rotation)
+            : (_viewModel.SourceVideoWidth, _viewModel.SourceVideoHeight, 0);
+
+    private async Task SendArrowSwipeAsync(byte usage, string? targetUdid, Func<bool> canSend)
+    {
+        if (!ArrowKeySwipe.TryGetSwipe(usage, out var start, out var end)) return;
+        var geometry = ControlGeometry(targetUdid);
+        if (geometry.Width == 0 || geometry.Height == 0) return;
+        // Same screen-to-device mapping as keyboard-mapping gestures, so the
+        // swipe follows what the preview shows in portrait and landscape.
+        var portrait = _viewModel.AppliedBluetoothPortraitMouseDirection;
+        var landscape = _viewModel.AppliedBluetoothLandscapeMouseDirection;
+        var reverseX = _viewModel.AppliedBluetoothMouseReverseHorizontal;
+        var reverseY = _viewModel.AppliedBluetoothMouseReverseVertical;
+        var route = _viewModel.CaptureTouchRoute(targetUdid,
+            () => canSend() && geometry == ControlGeometry(targetUdid),
+            (x, y) => BluetoothMouseOrientationMapper.MapNormalized(x, y, geometry.Width, geometry.Height,
+                geometry.Rotation, portrait, landscape, reverseX, reverseY));
+        if (route is null) return;
+        try
+        {
+            await _mappingExecutor.ExecuteGestureAsync(new TouchGesture(Guid.NewGuid(),
+                MappedTouchAction.Swipe, start.X, start.Y, end.X, end.Y, ArrowKeySwipe.DurationMs), route);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error)
+        {
+            _viewModel.AddDiagnosticLog(AppLog.Event("arrow_key_swipe_failed",
+                ("device", AppLog.Device(targetUdid)), ("error", AppLog.Error(error))));
+        }
+    }
+
     [DllImport("user32.dll")]
     private static extern int ToUnicodeEx(uint virtualKey, uint scanCode, byte[] keyState,
         [Out] char[] buffer, int bufferSize, uint flags, nint layout);

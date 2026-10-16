@@ -388,6 +388,21 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         _usbControlFailed ? LocalizationService.Get("UsbControlRetry") :
         _wirelessControlEnabled ? LocalizationService.Get("UsbControlDisableWireless") : _usbControlEnabled ? LocalizationService.Get("UsbControlDisable") : LocalizationService.Get("UsbControlDefault");
 
+    public bool ArrowKeysSwipe
+    {
+        get => Application.Current is not App app || app.UpdateSettings.ArrowKeysSwipe;
+        set
+        {
+            if (Application.Current is not App app ||
+                app.UpdateSettings.ArrowKeysSwipe == value) return;
+            app.UpdateSettings.ArrowKeysSwipe = value;
+            if (!app.SaveUpdateSettings()) app.UpdateSettings.ArrowKeysSwipe = !value;
+            OnPropertyChanged();
+            AddDiagnosticLog(AppLog.Event("arrow_keys_swipe_changed",
+                ("enabled", app.UpdateSettings.ArrowKeysSwipe)));
+        }
+    }
+
     public ApplicationDisplayMode SelectedApplicationDisplayMode
     {
         get => Application.Current is App app

@@ -1992,6 +1992,11 @@
                                 </Button>
                                 <TextBlock Text="{Binding KeyboardMappingStatus}" TextWrapping="Wrap" Margin="0,6,0,0"
                                            Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                                <CheckBox Content="{DynamicResource ArrowKeysSwipe}" Margin="0,12,0,0"
+                                          IsChecked="{Binding ArrowKeysSwipe, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="ArrowKeysSwipeCheckBox"/>
+                                <TextBlock Text="{DynamicResource ArrowKeysSwipeHelp}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
                             </StackPanel>
                         </Border>
 

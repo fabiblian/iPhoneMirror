@@ -22,8 +22,8 @@ Testen über den Launcher (`tools/version-launcher`, Start mit `Start-iPhoneMirr
 | 1 – Echte Uhrzeit + Preview-Shortcut | ✅ fertig, Commit `12ef0a5`, gepusht, von Fabian am iPhone getestet (funktioniert). |
 | 2 – Schärferes Bild bei kleinem Fenster | umgesetzt (Mip-Zwei-Pass, LOD-Bias −0.5, ohne Nachschärfung), Build ok – **Test am iPhone offen**. Log zeigt `mode=mipmapped`. |
 | 3 – Tippen mit Schweizer Layout | umgesetzt (`SwissKeyboardLayout.cs`, `MainWindow.KeyboardLayout.cs`), Logik-Tests ok, Build ok – **Test am iPhone offen**. Dabei prüfen: `~` (⌥N ist am Mac evtl. eine Tottaste) und ob `§`/`<` vertauscht sind. |
-| 4 – Pfeiltasten wischen | offen – **als Nächstes** |
-| 5 – Zwischenablage beide Richtungen, Text | offen |
+| 4 – Pfeiltasten wischen | umgesetzt (`ArrowKeySwipe.cs`, Dispatch in `MainWindow.xaml.cs`, Schalter in der Karte „Keyboard mapping“), Logik-Tests ok, Build ok – **Test am iPhone offen**. Nur ohne Modifier wird gewischt; Shift/Alt/Cmd+Pfeil bleiben normale Tasten. |
+| 5 – Zwischenablage beide Richtungen, Text | offen – **als Nächstes** |
 | 6 – Bilder in der Zwischenablage | offen |
 
 Veraltete Logik-Tests wurden in Commit `75421d0` repariert. Auf dem alten PC lag zuletzt noch eine **uncommittete** Änderung an `src/App.Runtime.Tests/ReverseControlCountdownTests.cs` aus der Session „stabilize flaky reverse“. Sie ist **nicht** auf GitHub. Bis das geklärt ist, weiter mit `-SkipTests` bauen.
