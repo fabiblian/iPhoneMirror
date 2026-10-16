@@ -1553,6 +1553,9 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                     if (!string.IsNullOrEmpty(text))
                         await TrackKeyboardSendAsync(_viewModel.SendUsbPasteTextAsync(
                             text, routeUdid, () => route.IsCurrent() && canSend()));
+                    else if (route.IsCurrent() && canSend())
+                        await TrackKeyboardSendAsync(_viewModel.SendUsbPasteImageAsync(
+                            routeUdid, () => route.IsCurrent() && canSend()));
                 }
                 catch (Exception error)
                 {

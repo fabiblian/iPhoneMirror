@@ -24,6 +24,7 @@
     <Compile Include="..\App\Services\ArrowKeySwipe.cs" Link="ArrowKeySwipe.cs" />
     <Compile Include="ClipboardPushPolicyTests.cs" />
     <Compile Include="..\App\Services\ClipboardPushPolicy.cs" Link="ClipboardPushPolicy.cs" />
+    <Compile Include="..\App\Services\ClipboardImageCodec.cs" Link="ClipboardImageCodec.cs" />
     <Compile Include="UxPlayComponentTests.cs" />
     <Compile Include="ComponentDownloadNetworkTests.cs" />
     <EmbeddedResource Include="..\..\config\uxplay-component.json" LogicalName="IPhoneMirror.App.Components.UxPlay.json" />

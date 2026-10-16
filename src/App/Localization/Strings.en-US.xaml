@@ -1294,7 +1294,7 @@
     <system:String x:Key="KeyboardInputModeDirect">Direct keyboard input to Apple is active; keyboard mapping is unavailable.</system:String>
     <system:String x:Key="ArrowKeysSwipe">Arrow keys swipe</system:String>
     <system:String x:Key="ArrowKeysSwipeHelp">Arrow keys swipe in the middle of the screen (↓ next video, → next page). Ctrl+arrow sends a normal arrow key. Only with wired or wireless control; Bluetooth has no touch gestures.</system:String>
-    <system:String x:Key="ClipboardAutoSyncHelp">Copied text syncs automatically in both directions while wired or wireless control is on. Bluetooth control has no clipboard access.</system:String>
+    <system:String x:Key="ClipboardAutoSyncHelp">Copied text and images sync automatically in both directions while wired or wireless control is on. Bluetooth control has no clipboard access.</system:String>
     <system:String x:Key="MappingPaused">Mapping is paused. Click the current mirror to resume; editing and text input pause execution.</system:String>
     <system:String x:Key="MappingNoDevice">Waiting for a device: select and connect an iPhone/iPad.</system:String>
     <system:String x:Key="MappingUnsupportedDevice">This device does not support touch control. Select an iPhone/iPad mirror.</system:String>

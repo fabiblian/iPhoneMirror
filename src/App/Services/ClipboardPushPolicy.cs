@@ -24,6 +24,32 @@ internal sealed class ClipboardPushPolicy
         _lastHash = Hash(text);
     }
 
+    /// <summary>The app wrote a phone image into the Windows clipboard.</summary>
+    internal void RecordWindowsImageWrite(byte[] image, uint sequenceAfterWrite)
+    {
+        _ownWriteSequence = sequenceAfterWrite;
+        _lastHash = Hash(image);
+    }
+
+    /// <summary>
+    /// Images: the sequence number is what blocks our own echo (a PNG
+    /// round trip through the clipboard is not byte-identical); the hash
+    /// only stops re-sending the same pasted image.
+    /// </summary>
+    internal bool ShouldPushImage(byte[] encoded, uint sequence)
+    {
+        if (encoded.Length == 0 || sequence == _ownWriteSequence) return false;
+        var hash = Hash(encoded);
+        if (hash == _lastHash) return false;
+        _lastHash = hash;
+        return true;
+    }
+
+    internal void PushImageFailed(byte[] encoded)
+    {
+        if (_lastHash == Hash(encoded)) _lastHash = null;
+    }
+
     internal bool ShouldPush(string? text, uint sequence)
     {
         if (string.IsNullOrEmpty(text)) return false;
@@ -42,5 +68,7 @@ internal sealed class ClipboardPushPolicy
     }
 
     private static string Hash(string text) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
+        "t:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
+
+    private static string Hash(byte[] image) => "i:" + Convert.ToHexString(SHA256.HashData(image));
 }

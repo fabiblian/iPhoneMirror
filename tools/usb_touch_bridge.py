@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import base64
 import contextlib
 from concurrent.futures import ThreadPoolExecutor, wait
 from collections import deque
@@ -435,7 +436,7 @@ def _interface_with_subclass(configuration, subclass: int):
     return None
 
 PROTOCOL_VERSION = 2
-CAPABILITIES = ['iphoneMirror.usb_touch.v2', 'iphoneMirror.usb_keyboard.v1', 'iphoneMirror.clipboard.rpc.v1']
+CAPABILITIES = ['iphoneMirror.usb_touch.v2', 'iphoneMirror.usb_keyboard.v1', 'iphoneMirror.clipboard.rpc.v1', 'iphoneMirror.clipboard.image.v1']
 MAX_SLOTS = 5
 MAX_FRAME_SIZE = 4 * 1024 * 1024
 MESSAGE_SCHEMA = 'iphoneMirror.touch.v2'
@@ -444,7 +445,16 @@ VALID_ACTIONS = frozenset(('down', 'move', 'up'))
 KEYBOARD_MESSAGE_KIND = 'keyboard_batch'
 PASTE_TEXT_MESSAGE_KIND = 'paste_text'
 READ_CLIPBOARD_MESSAGE_KIND = 'read_clipboard'
+WRITE_CLIPBOARD_IMAGE_MESSAGE_KIND = 'write_clipboard_image'
+PASTE_IMAGE_MESSAGE_KIND = 'paste_image'
 BUTTON_MESSAGE_KIND = 'button_event'
+# Preferred first: formats Windows decodes without extra codecs.
+CLIPBOARD_IMAGE_UTIS = ('public.png', 'public.jpeg', 'public.tiff', 'public.heic')
+IMAGE_UNCHANGED = object()
+# Host -> bridge frames are limited to MAX_FRAME_SIZE; base64 adds a third.
+MAX_HOST_CLIPBOARD_IMAGE_BYTES = 2_800_000
+# Bridge -> host events have no frame limit; keep large photos bounded.
+MAX_DEVICE_CLIPBOARD_IMAGE_BYTES = 16 * 1024 * 1024
 
 BUTTON_STATES = frozenset(('down', 'up', 'canceled'))
 LEGACY_UNIVERSAL_HID_SERVICE = 'com.apple.coredevice.hid.universalhid'
@@ -586,6 +596,33 @@ def _pasteboard_snapshot_text(snapshot: dict) -> tuple[Optional[str], bool]:
             except UnicodeDecodeError:
                 continue
     return None, unresolved
+
+
+def _pasteboard_snapshot_image(snapshot: dict) -> tuple[Optional[tuple[str, bytes]], Optional[tuple]]:
+    """Return inline image data, or a promise signature (uti, size) to resolve."""
+    board = snapshot.get('pasteboard', snapshot)
+    promised = None
+    for uti in CLIPBOARD_IMAGE_UTIS:
+        for item in board.get('items', []) or []:
+            datum = (item.get('data') or {}).get(uti)
+            if isinstance(datum, dict) and isinstance(datum.get('data'), (bytes, bytearray)):
+                return (uti, bytes(datum['data'])), None
+            if promised is None and (uti in (item.get('types') or []) or
+                                     (isinstance(datum, dict) and datum.get('isPromised') is True)):
+                size = datum.get('size') if isinstance(datum, dict) else None
+                promised = (uti, int(size) if isinstance(size, int) else None)
+    return None, promised
+
+
+def _decode_host_clipboard_image(frame: dict) -> tuple[str, bytes]:
+    uti = frame.get('uti')
+    data = frame.get('data')
+    if uti not in CLIPBOARD_IMAGE_UTIS or not isinstance(data, str):
+        raise ValueError('invalid clipboard image')
+    raw = base64.b64decode(data, validate=True)
+    if not raw or len(raw) > MAX_HOST_CLIPBOARD_IMAGE_BYTES:
+        raise ValueError('invalid clipboard image size')
+    return uti, raw
 
 
 def local_personalized_ddi_bundle(ddi_dir: Path) -> tuple[Path, Path, Path]:
@@ -2202,6 +2239,12 @@ class TouchSession:
         self._pasteboard_rsd = None
         self._pasteboard_last_text = object()
         self._pasteboard_unconfirmed_writes: set[str] = set()
+        # Images: content hash of the last published/written image, and the
+        # promise signature already resolved, so polling never refetches it.
+        self._pasteboard_last_image: Optional[str] = None
+        self._pasteboard_last_image_promise: Optional[tuple] = None
+        self._pasteboard_unconfirmed_images: set[str] = set()
+        self._pasteboard_read_image = None
         self._pasteboard_write_generation = 0
         self._pasteboard_writers_waiting = 0
         self._pasteboard_writes_idle = asyncio.Event()
@@ -3848,10 +3891,18 @@ class TouchSession:
             try:
                 kind = frame['kind']
                 text = frame.get('text')
-                if kind != READ_CLIPBOARD_MESSAGE_KIND and (
+                image_kind = kind in (WRITE_CLIPBOARD_IMAGE_MESSAGE_KIND, PASTE_IMAGE_MESSAGE_KIND)
+                if kind != READ_CLIPBOARD_MESSAGE_KIND and not image_kind and (
                         not isinstance(text, str) or len(text.encode('utf-8')) > 65536):
                     raise ValueError('invalid automation text')
-                if kind == READ_CLIPBOARD_MESSAGE_KIND:
+                if image_kind:
+                    uti, data = _decode_host_clipboard_image(frame)
+                    if kind == WRITE_CLIPBOARD_IMAGE_MESSAGE_KIND:
+                        await self._write_device_pasteboard_image(uti, data)
+                    else:
+                        async with self._paste_sequence_lock:
+                            await self._apply_paste_image(uti, data)
+                elif kind == READ_CLIPBOARD_MESSAGE_KIND:
                     # Dedicated response: do not publish this read into the
                     # Windows clipboard synchronization event stream.
                     async with self._pasteboard_publish_lock:
@@ -3930,7 +3981,8 @@ class TouchSession:
                                     task.cancel()
                                     await asyncio.gather(task, return_exceptions=True)
                             elif frame.get('requestId') is not None and frame.get('kind') in {
-                                    PASTE_TEXT_MESSAGE_KIND, READ_CLIPBOARD_MESSAGE_KIND, 'write_clipboard'}:
+                                    PASTE_TEXT_MESSAGE_KIND, READ_CLIPBOARD_MESSAGE_KIND, 'write_clipboard',
+                                    WRITE_CLIPBOARD_IMAGE_MESSAGE_KIND, PASTE_IMAGE_MESSAGE_KIND}:
                                 request_id = frame.get('requestId')
                                 if (not isinstance(request_id, str) or not 1 <= len(request_id) <= 64 or
                                         not request_id.isascii() or not request_id.isalnum() or
@@ -4185,6 +4237,9 @@ class TouchSession:
         # request after cancellation.
         await self._pasteboard_writes_idle.wait()
         async with self._pasteboard_lock:
+            # Side result for publication: (uti, bytes, promise) of an image
+            # board without text, IMAGE_UNCHANGED, or None.
+            self._pasteboard_read_image = None
             async def read():
                 pasteboard = await self._get_device_pasteboard()
                 if hasattr(pasteboard, 'get'):
@@ -4200,6 +4255,21 @@ class TouchSession:
                         text, unresolved = _pasteboard_snapshot_text(snapshot)
                         if unresolved:
                             raise RuntimeError('device pasteboard text is unresolved')
+                    if text is None:
+                        image, promise = _pasteboard_snapshot_image(snapshot)
+                        if image is None and promise is not None:
+                            # Without a size the promise cannot tell images
+                            # apart; resolving it would refetch it every poll.
+                            if promise[1] is None:
+                                return text
+                            if promise == getattr(self, '_pasteboard_last_image_promise', None):
+                                self._pasteboard_read_image = IMAGE_UNCHANGED
+                                return text
+                            pasteboard = await self._get_device_pasteboard()
+                            snapshot = await pasteboard.get(data_policy={'allResolved': {}})
+                            image, _ = _pasteboard_snapshot_image(snapshot)
+                        if image is not None:
+                            self._pasteboard_read_image = (image[0], image[1], promise)
                     return text
                 return await pasteboard.get_text()
             try:
@@ -4219,6 +4289,15 @@ class TouchSession:
                 await self._close_device_pasteboard()
 
     async def _write_device_pasteboard(self, text: str) -> None:
+        await self._write_device_pasteboard_content(text=text)
+
+    async def _write_device_pasteboard_image(self, uti: str, data: bytes) -> None:
+        await self._write_device_pasteboard_content(image=(uti, data))
+
+    async def _write_device_pasteboard_content(self, *, text: Optional[str] = None,
+                                               image: Optional[tuple[str, bytes]] = None) -> None:
+        image_key = None if image is None else 'sha256:' + hashlib.sha256(image[1]).hexdigest()
+        length = len(text) if image is None else len(image[1])
         self._pasteboard_writers_waiting += 1
         # Invalidate reads already in flight as soon as a host paste queues,
         # not only after SET succeeds. A pre-paste snapshot is already stale.
@@ -4234,19 +4313,31 @@ class TouchSession:
                 # Once SET starts, timeout/cancellation cannot tell whether iOS
                 # applied it. Retain its origin until a stable poll reconciles it.
                 # Connection or queue failures before SET do not add a candidate.
-                self._pasteboard_unconfirmed_writes.add(text)
-                await pasteboard.set_text(text)
+                if image is None:
+                    self._pasteboard_unconfirmed_writes.add(text)
+                    await pasteboard.set_text(text)
+                else:
+                    self._pasteboard_unconfirmed_images.add(image_key)
+                    await pasteboard.set([{'types': [image[0]],
+                                           'data': {image[0]: {'data': image[1]}}}])
             try:
                 await asyncio.wait_for(write(), PASTEBOARD_OPERATION_TIMEOUT_SECONDS)
                 # A host paste is already present on Windows. Treat it as the
                 # polling baseline so it cannot echo over a newer local copy.
-                self._pasteboard_last_text = text
-                self._pasteboard_unconfirmed_writes.clear()
-                log.info('pasteboard_set_reply op=%s generation=%s length=%s',
-                         self._pasteboard_operation_id, self._generation, len(text))
+                if image is None:
+                    self._pasteboard_last_text = text
+                    self._pasteboard_unconfirmed_writes.clear()
+                    self._pasteboard_last_image = None
+                else:
+                    # An image board has no text; '' keeps text polling quiet.
+                    self._pasteboard_last_text = ''
+                    self._pasteboard_last_image = image_key
+                    self._pasteboard_unconfirmed_images.clear()
+                log.info('pasteboard_set_reply op=%s generation=%s length=%s image=%s',
+                         self._pasteboard_operation_id, self._generation, length, image is not None)
             except (Exception, asyncio.CancelledError) as error:
                 log.warning('pasteboard_set_failed op=%s generation=%s length=%s error=%s',
-                            self._pasteboard_operation_id, self._generation, len(text),
+                            self._pasteboard_operation_id, self._generation, length,
                             type(error).__name__)
                 raise
             finally:
@@ -4282,6 +4373,17 @@ class TouchSession:
                 if unconfirmed_echo:
                     self._pasteboard_last_text = normalized_text
                 self._pasteboard_unconfirmed_writes.clear()
+                image = getattr(self, '_pasteboard_read_image', None)
+                if normalized_text == '' and image is not None:
+                    # Image-only board: publish the image instead of empty text.
+                    if image is not IMAGE_UNCHANGED:
+                        await self._publish_device_image(read_id, image, force)
+                    self._pasteboard_last_text = ''
+                    return
+                if normalized_text:
+                    # Text replaced any image; copying that image again is new.
+                    self._pasteboard_last_image = None
+                    self._pasteboard_last_image_promise = None
                 if not unconfirmed_echo and (force or normalized_text != self._pasteboard_last_text):
                     await self.ipc.emit({'event': 'clipboard_text', 'readId': read_id,
                                          'text': normalized_text})
@@ -4291,6 +4393,24 @@ class TouchSession:
                 # Also release the host's request snapshot on unchanged content,
                 # errors and cancellation; only live reads retain version tokens.
                 await self.ipc.emit({'event': 'clipboard_read_finished', 'readId': read_id})
+
+    async def _publish_device_image(self, read_id: int, image: tuple, force: bool) -> None:
+        uti, data, promise = image
+        key = 'sha256:' + hashlib.sha256(data).hexdigest()
+        unconfirmed = key in self._pasteboard_unconfirmed_images
+        self._pasteboard_unconfirmed_images.clear()
+        self._pasteboard_last_image_promise = promise
+        if unconfirmed or (not force and key == self._pasteboard_last_image):
+            # Our own host write, or an image the host already has.
+            self._pasteboard_last_image = key
+            return
+        self._pasteboard_last_image = key
+        if len(data) > MAX_DEVICE_CLIPBOARD_IMAGE_BYTES:
+            await self.ipc.emit({'event': 'warning', 'code': 'clipboard_image_too_large',
+                                 'message': f'uti={uti} bytes={len(data)}'})
+            return
+        await self.ipc.emit({'event': 'clipboard_image', 'readId': read_id, 'uti': uti,
+                             'data': base64.b64encode(data).decode('ascii')})
 
     async def _poll_device_pasteboard(self) -> None:
         if self.rsd is None:
@@ -4425,6 +4545,22 @@ class TouchSession:
                 if attempt == 1:
                     raise
                 await asyncio.sleep(PASTEBOARD_RETRY_DELAY_SECONDS)
+        await self._send_paste_chord()
+
+    async def _apply_paste_image(self, uti: str, data: bytes) -> None:
+        if self.rsd is None:
+            raise RuntimeError('pasteboard service is unavailable')
+        for attempt in range(2):
+            try:
+                await self._write_device_pasteboard_image(uti, data)
+                break
+            except (TimeoutError, ConnectionError, OSError):
+                if attempt == 1:
+                    raise
+                await asyncio.sleep(PASTEBOARD_RETRY_DELAY_SECONDS)
+        await self._send_paste_chord()
+
+    async def _send_paste_chord(self) -> None:
         # The HID service exposes a full pressed-key bitmap. If Command and V
         # arrive in the same report, iOS may dispatch V before it observes the
         # Command modifier and inserts a literal "v". Keep the modifier held

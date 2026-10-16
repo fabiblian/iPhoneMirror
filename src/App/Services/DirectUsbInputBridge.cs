@@ -456,7 +456,7 @@ public sealed partial class DirectUsbInputBridge : IAsyncDisposable
             using var doc = JsonDocument.Parse(line);
             var root = doc.RootElement;
             var evt = root.GetProperty("event").GetString();
-            if (evt is not ("clipboard_text" or "clipboard_result")) _lastDiagnostic = line;
+            if (evt is not ("clipboard_text" or "clipboard_image" or "clipboard_result")) _lastDiagnostic = line;
             switch (evt)
             {
                 case "clipboard_result":
@@ -505,6 +505,8 @@ public sealed partial class DirectUsbInputBridge : IAsyncDisposable
                     SupportsAutomationClipboard = root.TryGetProperty("capabilities", out var caps) &&
                         caps.ValueKind == JsonValueKind.Array && caps.EnumerateArray().Any(c =>
                             c.ValueKind == JsonValueKind.String && c.GetString() == "iphoneMirror.clipboard.rpc.v1");
+                    SupportsClipboardImages = SupportsAutomationClipboard && caps.EnumerateArray().Any(c =>
+                        c.ValueKind == JsonValueKind.String && c.GetString() == "iphoneMirror.clipboard.image.v1");
                     Udid = readyUdid;
                     RateHz = root.TryGetProperty("rateHz", out var r) ? r.GetInt32() : 0;
                     GateOpen = root.TryGetProperty("gateOpen", out var g) && g.GetBoolean();
@@ -541,6 +543,13 @@ public sealed partial class DirectUsbInputBridge : IAsyncDisposable
                     OnEvent?.Invoke(new BridgeEvent(evt, null, null,
                         root.TryGetProperty("text", out var ct) ? ct.GetString() : null,
                         root.TryGetProperty("readId", out var readId) ? readId.GetInt64() : null));
+                    break;
+                case "clipboard_image":
+                    // Code carries the UTI, Text the base64 image data.
+                    OnEvent?.Invoke(new BridgeEvent(evt,
+                        root.TryGetProperty("uti", out var uti) ? uti.GetString() : null, null,
+                        root.TryGetProperty("data", out var imageData) ? imageData.GetString() : null,
+                        root.TryGetProperty("readId", out var imageReadId) ? imageReadId.GetInt64() : null));
                     break;
                 case "error":
                     _lastFailureDiagnostic = line;

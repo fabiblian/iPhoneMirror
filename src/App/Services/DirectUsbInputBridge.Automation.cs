@@ -7,6 +7,7 @@ namespace IPhoneMirror.App.Services;
 public sealed partial class DirectUsbInputBridge
 {
     internal bool SupportsAutomationClipboard { get; private set; }
+    internal bool SupportsClipboardImages { get; private set; }
     internal Func<IDisposable>? InputAdmission { get; set; }
     internal bool InputWritePending => _sendLock.CurrentCount == 0;
     private readonly SemaphoreSlim _clipboardRequestGate = new(1, 1);
@@ -26,11 +27,15 @@ public sealed partial class DirectUsbInputBridge
     // automation input, so it skips input admission and queues behind another
     // clipboard request instead of failing.
     internal async Task<string?> AutomationClipboardAsync(string kind, string? text, Func<bool> current,
-        CancellationToken cancellation, bool hostSync = false)
+        CancellationToken cancellation, bool hostSync = false, string? uti = null, string? data = null)
     {
         if (!SupportsAutomationClipboard)
             throw new AutomationException("CAPABILITY_NOT_SUPPORTED", "The installed bridge does not support clipboard requests.", 422);
-        if (kind is not ("read_clipboard" or "write_clipboard" or "paste_text")) throw new ArgumentException(nameof(kind));
+        var imageKind = kind is "write_clipboard_image" or "paste_image";
+        if (imageKind && (!SupportsClipboardImages || uti is null || data is null))
+            throw new AutomationException("CAPABILITY_NOT_SUPPORTED", "The installed bridge does not support clipboard images.", 422);
+        if (kind is not ("read_clipboard" or "write_clipboard" or "paste_text") && !imageKind)
+            throw new ArgumentException(nameof(kind));
         if (hostSync) await _clipboardRequestGate.WaitAsync(cancellation);
         else if (!await _clipboardRequestGate.WaitAsync(0, cancellation))
             throw new AutomationException("CONTROL_LOCKED", "Another clipboard request is in progress.");
@@ -53,7 +58,7 @@ public sealed partial class DirectUsbInputBridge
                 await WriteFrameAsync(JsonSerializer.SerializeToUtf8Bytes(new
                 {
                     schema = CoreDeviceTouchProtocol.MessageSchema, kind, requestId = id, generation = wireGeneration,
-                    seq = NextSequence(), text
+                    seq = NextSequence(), text, uti, data
                 }), cancellation);
             }
             finally { _sendLock.Release(); }

@@ -44,6 +44,11 @@ internal sealed class UsbTouchBridgeHost : IAsyncDisposable
         CancellationToken cancellation) => _bridge.AutomationClipboardAsync(kind, text, current, cancellation);
     internal Task SetDeviceClipboardAsync(string text, Func<bool> current, CancellationToken cancellation) =>
         _bridge.AutomationClipboardAsync("write_clipboard", text, current, cancellation, hostSync: true);
+    internal bool SupportsClipboardImages => _bridge.SupportsClipboardImages;
+    internal Task SendDeviceClipboardImageAsync(bool paste, string uti, byte[] data, Func<bool> current,
+        CancellationToken cancellation) =>
+        _bridge.AutomationClipboardAsync(paste ? "paste_image" : "write_clipboard_image", null, current,
+            cancellation, hostSync: true, uti: uti, data: Convert.ToBase64String(data));
     internal long InputGeneration => _bridge.InputGeneration;
     internal string? Udid => _bridge.Udid;
     internal bool GateOpen => _bridge.GateOpen;

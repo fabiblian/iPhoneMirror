@@ -1512,6 +1512,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         if (bridge is null || !bridge.SupportsAutomationClipboard) return;
         var sequence = GetClipboardSequenceNumber();
         var text = await ClipboardTextReader.ReadAsync(readText, () => !_disposed);
+        if (string.IsNullOrEmpty(text))
+        {
+            await PushWindowsClipboardImageToDeviceAsync(udid, bridge, sequence);
+            return;
+        }
         if (!_clipboardPush.ShouldPush(text, sequence)) return;
         var generation = bridge.InputGeneration;
         try
@@ -1527,6 +1532,119 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             _clipboardPush.PushFailed(text!);
             AddDiagnosticLog(AppLog.Event("clipboard_sync_to_device_failed",
                 ("device", AppLog.Device(udid)), ("error", AppLog.Error(error))));
+        }
+    }
+
+    private async Task PushWindowsClipboardImageToDeviceAsync(string udid, UsbTouchBridgeHost bridge, uint sequence)
+    {
+        if (!bridge.SupportsClipboardImages || sequence == 0) return;
+        (string Uti, byte[] Data)? image;
+        try { image = ReadWindowsClipboardImageForDevice(); }
+        catch (Exception error)
+        {
+            AddDiagnosticLog(AppLog.Event("clipboard_image_sync_to_device_failed",
+                ("device", AppLog.Device(udid)), ("error", AppLog.Error(error))));
+            return;
+        }
+        if (image is not { } encoded || !_clipboardPush.ShouldPushImage(encoded.Data, sequence)) return;
+        var generation = bridge.InputGeneration;
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            await bridge.SendDeviceClipboardImageAsync(false, encoded.Uti, encoded.Data,
+                () => !_disposed && bridge.IsReady && bridge.InputGeneration == generation, timeout.Token);
+            AddDiagnosticLog(AppLog.Event("clipboard_image_synced_to_device",
+                ("device", AppLog.Device(udid)), ("uti", encoded.Uti), ("bytes", encoded.Data.Length)));
+        }
+        catch (Exception error)
+        {
+            _clipboardPush.PushImageFailed(encoded.Data);
+            AddDiagnosticLog(AppLog.Event("clipboard_image_sync_to_device_failed",
+                ("device", AppLog.Device(udid)), ("error", AppLog.Error(error))));
+        }
+    }
+
+    // iPhone -> Windows image, on the dispatcher. Written as bitmap plus PNG so
+    // Paint, Office and browsers all accept it.
+    private async Task HandleClipboardImageFromDeviceAsync(string device, string? uti, string? base64)
+    {
+        if (_disposed || string.IsNullOrEmpty(base64)) return;
+        byte[] data;
+        System.Windows.Media.Imaging.BitmapSource image;
+        byte[] png;
+        try
+        {
+            data = Convert.FromBase64String(base64);
+            image = ClipboardImageCodec.Decode(data);
+            png = uti == "public.png" ? data : ClipboardImageCodec.EncodePng(image);
+        }
+        catch (Exception error)
+        {
+            // HEIC needs the Windows HEIF extension; report instead of failing silently.
+            AddDiagnosticLog(AppLog.Event("clipboard_image_to_win_failed",
+                ("device", AppLog.Device(device)), ("uti", uti), ("error", AppLog.Error(error))));
+            return;
+        }
+        for (var attempt = 1; attempt <= 5; attempt++)
+        {
+            try
+            {
+                var dataObject = new System.Windows.DataObject();
+                dataObject.SetImage(image);
+                dataObject.SetData("PNG", new System.IO.MemoryStream(png));
+                System.Windows.Clipboard.SetDataObject(dataObject, copy: true);
+                _clipboardPush.RecordWindowsImageWrite(data, GetClipboardSequenceNumber());
+                AddDiagnosticLog(AppLog.Event("clipboard_image_synced_to_win",
+                    ("device", AppLog.Device(device)), ("uti", uti), ("bytes", data.Length),
+                    ("size", $"{image.PixelWidth}x{image.PixelHeight}")));
+                return;
+            }
+            catch (System.Runtime.InteropServices.ExternalException) when (attempt < 5)
+            {
+                await Task.Delay(100 * attempt);
+            }
+            catch (Exception error)
+            {
+                AddDiagnosticLog(AppLog.Event("clipboard_image_to_win_failed",
+                    ("device", AppLog.Device(device)), ("uti", uti), ("error", AppLog.Error(error))));
+                return;
+            }
+        }
+    }
+
+    // Reads the Windows clipboard image and encodes it for the bridge frame.
+    private (string Uti, byte[] Data)? ReadWindowsClipboardImageForDevice()
+    {
+        if (!System.Windows.Clipboard.ContainsImage()) return null;
+        var image = System.Windows.Clipboard.GetImage();
+        if (image is null) return null;
+        var encoded = ClipboardImageCodec.EncodeForDevice(image, out var note);
+        if (note is not null)
+            AddDiagnosticLog(AppLog.Event("clipboard_image_reduced", ("detail", note)));
+        return encoded;
+    }
+
+    // Ctrl+V with an image on the Windows clipboard: set it and paste on the phone.
+    internal async Task SendUsbPasteImageAsync(string? targetUdid, Func<bool>? canSend = null)
+    {
+        if (targetUdid is null || !AutomationHumanAllowed(targetUdid)) return;
+        var bridge = GetReadyUsbControlBridge(targetUdid);
+        if (bridge is null || !bridge.SupportsClipboardImages) return;
+        try
+        {
+            if (ReadWindowsClipboardImageForDevice() is not { } image) return;
+            var generation = bridge.InputGeneration;
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            await bridge.SendDeviceClipboardImageAsync(true, image.Uti, image.Data,
+                () => !_disposed && bridge.IsReady && bridge.InputGeneration == generation &&
+                    canSend?.Invoke() != false, timeout.Token);
+            AddDiagnosticLog(AppLog.Event("usb_paste_image_queued",
+                ("device", AppLog.Device(targetUdid)), ("uti", image.Uti), ("bytes", image.Data.Length)));
+        }
+        catch (Exception error)
+        {
+            AddDiagnosticLog(AppLog.Event("usb_paste_image_failed",
+                ("device", AppLog.Device(targetUdid)), ("error", AppLog.Error(error))));
         }
     }
 
@@ -2367,6 +2485,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                     HandleClipboardTextFromDevice(control.DeviceUdid, bridge, bridgeEvent.Text, clipboardSequence!);
                     return;
                 }
+                if (bridgeEvent.EventName == "clipboard_image")
+                {
+                    _ = HandleClipboardImageFromDeviceAsync(control.DeviceUdid, bridgeEvent.Code, bridgeEvent.Text);
+                    return;
+                }
                 if (bridgeEvent.EventName == "warning" && bridgeEvent.Code == "paste_failed")
                     ShowClipboardPasteFailure(control);
                 LogBridgeEvent("wireless", bridgeEvent);
@@ -2711,6 +2834,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                 if (bridgeEvent.EventName == "clipboard_text")
                 {
                     HandleClipboardTextFromDevice(control.DeviceUdid, bridge, bridgeEvent.Text, clipboardSequence!);
+                    return;
+                }
+                if (bridgeEvent.EventName == "clipboard_image")
+                {
+                    _ = HandleClipboardImageFromDeviceAsync(control.DeviceUdid, bridgeEvent.Code, bridgeEvent.Text);
                     return;
                 }
                 if (bridgeEvent.EventName == "warning" && bridgeEvent.Code == "paste_failed")

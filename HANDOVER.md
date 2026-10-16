@@ -24,7 +24,9 @@ Testen über den Launcher (`tools/version-launcher`, Start mit `Start-iPhoneMirr
 | 3 – Tippen mit Schweizer Layout | umgesetzt (`SwissKeyboardLayout.cs`, `MainWindow.KeyboardLayout.cs`), Logik-Tests ok, Build ok – **Test am iPhone offen**. Dabei prüfen: `~` (⌥N ist am Mac evtl. eine Tottaste) und ob `§`/`<` vertauscht sind. |
 | 4 – Pfeiltasten wischen | umgesetzt (`ArrowKeySwipe.cs`, Dispatch in `MainWindow.xaml.cs`, Schalter in der Karte „Keyboard mapping“), Logik-Tests ok, Build ok – **Test am iPhone offen**. Nur ohne Modifier wird gewischt; Shift/Alt/Cmd+Pfeil bleiben normale Tasten. |
 | 5 – Zwischenablage beide Richtungen, Text | umgesetzt: PC → iPhone über `WM_CLIPBOARDUPDATE` (`MainWindow.ClipboardSync.cs`) und den **vorhandenen** Bridge-Frame `write_clipboard` (kein neuer `set_clipboard` nötig, Bridge unverändert). Echo-Schutz: `ClipboardPushPolicy` (Hash + Sequenznummer). Logik-Tests ok, Build ok – **Test am iPhone offen**. |
-| 6 – Bilder in der Zwischenablage | offen – **als Nächstes**. Hinweis: Etappe 5 nutzt `write_clipboard`; für Bilder dort erweitern statt `set_clipboard` neu bauen. |
+| 6 – Bilder in der Zwischenablage | umgesetzt: Bridge liest `public.png/jpeg/tiff/heic` (Event `clipboard_image`, Capability `iphoneMirror.clipboard.image.v1`), neue Frames `write_clipboard_image`/`paste_image`; App schreibt Bilder als Bitmap+PNG nach Windows, schickt PC-Bilder (>2,8 MB → JPEG/verkleinert, Log `clipboard_image_reduced`), Ctrl+V fügt Bilder ein. Python- und Logik-Tests ok, Build ok – **Test am iPhone offen**. HEIC braucht unter Windows die HEIF-Erweiterung (sonst Log `clipboard_image_to_win_failed`). |
+
+**Alle 6 Etappen umgesetzt.** Offen ist nur noch der Gesamttest am iPhone (Etappen 2–6).
 
 Veraltete Logik-Tests wurden in Commit `75421d0` repariert. Auf dem alten PC lag zuletzt noch eine **uncommittete** Änderung an `src/App.Runtime.Tests/ReverseControlCountdownTests.cs` aus der Session „stabilize flaky reverse“. Sie ist **nicht** auf GitHub. Bis das geklärt ist, weiter mit `-SkipTests` bauen.
 
