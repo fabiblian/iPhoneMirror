@@ -2,6 +2,22 @@ namespace IPhoneMirror.App.Services;
 
 internal static class DeviceKeyMap
 {
+    /// <summary>
+    /// Prefers the physical scan code for typing keys (scanCode carries 0x100
+    /// for extended keys) and falls back to the virtual key otherwise, e.g.
+    /// for modifiers, navigation, function keys and injected input.
+    /// </summary>
+    internal static bool TryMapKey(int virtualKey, int scanCode, out byte usage, out byte modifier)
+    {
+        modifier = 0;
+        if (scanCode != 0 &&
+            SwissKeyboardLayout.TryMapPhysicalKey(scanCode & 0xFF, (scanCode & 0x100) != 0, out usage))
+        {
+            return true;
+        }
+        return TryMapVirtualKey(virtualKey, out usage, out modifier);
+    }
+
     internal static bool TryMapVirtualKey(int virtualKey, out byte usage, out byte modifier)
     {
         usage = 0;
@@ -14,6 +30,9 @@ internal static class DeviceKeyMap
             0x10 or 0xA0 or 0xA1 => 0x02,
             0x11 or 0xA2 or 0xA3 => 0x01,
             0x12 or 0xA4 or 0xA5 => 0x04,
+            0x5B => 0x08, 0x5C => 0x80, // Win → Command
+            0x5D => 0x65, 0xE2 => 0x64, // Menu key, ISO <>
+            0x70 => 0x3A, 0x71 => 0x3B, // F1, F2
             0x20 => 0x2C, 0x0D => 0x28, 0x08 => 0x2A, 0x09 => 0x2B,
             0x1B => 0x29, 0x14 => 0x39, 0x25 => 0x50, 0x26 => 0x52, 0x27 => 0x4F,
             0x28 => 0x51, 0x2E => 0x4C, 0x2D => 0x49, 0x24 => 0x4A,
@@ -31,7 +50,7 @@ internal static class DeviceKeyMap
             0x7A => 0x44, 0x7B => 0x45, _ => (byte)0,
         };
         if (virtualKey is 0x10 or 0xA0 or 0xA1 or 0x11 or 0xA2 or 0xA3 or
-            0x12 or 0xA4 or 0xA5)
+            0x12 or 0xA4 or 0xA5 or 0x5B or 0x5C)
         {
             modifier = usage;
             usage = 0;

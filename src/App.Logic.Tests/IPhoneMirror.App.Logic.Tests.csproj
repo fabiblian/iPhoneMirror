@@ -18,6 +18,9 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="ClipboardSyncTests.cs" />
+    <Compile Include="SwissKeyboardLayoutTests.cs" />
+    <Compile Include="..\App\Services\SwissKeyboardLayout.cs" Link="SwissKeyboardLayout.cs" />
+    <Compile Include="..\App\Services\DeviceKeyMap.cs" Link="DeviceKeyMap.cs" />
     <Compile Include="UxPlayComponentTests.cs" />
     <Compile Include="ComponentDownloadNetworkTests.cs" />
     <EmbeddedResource Include="..\..\config\uxplay-component.json" LogicalName="IPhoneMirror.App.Components.UxPlay.json" />

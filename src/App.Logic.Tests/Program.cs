@@ -100,6 +100,8 @@ static async Task ThrowsAsync<TException>(Func<Task> action, string name)
     throw new InvalidOperationException($"{name}: expected {typeof(TException).Name}");
 }
 
+SwissKeyboardLayoutTests.Run();
+if (args is ["--swiss-keyboard"]) return;
 await ClipboardSyncTests.RunAsync();
 if (args is ["--clipboard-sync"]) return;
 

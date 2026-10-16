@@ -1485,7 +1485,23 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         try
         {
             if (Volatile.Read(ref _bluetoothRouteChanging) != 0 || !canSend() || !route.IsCurrent()) return;
-            if (!TryMapVirtualKey(e.VirtualKey, out var usage, out var modifier)) return;
+            if (!DeviceKeyMap.TryMapKey(e.VirtualKey, e.ScanCode, out var usage, out var modifier)) return;
+            var bluetooth = route.Transport == "BluetoothDirect";
+            if (down && modifier == 0 && usage != 0 &&
+                TryTranslateLayoutKey(e.VirtualKey, e.ScanCode, bluetooth,
+                    out var tapUsage, out var tapModifiers, out var insertText))
+            {
+                // A translated key is a complete tap; it never joins the held
+                // usages, so its release only re-sends the remaining state.
+                ReleaseRoute();
+                if (insertText is not null)
+                    await TrackKeyboardSendAsync(_viewModel.SendUsbPasteTextAsync(
+                        insertText, routeUdid, () => route.IsCurrent() && canSend()));
+                else
+                    await TrackKeyboardSendAsync(SendKeyTapAsync(
+                        route, tapModifiers, tapUsage, bluetooth, canSend));
+                return;
+            }
             if (down)
             {
                 if (modifier != 0) _controlModifierKeys.Add(key);
@@ -1497,7 +1513,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 else if (usage != 0) _controlKeyboardUsages.Remove(usage);
             }
             _controlKeyboardModifiers = ModifierMask(_controlModifierKeys);
-            var bluetooth = route.Transport == "BluetoothDirect";
             var pasteRequested = false;
             var pasteIntercepted = !bluetooth && TryInterceptUsbPasteKey(down, usage,
                 _controlKeyboardModifiers, _controlKeyboardUsages, ref _pasteVPending, out pasteRequested);
@@ -1566,9 +1581,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             0xA3 => (byte)0xE4, 0xA1 => (byte)0xE5, 0xA5 => (byte)0xE6, 0x5C => (byte)0xE7,
             _ => (byte)0,
         }).Where(usage => usage != 0);
-
-    private static bool TryMapVirtualKey(int key, out byte usage, out byte modifier) =>
-        DeviceKeyMap.TryMapVirtualKey(key, out usage, out modifier);
 
     private void OnClosed(object? sender, EventArgs e)
     {
