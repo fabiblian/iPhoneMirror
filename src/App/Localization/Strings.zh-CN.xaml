@@ -542,8 +542,8 @@
     <system:String x:Key="AdvancedModeEnabled">高级模式已开启</system:String>
     <system:String x:Key="AdvancedModeDisabled">高级模式已关闭，恢复普通预设</system:String>
     <system:String x:Key="UsbProjectionModeTitle">有线投屏协议</system:String>
-    <system:String x:Key="UsbModeDemoLabel">A 演示模式（时间显示 9:41）</system:String>
-    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay（推荐）</system:String>
+    <system:String x:Key="UsbModeDemoLabel">A 演示模式（推荐）</system:String>
+    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay（真实时间；视频仅有声音）</system:String>
     <system:String x:Key="UsbModeAisiLabel">C 爱思模式</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">仅应用于当前选中的有线设备。</system:String>
     <system:String x:Key="UsbModeDetailsToolTip">查看该模式的优缺点</system:String>

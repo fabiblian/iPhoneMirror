@@ -542,8 +542,8 @@
     <system:String x:Key="AdvancedModeEnabled">進階模式已開啟</system:String>
     <system:String x:Key="AdvancedModeDisabled">進階模式已關閉，還原一般預設</system:String>
     <system:String x:Key="UsbProjectionModeTitle">有線螢幕鏡像協議</system:String>
-    <system:String x:Key="UsbModeDemoLabel">A 示範模式（時間顯示 9:41）</system:String>
-    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay（推薦）</system:String>
+    <system:String x:Key="UsbModeDemoLabel">A 示範模式（推薦）</system:String>
+    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay（真實時間；影片只有聲音）</system:String>
     <system:String x:Key="UsbModeAisiLabel">C 愛思模式</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">只套用至目前選取的有線裝置。</system:String>
     <system:String x:Key="UsbModeDetailsToolTip">查看該模式的優缺點</system:String>

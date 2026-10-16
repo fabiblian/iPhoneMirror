@@ -542,8 +542,8 @@
     <system:String x:Key="AdvancedModeEnabled">Advanced mode enabled</system:String>
     <system:String x:Key="AdvancedModeDisabled">Advanced mode disabled; normal presets restored</system:String>
     <system:String x:Key="UsbProjectionModeTitle">USB mirroring protocol</system:String>
-    <system:String x:Key="UsbModeDemoLabel">A Demo (time shows 9:41)</system:String>
-    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay (recommended)</system:String>
+    <system:String x:Key="UsbModeDemoLabel">A Demo (recommended)</system:String>
+    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay (real time; videos play audio only)</system:String>
     <system:String x:Key="UsbModeAisiLabel">C Aisi mode</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">Applies only to the currently selected USB device.</system:String>
     <system:String x:Key="UsbModeDetailsToolTip">View this mode's advantages and disadvantages</system:String>

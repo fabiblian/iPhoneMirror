@@ -37,7 +37,7 @@ Veraltete Logik-Tests wurden in Commit `75421d0` repariert. Auf dem alten PC lag
 - Pfeiltasten **wischen immer**, **Ctrl+Pfeil** = normale Pfeiltaste.
 - iPhone-Hardware-Layout **Deutsch (Schweiz)**.
 - Zwischenablage **beide Richtungen automatisch**, mit Bildern.
-- **USB-Modus B als Standard**, Wahl pro Gerät gemerkt (erledigt in Etappe 1).
+- ~~USB-Modus B als Standard~~ → **zurück auf A Demo als Standard** (16.10.): In B leiten Video-Apps (TikTok) das Video per AirPlay aus, im Spiegelbild bleibt nur der Ton. A zeigt dafür 9:41. Wahl pro Gerät bleibt gemerkt; B ist weiter wählbar.
 - Shortcuts: Show app = Ctrl+Home, Show preview = Ctrl+End.
 
 **Etappen-Regel:** Jede Etappe ist für sich fertig. Am Ende jeder Etappe:

@@ -969,7 +969,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         CanChangeUsbProjectionMode && !HasCaptureSession && !IsBusy;
 
     private UsbProjectionMode CurrentUsbProjectionMode =>
-        CurrentDeviceSession?.UsbProjectionMode ?? UsbProjectionMode.AirPlay;
+        CurrentDeviceSession?.UsbProjectionMode ?? UsbProjectionMode.Demo;
 
     public UsbProjectionModeOption? SelectedUsbProjectionMode
     {
