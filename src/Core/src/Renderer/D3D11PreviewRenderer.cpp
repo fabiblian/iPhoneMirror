@@ -525,6 +525,15 @@ struct D3D11PreviewRenderer::Impl {
     ComPtr<ID3D11Texture2D> render_texture;
     ComPtr<ID3D11RenderTargetView> render_target;
     ComPtr<ID3D11ShaderResourceView> render_view;
+    // Downscale path: full-resolution RGB with a mip chain, sampled
+    // trilinearly so a small window averages all source pixels.
+    ComPtr<ID3D11SamplerState> mip_sampler;
+    ComPtr<ID3D11Texture2D> mip_texture;
+    ComPtr<ID3D11RenderTargetView> mip_target;
+    ComPtr<ID3D11ShaderResourceView> mip_view;
+    UINT mip_width{};
+    UINT mip_height{};
+    DXGI_FORMAT mip_format{DXGI_FORMAT_UNKNOWN};
     output::State output_state;
 
     std::uint32_t frame_width{};
@@ -536,6 +545,7 @@ struct D3D11PreviewRenderer::Impl {
     UINT local_render_width{};
     UINT local_render_height{};
     bool using_limited_pass{};
+    bool using_mip_pass{};
     std::int64_t last_timestamp{};
     std::shared_ptr<const media::DecodedFrame> last_frame;
     std::uint64_t rendered_frames{};
@@ -810,6 +820,12 @@ struct D3D11PreviewRenderer::Impl {
         sampler_description.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         sampler_description.MaxLOD = D3D11_FLOAT32_MAX;
         check(device->CreateSamplerState(&sampler_description, &sampler), "CreateSamplerState");
+        // Slightly negative bias keeps small text crisp instead of picking
+        // the next smaller (blurrier) mip level too early.
+        sampler_description.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+        sampler_description.MipLODBias = -0.5F;
+        check(device->CreateSamplerState(&sampler_description, &mip_sampler),
+            "Create mip sampler");
         recreate_target();
         output_state = {};
         output_state.monitor_generation = monitor_generation;
@@ -849,10 +865,12 @@ struct D3D11PreviewRenderer::Impl {
         render_view.Reset();
         render_target.Reset();
         render_texture.Reset();
+        release_mip_texture();
         y_view.Reset();
         uv_view.Reset();
         y_texture.Reset();
         uv_texture.Reset();
+        mip_sampler.Reset();
         sampler.Reset();
         shape_constants.Reset();
         mask_pixel_shader.Reset();
@@ -889,6 +907,7 @@ struct D3D11PreviewRenderer::Impl {
         render_width = render_height = 0;
         local_render_width = local_render_height = 0;
         using_limited_pass = false;
+        using_mip_pass = false;
         scheduled_fps = 0;
         next_present_due = {};
         next_resize_allowed = {};
@@ -955,6 +974,15 @@ struct D3D11PreviewRenderer::Impl {
         render_target.Reset();
         render_texture.Reset();
         render_width = render_height = 0;
+        release_mip_texture();
+    }
+
+    void release_mip_texture() noexcept {
+        mip_view.Reset();
+        mip_target.Reset();
+        mip_texture.Reset();
+        mip_width = mip_height = 0;
+        mip_format = DXGI_FORMAT_UNKNOWN;
     }
 
     HRESULT set_swap_chain_color_space(output::Mode mode) noexcept {
@@ -1689,6 +1717,53 @@ struct D3D11PreviewRenderer::Impl {
             static_cast<std::uint32_t>(packed & 0xFFFFFFFFU), target_width, target_height));
     }
 
+    // Returns false when the output format cannot auto-generate mips; the
+    // caller then keeps the direct (single bilinear tap) path.
+    bool ensure_mip_texture(UINT width, UINT height) {
+        const auto format = dxgi_format(output_state.actual_format);
+        if (mip_texture && width == mip_width && height == mip_height &&
+            format == mip_format) {
+            return true;
+        }
+        ID3D11ShaderResourceView* empty[] = {nullptr, nullptr, nullptr};
+        context->PSSetShaderResources(0, 3, empty);
+        context->OMSetRenderTargets(0, nullptr, nullptr);
+        release_mip_texture();
+
+        UINT support{};
+        if (FAILED(device->CheckFormatSupport(format, &support)) ||
+            (support & D3D11_FORMAT_SUPPORT_MIP_AUTOGEN) == 0) {
+            return false;
+        }
+        D3D11_TEXTURE2D_DESC description{};
+        description.Width = width;
+        description.Height = height;
+        description.MipLevels = 0;
+        description.ArraySize = 1;
+        description.Format = format;
+        description.SampleDesc.Count = 1;
+        description.Usage = D3D11_USAGE_DEFAULT;
+        description.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+        description.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+        check(device->CreateTexture2D(&description, nullptr, &mip_texture),
+            "Create mip render texture");
+        D3D11_RENDER_TARGET_VIEW_DESC target_description{};
+        target_description.Format = format;
+        target_description.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+        target_description.Texture2D.MipSlice = 0;
+        check(device->CreateRenderTargetView(mip_texture.Get(), &target_description,
+            &mip_target), "Create mip render target");
+        check(device->CreateShaderResourceView(mip_texture.Get(), nullptr, &mip_view),
+            "Create mip render view");
+        mip_width = width;
+        mip_height = height;
+        mip_format = format;
+        logging::write(std::format(
+            "d3d_preview mip_texture={}x{} window={}x{}",
+            mip_width, mip_height, target_width, target_height));
+        return true;
+    }
+
     bool upload_cpu(const media::DecodedFrame& frame) {
         if (!y_texture || frame.width != frame_width || frame.height != frame_height ||
             frame.pixel_format != texture_pixel_format) {
@@ -1861,22 +1936,36 @@ struct D3D11PreviewRenderer::Impl {
         const bool use_limited_pass = packed_limit != 0 && cap_reduces_source &&
             (viewport.Width > static_cast<float>(limited_width) + 0.5F ||
              viewport.Height > static_cast<float>(limited_height) + 0.5F);
-        const auto current_local_width = use_limited_pass
+        // A window smaller than the (capped) source would otherwise read one
+        // bilinear tap per output pixel and skip most source pixels, which
+        // makes small text jagged. Render at source size and mip-filter down.
+        bool use_mip_pass = false;
+        if (!use_limited_pass &&
+            (viewport.Width < static_cast<float>(limited_width) - 0.5F ||
+             viewport.Height < static_cast<float>(limited_height) - 0.5F)) {
+            use_mip_pass = ensure_mip_texture(limited_width, limited_height);
+        } else if (mip_texture) {
+            release_mip_texture();
+        }
+        const bool uses_intermediate = use_limited_pass || use_mip_pass;
+        const auto current_local_width = uses_intermediate
             ? limited_width
             : std::max<UINT>(1, static_cast<UINT>(std::lround(viewport.Width)));
-        const auto current_local_height = use_limited_pass
+        const auto current_local_height = uses_intermediate
             ? limited_height
             : std::max<UINT>(1, static_cast<UINT>(std::lround(viewport.Height)));
         if (current_local_width != local_render_width ||
             current_local_height != local_render_height ||
-            use_limited_pass != using_limited_pass) {
+            use_limited_pass != using_limited_pass ||
+            use_mip_pass != using_mip_pass) {
             local_render_width = current_local_width;
             local_render_height = current_local_height;
             using_limited_pass = use_limited_pass;
+            using_mip_pass = use_mip_pass;
             logging::write(std::format(
                 "d3d_preview local_render={}x{} mode={} source={}x{} window={}x{} limit={}x{}",
                 local_render_width, local_render_height,
-                using_limited_pass ? "limited" : "direct",
+                using_limited_pass ? "limited" : using_mip_pass ? "mipmapped" : "direct",
                 frame.width, frame.height, target_width, target_height,
                 static_cast<std::uint32_t>(packed_limit >> 32U),
                 static_cast<std::uint32_t>(packed_limit & 0xFFFFFFFFU)));
@@ -1903,7 +1992,31 @@ struct D3D11PreviewRenderer::Impl {
             context->PSSetShaderResources(0, 3, empty);
         };
 
-        if (!use_limited_pass) {
+        if (use_mip_pass) {
+            context->OMSetRenderTargets(1, mip_target.GetAddressOf(), nullptr);
+            context->ClearRenderTargetView(mip_target.Get(), black);
+            D3D11_VIEWPORT mip_viewport{};
+            mip_viewport.Width = static_cast<float>(limited_width);
+            mip_viewport.Height = static_cast<float>(limited_height);
+            mip_viewport.MinDepth = 0;
+            mip_viewport.MaxDepth = 1;
+            draw_nv12(mip_viewport, limited_width, limited_height, false, turns);
+            context->OMSetRenderTargets(0, nullptr, nullptr);
+            context->GenerateMips(mip_view.Get());
+
+            context->OMSetRenderTargets(1, target.GetAddressOf(), nullptr);
+            context->ClearRenderTargetView(target.Get(), composition_mode ? transparent : black);
+            if (composition_mode) draw_black_background(rounded);
+            context->RSSetViewports(1, &viewport);
+            context->PSSetShader(copy_pixel_shader.Get(), nullptr, 0);
+            update_shape_constants(target_width, target_height, rounded);
+            ID3D11ShaderResourceView* copy_view = mip_view.Get();
+            context->PSSetShaderResources(2, 1, &copy_view);
+            context->PSSetSamplers(0, 1, mip_sampler.GetAddressOf());
+            context->Draw(3, 0);
+            context->PSSetShaderResources(0, 3, empty);
+            context->PSSetSamplers(0, 1, sampler.GetAddressOf());
+        } else if (!use_limited_pass) {
             context->OMSetRenderTargets(1, target.GetAddressOf(), nullptr);
             context->ClearRenderTargetView(target.Get(), composition_mode ? transparent : black);
             if (composition_mode) draw_black_background(rounded);

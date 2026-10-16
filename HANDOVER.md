@@ -20,8 +20,8 @@ Testen über den Launcher (`tools/version-launcher`, Start mit `Start-iPhoneMirr
 | Etappe | Status |
 |---|---|
 | 1 – Echte Uhrzeit + Preview-Shortcut | ✅ fertig, Commit `12ef0a5`, gepusht, von Fabian am iPhone getestet (funktioniert). |
-| 2 – Schärferes Bild bei kleinem Fenster | offen – **als Nächstes** |
-| 3 – Tippen mit Schweizer Layout | offen |
+| 2 – Schärferes Bild bei kleinem Fenster | umgesetzt (Mip-Zwei-Pass, LOD-Bias −0.5, ohne Nachschärfung), Build ok – **Test am iPhone offen**. Log zeigt `mode=mipmapped`. |
+| 3 – Tippen mit Schweizer Layout | offen – **als Nächstes** |
 | 4 – Pfeiltasten wischen | offen |
 | 5 – Zwischenablage beide Richtungen, Text | offen |
 | 6 – Bilder in der Zwischenablage | offen |
