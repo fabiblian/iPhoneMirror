@@ -1,0 +1,693 @@
+<title>iPhoneMirror Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a framed desktop window on a quiet stage; the window carries its own theme tokens set by script. */
+:root {
+  --page-bg: #eceef1;
+  --page-fg: #1d1f24;
+  --page-muted: #5d6270;
+  --page-line: #d5d8de;
+  --page-chip: #ffffff;
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page-bg: #121316; --page-fg: #eceef2; --page-muted: #9aa0ad; --page-line: #2a2d33; --page-chip: #1b1d21;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page-bg: #121316; --page-fg: #eceef2; --page-muted: #9aa0ad; --page-line: #2a2d33; --page-chip: #1b1d21;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+body { background: var(--page-bg); color: var(--page-fg); font-family: var(--font-ui); }
+.page { padding-block: 24px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+.intro { display: grid; gap: 6px; max-width: 70ch; }
+.intro h1 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 0; text-wrap: balance; }
+.intro p { margin: 0; color: var(--page-muted); line-height: 1.5; }
+.hints { display: flex; flex-wrap: wrap; gap: 8px; }
+.hints span { background: var(--page-chip); border: 1px solid var(--page-line); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--page-muted); }
+.stage { overflow-x: auto; padding-bottom: 8px; }
+
+/* ---------- App window ---------- */
+.app {
+  --r-win: 12px; --r-card: 10px; --r-ctl: 6px;
+  min-width: 1080px; max-width: 1400px; height: 760px; margin: 0 auto;
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+  background: var(--bg); color: var(--text); border-radius: var(--r-win);
+  border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0,0,0,.28);
+  font-family: var(--font-ui); font-size: 13px; transition: background .25s, color .25s;
+}
+.app[data-style="playful"] { --r-win: 18px; --r-card: 16px; --r-ctl: 11px; }
+.app[data-style="minimal"] { --r-win: 6px; --r-card: 4px; --r-ctl: 4px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.app[data-style="playful"] { background: radial-gradient(1200px 500px at 85% -10%, var(--accent-soft), transparent 60%), var(--bg); }
+
+.ico { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ico.sm { width: 15px; height: 15px; }
+.ico.fill { fill: currentColor; stroke: none; }
+
+/* Title bar */
+.titlebar { display: flex; align-items: center; gap: 14px; padding: 10px 10px 10px 16px; border-bottom: 1px solid var(--soft); }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14px; }
+.brand-mark { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; color: var(--on-accent); }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; background: var(--raised); border: 1px solid var(--soft); color: var(--muted); white-space: nowrap; }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.pill.ok { color: var(--text); } .pill.ok i { background: var(--success); }
+.pill.on { color: var(--text); border-color: color-mix(in srgb, var(--accent) 45%, transparent); } .pill.on i { background: var(--accent); }
+.app[data-style="playful"] .pill.on { box-shadow: 0 0 0 3px var(--accent-soft); }
+.app[data-style="minimal"] .pill { background: transparent; border-color: transparent; padding-inline: 4px; }
+.spacer { flex: 1; }
+.tb-btn { width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--r-ctl); border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.tb-btn:hover { background: var(--raised); color: var(--text); }
+.tb-btn[aria-pressed="true"] { color: var(--accent); }
+.winctl { display: flex; gap: 2px; margin-left: 4px; }
+.winctl span { width: 40px; height: 28px; display: grid; place-items: center; color: var(--muted); font-size: 13px; border-radius: 4px; }
+.menu-wrap { position: relative; }
+.menu { position: absolute; right: 0; top: 38px; width: 220px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: 0 12px 30px rgba(0,0,0,.3); padding: 6px; z-index: 5; display: grid; gap: 2px; }
+.menu button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; background: transparent; color: var(--text); border-radius: var(--r-ctl); text-align: left; font: inherit; cursor: pointer; }
+.menu button:hover { background: var(--accent-soft); }
+.menu hr { border: 0; border-top: 1px solid var(--soft); margin: 4px 2px; }
+.menu .danger { color: var(--err); }
+
+/* Body grid */
+.body { display: grid; grid-template-columns: 280px 1fr 340px; min-height: 0; transition: grid-template-columns .25s; }
+.body.collapsed { grid-template-columns: 280px 1fr 0px; }
+.col { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+
+/* Left column */
+.left { padding: 14px; gap: 12px; border-right: 1px solid var(--soft); background: var(--sidebar); }
+.col-head { display: flex; align-items: center; justify-content: space-between; }
+.col-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.devices { display: grid; gap: 8px; }
+.device { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; padding: 10px; border-radius: var(--r-card); border: 1px solid var(--soft); background: var(--surface); cursor: pointer; text-align: left; color: inherit; font: inherit; }
+.device:hover { border-color: var(--border); }
+.device[aria-selected="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.app[data-style="playful"] .device[aria-selected="true"] { box-shadow: 0 6px 22px var(--accent-soft); }
+.app[data-style="minimal"] .device { border-color: transparent; background: transparent; }
+.app[data-style="minimal"] .device[aria-selected="true"] { background: var(--accent-soft); border-color: transparent; }
+.dev-ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--raised); color: var(--accent); }
+.dev-name { font-weight: 600; }
+.dev-meta { color: var(--muted); font-size: 12px; display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.dev-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+.dev-meta .dot.idle { background: var(--muted); }
+
+.primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px 14px; border-radius: var(--r-ctl); border: 0; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; background: var(--accent); color: var(--on-accent); }
+.primary:hover { background: var(--accent-hover); }
+.primary.stop { background: color-mix(in srgb, var(--err) 18%, var(--surface)); color: var(--err); border: 1px solid color-mix(in srgb, var(--err) 40%, transparent); }
+.app[data-style="playful"] .primary:not(.stop) { background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 22px var(--accent-soft); }
+.label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--raised); border: 1px solid var(--soft); border-radius: var(--r-ctl); padding: 3px; gap: 3px; }
+.seg button { white-space: nowrap; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; padding: 6px 4px; border-radius: calc(var(--r-ctl) - 2px); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.app[data-style="minimal"] .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.hint { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.hint.warn { color: var(--warn); }
+.left .grow { flex: 1; }
+.version { font-size: 11px; color: var(--muted); }
+
+/* Center */
+.center { padding: 14px; gap: 10px; }
+.toolbar { display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--soft); }
+.app[data-style="minimal"] .toolbar { background: transparent; border-color: transparent; padding-inline: 0; }
+.tool { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border-radius: var(--r-ctl); border: 0; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.tool:hover { background: var(--raised); }
+.tool.stop { color: var(--err); }
+.tool .ico { color: var(--muted); } .tool.stop .ico { color: var(--err); }
+.toolbar .sep { width: 1px; height: 22px; background: var(--soft); margin-inline: 4px; }
+.preview { flex: 1; min-height: 0; border-radius: var(--r-card); background: color-mix(in srgb, var(--bg) 70%, #000); display: grid; place-items: center; position: relative; overflow: hidden; }
+.app[data-style="playful"] .preview { background: radial-gradient(500px 400px at 50% 60%, var(--accent-soft), transparent 70%), color-mix(in srgb, var(--bg) 70%, #000); }
+.phone { height: 92%; aspect-ratio: 9 / 19.5; border-radius: 34px; padding: 9px; background: var(--frame); box-shadow: 0 20px 50px rgba(0,0,0,.45); display: grid; grid-template-rows: 1fr auto; gap: 6px; }
+.screen { border-radius: 26px; overflow: hidden; position: relative; background: linear-gradient(160deg, #2b5876 0%, #4e4376 55%, #c56a8a 100%); display: grid; grid-template-rows: auto auto 1fr auto; padding: 10px 12px; gap: 12px; color: #fff; }
+.status { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; padding: 2px 6px; }
+.widget { background: rgba(255,255,255,.18); border-radius: 16px; padding: 10px; font-size: 11px; line-height: 1.35; backdrop-filter: blur(6px); }
+.widget b { display: block; font-size: 20px; font-weight: 600; }
+.grid-icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 10px; align-content: start; }
+.grid-icons span, .dock span { aspect-ratio: 1; border-radius: 22%; display: block; }
+.dock { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(255,255,255,.2); padding: 8px; border-radius: 20px; }
+.homebar { height: 14px; display: grid; place-items: center; }
+.homebar i { width: 34%; height: 4px; border-radius: 3px; background: color-mix(in srgb, var(--on-frame) 80%, transparent); }
+.empty { display: grid; justify-items: center; gap: 12px; text-align: center; max-width: 34ch; }
+.empty .big { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: var(--surface); color: var(--accent); border: 1px solid var(--soft); }
+.empty h3 { margin: 0; font-size: 16px; }
+.empty .primary { width: auto; }
+.statsbar { border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--soft); }
+.app[data-style="minimal"] .statsbar { background: transparent; }
+.stats-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border: 0; background: transparent; color: var(--text); width: 100%; font: inherit; text-align: left; }
+.stats-head .chev { margin-left: auto; transition: transform .2s; color: var(--muted); }
+.statsbar[data-open="true"] .chev { transform: rotate(90deg); }
+.stats-quick { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 12px 12px; }
+.stat { background: var(--raised); border-radius: var(--r-ctl); padding: 8px 10px; }
+.stat small { color: var(--muted); font-size: 11px; display: block; }
+.stat b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Right sidebar */
+.right { border-left: 1px solid var(--soft); background: var(--sidebar); overflow: hidden; }
+.body.collapsed .right { border-left: 0; }
+.right-inner { width: 340px; display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 10px 10px 8px; border-bottom: 1px solid var(--soft); }
+.tab { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; border: 0; border-radius: var(--r-ctl); background: transparent; color: var(--muted); font: inherit; font-size: 11.5px; cursor: pointer; }
+.tab:hover { background: var(--raised); color: var(--text); }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--text); }
+.tab[aria-selected="true"] .ico { color: var(--accent); }
+.app[data-style="minimal"] .tab[aria-selected="true"] { background: transparent; box-shadow: inset 0 -2px 0 var(--accent); border-radius: 0; }
+.app[data-style="playful"] .tab[aria-selected="true"] { background: linear-gradient(160deg, var(--accent-soft), transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+.panel { flex: 1; overflow-y: auto; padding: 12px; display: grid; gap: 10px; align-content: start; }
+.panel[hidden] { display: none; }
+.sec { border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--soft); }
+.app[data-style="playful"] .sec { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, var(--surface)), var(--surface)); }
+.app[data-style="minimal"] .sec { background: transparent; border: 0; border-bottom: 1px solid var(--soft); border-radius: 0; }
+.sec-head { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; width: 100%; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.sec-ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--raised); color: var(--accent); }
+.app[data-style="minimal"] .sec-ico { background: transparent; }
+.sec-title { font-weight: 600; }
+.sec-sum { color: var(--muted); font-size: 12px; margin-top: 1px; }
+.sec-head .chev { color: var(--muted); transition: transform .2s; }
+.sec[data-open="true"] .chev { transform: rotate(90deg); }
+.sec-body { padding: 2px 12px 14px; display: grid; gap: 12px; }
+.sec:not([data-open="true"]) .sec-body { display: none; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.row > span { min-width: 0; }
+.switch { position: relative; width: 38px; height: 20px; border-radius: 999px; border: 1px solid var(--border); background: var(--raised); cursor: pointer; flex: none; padding: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform .18s, background .18s; }
+.switch[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(18px); background: var(--on-accent); }
+select, input[type="text"] { width: 100%; padding: 7px 10px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--raised); color: var(--text); font: inherit; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { padding: 7px 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--raised); color: var(--text); font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; justify-content: center; }
+.btn:hover { border-color: var(--accent); }
+.kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--raised); border: 1px solid var(--soft); }
+.shortcut { display: flex; justify-content: space-between; font-size: 12px; }
+.callout { border-radius: var(--r-ctl); padding: 8px 10px; font-size: 12px; line-height: 1.45; background: color-mix(in srgb, var(--warn) 12%, transparent); color: var(--text); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); }
+.themes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.theme-tile { border-radius: var(--r-ctl); border: 1px solid var(--soft); background: var(--raised); padding: 6px; cursor: pointer; display: grid; gap: 6px; color: var(--text); font: inherit; font-size: 12px; text-align: left; }
+.theme-tile[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.theme-tile .mini { height: 38px; border-radius: 4px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 3px; padding: 4px; }
+.theme-tile .mini i { border-radius: 2px; display: block; }
+.accents { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; outline-offset: 2px; }
+.swatch[aria-pressed="true"] { border-color: var(--text); }
+.swatch.auto { background: conic-gradient(#3b82f6, #8b5cf6, #ec4899, #f97316, #22c55e, #14b8a6, #3b82f6); }
+.hex { display: flex; gap: 8px; align-items: center; }
+.hex input[type="color"] { width: 34px; height: 32px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--raised); padding: 2px; cursor: pointer; }
+.styles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.style-card { border: 1px solid var(--soft); background: var(--raised); color: var(--text); border-radius: var(--r-ctl); padding: 8px; font: inherit; font-size: 12px; cursor: pointer; display: grid; gap: 6px; justify-items: start; }
+.style-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.style-card .thumb { width: 100%; height: 30px; display: grid; gap: 3px; grid-template-columns: 1fr 1fr; }
+.style-card .thumb i { display: block; background: var(--surface); border: 1px solid var(--soft); }
+.style-card .thumb.modern i { border-radius: 4px; }
+.style-card .thumb.playful i { border-radius: 9px; background: linear-gradient(135deg, var(--accent-soft), var(--surface)); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.style-card .thumb.minimal i { border-radius: 1px; border: 0; border-bottom: 1px solid var(--border); background: transparent; }
+.sidebar-foot { padding: 8px 14px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--soft); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+  <div class="intro">
+    <h1>iPhoneMirror Redesign</h1>
+    <p>Klickbares Mockup für den Redesign-Branch. Die App-Texte sind englisch wie in der echten App. Probier unter <b>App → Appearance</b> die Themes, Akzentfarben und die drei Stile aus.</p>
+    <div class="hints">
+      <span>Reiter rechts</span><span>Abschnitte auf- und zuklappen</span><span>Start / Stop mirroring</span><span>Steuerung: Off · Wired · Wireless · Bluetooth</span><span>⋯-Menü oben rechts</span><span>Seitenleiste einklappen</span><span>Statistik unten aufklappen</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="app" id="app" data-style="modern">
+      <header class="titlebar">
+        <div class="brand"><span class="brand-mark"><svg class="ico sm" data-icon="phone"></svg></span>iPhoneMirror</div>
+        <div class="pills" id="pills"></div>
+        <div class="spacer"></div>
+        <button class="tb-btn" id="sidebarToggle" aria-pressed="true" title="Show or hide settings"><svg class="ico" data-icon="sidebar"></svg></button>
+        <div class="menu-wrap">
+          <button class="tb-btn" id="menuBtn" aria-expanded="false" title="More"><svg class="ico" data-icon="dots"></svg></button>
+          <div class="menu" id="menu" hidden>
+            <button><svg class="ico sm" data-icon="info"></svg>About iPhoneMirror</button>
+            <button><svg class="ico sm" data-icon="refresh"></svg>Check for updates</button>
+            <button><svg class="ico sm" data-icon="tray"></svg>Hide to tray</button>
+            <hr>
+            <button class="danger"><svg class="ico sm" data-icon="power"></svg>Exit iPhoneMirror</button>
+          </div>
+        </div>
+        <div class="winctl" aria-hidden="true"><span>—</span><span>☐</span><span>✕</span></div>
+      </header>
+
+      <div class="body" id="body">
+        <!-- Left: devices and primary action -->
+        <section class="col left">
+          <div class="col-head"><h2>Devices</h2><button class="tb-btn" title="Refresh devices"><svg class="ico sm" data-icon="refresh"></svg></button></div>
+          <div class="devices" id="devices"></div>
+          <button class="primary" id="startStop"></button>
+          <div>
+            <div class="label">Control</div>
+            <div class="seg" id="controlSeg">
+              <button data-v="off">Off</button>
+              <button data-v="wired">Wired</button>
+              <button data-v="wireless">Wi-Fi</button>
+              <button data-v="bluetooth">Bluetooth</button>
+            </div>
+          </div>
+          <div class="hint" id="controlHint"></div>
+          <div class="grow"></div>
+          <div class="version">iPhoneMirror v1.8.5-pre2 · redesign</div>
+        </section>
+
+        <!-- Center: toolbar, preview, stats -->
+        <section class="col center">
+          <div class="toolbar" id="toolbar">
+            <button class="tool stop" id="tbStop"><svg class="ico fill" data-icon="stop"></svg>Stop</button>
+            <span class="sep"></span>
+            <button class="tool"><svg class="ico" data-icon="camera"></svg>Screenshot</button>
+            <button class="tool"><svg class="ico" data-icon="window"></svg>Separate window</button>
+            <button class="tool"><svg class="ico" data-icon="frame"></svg>Preview settings</button>
+            <div class="spacer"></div>
+            <button class="tool" title="Full screen"><svg class="ico" data-icon="fullscreen"></svg></button>
+          </div>
+          <div class="preview" id="preview"></div>
+          <div class="statsbar" id="statsbar" data-open="false">
+            <button class="stats-head" id="statsHead" aria-expanded="false">
+              <svg class="ico sm" data-icon="pulse"></svg><b>Stream</b>
+              <span class="stats-quick" id="statsQuick"></span>
+              <svg class="ico sm chev" data-icon="chevron"></svg>
+            </button>
+            <div class="stats-grid" id="statsGrid" hidden>
+              <div class="stat"><small>Latency</small><b>41 ms</b></div>
+              <div class="stat"><small>Frame rate</small><b>60 fps</b></div>
+              <div class="stat"><small>Resolution</small><b>1179 × 2556</b></div>
+              <div class="stat"><small>Audio</small><b>48 kHz</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right: settings sidebar -->
+        <aside class="col right" id="right">
+          <div class="right-inner">
+            <nav class="tabs" role="tablist">
+              <button class="tab" role="tab" data-tab="video"><svg class="ico" data-icon="display"></svg>Video &amp; sound</button>
+              <button class="tab" role="tab" data-tab="control"><svg class="ico" data-icon="keyboard"></svg>Control</button>
+              <button class="tab" role="tab" data-tab="wireless"><svg class="ico" data-icon="wifi"></svg>Wireless</button>
+              <button class="tab" role="tab" data-tab="app"><svg class="ico" data-icon="sliders"></svg>App</button>
+            </nav>
+
+            <div class="panel" data-panel="video">
+              <div class="sec" data-sec="usb">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="usb"></svg></span><span><div class="sec-title">USB mode</div><div class="sec-sum" data-sum="usb"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="seg" id="usbSeg"><button data-v="A">A · Demo</button><button data-v="B">B · AirPlay</button></div>
+                  <div class="hint" id="usbHint"></div>
+                </div>
+              </div>
+              <div class="sec" data-sec="quality">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="display"></svg></span><span><div class="sec-title">Picture quality</div><div class="sec-sum" data-sum="quality"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="two">
+                    <label><div class="label">Resolution</div><select id="res"><option>Auto</option><option>1080p</option><option>720p</option></select></label>
+                    <label><div class="label">Frame rate</div><select id="fps"><option>60 fps</option><option>30 fps</option></select></label>
+                  </div>
+                  <label><div class="label">Decoder</div><select id="dec"><option>Hardware</option><option>Software</option></select></label>
+                  <div class="hint">Changes apply the next time mirroring starts.</div>
+                </div>
+              </div>
+              <div class="sec" data-sec="sound">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="volume"></svg></span><span><div class="sec-title">Sound</div><div class="sec-sum" data-sum="sound"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="row"><span>Use iPhone audio</span><button class="switch" role="switch" data-sw="iphoneAudio"></button></div>
+                  <div class="row"><span>Play on this PC</span><button class="switch" role="switch" data-sw="playPc"></button></div>
+                  <label><div class="label">Volume</div><input type="range" id="vol" min="0" max="100"></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel" data-panel="control">
+              <div class="sec" data-sec="keyboard">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="keyboard"></svg></span><span><div class="sec-title">Keyboard</div><div class="sec-sum" data-sum="keyboard"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="hint">Click into the preview, then type. Keys follow the iPhone layout German (Switzerland).</div>
+                  <div class="row"><span>Arrow keys swipe</span><button class="switch" role="switch" data-sw="arrowSwipe"></button></div>
+                  <div class="hint">↓ next video, → next page. Ctrl+arrow sends a normal arrow key.</div>
+                  <div class="row"><span>Sync clipboard (text and images)</span><button class="switch" role="switch" data-sw="clipboard"></button></div>
+                  <div class="callout" id="mappingCallout" hidden>Keyboard mapping is on. Keys trigger touches instead of typing. Turn it off below to type again.</div>
+                </div>
+              </div>
+              <div class="sec" data-sec="mapping">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="target"></svg></span><span><div class="sec-title">Keyboard mapping</div><div class="sec-sum" data-sum="mapping"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="hint">Bind keys to taps and swipes at fixed spots, for example for games.</div>
+                  <div class="row"><span>Use keyboard mapping</span><button class="switch" role="switch" data-sw="mapping"></button></div>
+                  <button class="btn"><svg class="ico sm" data-icon="target"></svg>Edit mappings</button>
+                </div>
+              </div>
+              <div class="sec" data-sec="shortcuts">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="command"></svg></span><span><div class="sec-title">Shortcuts</div><div class="sec-sum">5 assigned</div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="shortcut"><span>Stop mirroring</span><span class="kbd">Ctrl+Shift+X</span></div>
+                  <div class="shortcut"><span>Show app</span><span class="kbd">Ctrl+Home</span></div>
+                  <div class="shortcut"><span>Show preview</span><span class="kbd">Ctrl+End</span></div>
+                  <div class="shortcut"><span>Screenshot</span><span class="kbd">Ctrl+S</span></div>
+                  <div class="shortcut"><span>Home</span><span class="kbd">Ctrl+H</span></div>
+                  <button class="btn">Configure shortcuts</button>
+                </div>
+              </div>
+              <div class="sec" data-sec="mouse" id="mouseSec">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="mouse"></svg></span><span><div class="sec-title">Mouse (Bluetooth)</div><div class="sec-sum" data-sum="mouse"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <label><div class="label">Pointer speed</div><input type="range" min="10" max="1000" value="500"></label>
+                  <label><div class="label">Scroll speed</div><input type="range" min="10" max="1000" value="1000"></label>
+                  <div class="two">
+                    <label><div class="label">Portrait</div><select><option>Up</option><option>Right</option></select></label>
+                    <label><div class="label">Landscape</div><select><option>Right</option><option>Up</option></select></label>
+                  </div>
+                  <button class="btn">Remove Bluetooth pairings</button>
+                </div>
+              </div>
+              <div class="hint" id="mouseHint">Mouse settings for Bluetooth control appear here when Bluetooth control is on.</div>
+            </div>
+
+            <div class="panel" data-panel="wireless">
+              <div class="sec" data-sec="airplay">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="cast"></svg></span><span><div class="sec-title">AirPlay receiver</div><div class="sec-sum" data-sum="airplay"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <label><div class="label">Name shown on the iPhone</div><input type="text" id="airName" value="Fabians PC"></label>
+                  <div class="two">
+                    <label><div class="label">Receiver</div><select><option>Built-in</option><option>UxPlay</option></select></label>
+                    <label><div class="label">Resolution</div><select><option>1080p</option><option>1440p</option><option>720p</option></select></label>
+                  </div>
+                  <div class="hint">On the iPhone: Control Center → Screen Mirroring → this name.</div>
+                </div>
+              </div>
+              <div class="sec" data-sec="cast">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="play"></svg></span><span><div class="sec-title">Video app casting</div><div class="sec-sum" data-sum="cast"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="row"><span>Accept videos from apps</span><button class="switch" role="switch" data-sw="cast"></button></div>
+                  <div class="hint">Videos from apps like YouTube play here in full quality while the iPhone stays free.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel" data-panel="app">
+              <div class="sec" data-sec="appearance">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="palette"></svg></span><span><div class="sec-title">Appearance</div><div class="sec-sum" data-sum="appearance"></div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div><div class="label">Theme</div><div class="themes" id="themes"></div></div>
+                  <div>
+                    <div class="label">Accent color</div>
+                    <div class="accents" id="accents"></div>
+                    <div class="hex" style="margin-top:8px"><input type="color" id="accentPicker" aria-label="Pick accent color"><input type="text" id="accentHex" aria-label="Accent hex" spellcheck="false"></div>
+                  </div>
+                  <div><div class="label">Style</div><div class="styles" id="styles"></div></div>
+                  <div class="hint">The frame of preview windows uses the accent color. Other frame colors stay available in Preview settings.</div>
+                </div>
+              </div>
+              <div class="sec" data-sec="general">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="sliders"></svg></span><span><div class="sec-title">General</div><div class="sec-sum">English · Complete</div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="two">
+                    <label><div class="label">Language</div><select><option>English</option><option>System</option><option>简体中文</option></select></label>
+                    <label><div class="label">App mode</div><select><option>Complete</option><option>Lightweight</option><option>Tray</option></select></label>
+                  </div>
+                  <div class="two"><button class="btn">Run setup again</button><button class="btn">Advanced…</button></div>
+                </div>
+              </div>
+              <div class="sec" data-sec="updates">
+                <button class="sec-head"><span class="sec-ico"><svg class="ico sm" data-icon="refresh"></svg></span><span><div class="sec-title">Updates</div><div class="sec-sum">Beta channel · up to date</div></span><svg class="ico sm chev" data-icon="chevron"></svg></button>
+                <div class="sec-body">
+                  <div class="row"><span>Include beta versions</span><button class="switch" role="switch" data-sw="beta"></button></div>
+                  <button class="btn">Check now</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="sidebar-foot"><span class="version">Settings save automatically</span><button class="tb-btn" id="collapseInner" title="Hide settings"><svg class="ico sm" data-icon="chevron"></svg></button></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const ICONS = {
+    phone: '<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/>',
+    tablet: '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M11 18h2"/>',
+    sidebar: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
+    dots: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+    tray: '<path d="M4 14h4l2 3h4l2-3h4"/><path d="M4 14l2-9h12l2 9v5H4z"/>',
+    power: '<path d="M12 3v8"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/>',
+    usb: '<path d="M12 22v-5"/><path d="M8 8h8v5a4 4 0 0 1-8 0z"/><path d="M10 8V3M14 8V3"/>',
+    wifi: '<path d="M2.5 9a14 14 0 0 1 19 0"/><path d="M5.5 12.5a9.5 9.5 0 0 1 13 0"/><path d="M8.7 16a5 5 0 0 1 6.6 0"/><path d="M12 19.5h.01"/>',
+    bluetooth: '<path d="M7 7l10 10-5 5V2l5 5L7 17"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+    play: '<path d="M8 5v14l11-7z"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    window: '<rect x="3" y="5" width="13" height="11" rx="2"/><path d="M8 19h11a2 2 0 0 0 2-2V9"/>',
+    frame: '<rect x="7" y="2" width="10" height="20" rx="3"/><path d="M10.5 18h3"/>',
+    fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+    chevron: '<path d="M9 6l6 6-6 6"/>',
+    pulse: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+    display: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+    keyboard: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+    sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+    volume: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/>',
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+    command: '<path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/>',
+    mouse: '<rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v4"/>',
+    cast: '<path d="M3 8V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M3 12a8 8 0 0 1 8 8M3 16a4 4 0 0 1 4 4M3 20h.01"/>',
+    palette: '<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.9 1.4-2l-.3-.8c-.4-1.1.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5-4-9-9-9z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/>',
+  };
+  document.querySelectorAll('svg[data-icon]').forEach(svg => {
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = ICONS[svg.dataset.icon] || '';
+  });
+
+  // Base palettes (dark/light match the app's current DarkTheme/LightTheme).
+  const THEMES = {
+    system:   { name: 'System' },
+    dark:     { name: 'Dark', dark: true, bg: '#1f1f1f', surface: '#262626', raised: '#2e2e2e', sidebar: '#1b1b1b', border: 'rgba(255,255,255,.14)', soft: 'rgba(255,255,255,.07)', text: '#f5f5f7', muted: '#b7b7bc', accent: '#69b1f8', success: '#6ccb8f', warn: '#ffc55c', err: '#ff6961' },
+    light:    { name: 'Light', dark: false, bg: '#f3f3f5', surface: '#ffffff', raised: '#f7f7f9', sidebar: '#ebebee', border: 'rgba(0,0,0,.13)', soft: 'rgba(0,0,0,.07)', text: '#1d1d1f', muted: '#5f5f65', accent: '#0f6cbd', success: '#107c41', warn: '#9a4b00', err: '#d70015' },
+    midnight: { name: 'Midnight', dark: true, bg: '#0b1020', surface: '#121a2e', raised: '#19233c', sidebar: '#0d1426', border: 'rgba(140,170,255,.18)', soft: 'rgba(140,170,255,.09)', text: '#e8edf9', muted: '#9aa6c4', accent: '#5b8cff', success: '#5fd39a', warn: '#ffc66b', err: '#ff7a8a' },
+    nord:     { name: 'Nord', dark: true, bg: '#2e3440', surface: '#3b4252', raised: '#434c5e', sidebar: '#2a303b', border: 'rgba(216,222,233,.16)', soft: 'rgba(216,222,233,.08)', text: '#eceff4', muted: '#b0b8c7', accent: '#88c0d0', success: '#a3be8c', warn: '#ebcb8b', err: '#d08770' },
+    sunset:   { name: 'Sunset', dark: true, bg: '#1d1418', surface: '#281b20', raised: '#33232a', sidebar: '#181014', border: 'rgba(255,190,170,.16)', soft: 'rgba(255,190,170,.08)', text: '#fbeee8', muted: '#c9aaa3', accent: '#ff8a5c', success: '#7fd1a1', warn: '#ffd166', err: '#ff6b81' },
+    forest:   { name: 'Forest', dark: true, bg: '#111a15', surface: '#18241e', raised: '#1f2d26', sidebar: '#0e1612', border: 'rgba(170,230,200,.15)', soft: 'rgba(170,230,200,.08)', text: '#e6f2ea', muted: '#9fbaa9', accent: '#5fd3a5', success: '#8bdc7a', warn: '#e9c46a', err: '#f28482' },
+  };
+  const ACCENTS = [
+    ['Blue', '#3b82f6'], ['Violet', '#8b5cf6'], ['Green', '#22c55e'], ['Teal', '#14b8a6'],
+    ['Orange', '#f97316'], ['Pink', '#ec4899'], ['Red', '#ef4444'], ['Graphite', '#8a8f98'],
+  ];
+  const STYLES = [['modern', 'Modern'], ['playful', 'Playful'], ['minimal', 'Minimal']];
+
+  const defaults = {
+    theme: 'system', accent: null, style: 'modern', tab: 'video', sidebar: true, stats: false,
+    mirroring: true, control: 'wired', device: 'iphone', usb: 'A', res: 'Auto', fps: '60 fps', dec: 'Hardware', vol: 80,
+    sw: { iphoneAudio: true, playPc: true, arrowSwipe: true, clipboard: true, mapping: false, cast: true, beta: true },
+    open: { usb: true, quality: false, sound: true, keyboard: true, mapping: false, shortcuts: false, mouse: true, airplay: true, cast: false, appearance: true, general: false, updates: false },
+  };
+  let state;
+  try { state = Object.assign(structuredClone(defaults), JSON.parse(localStorage.getItem('im-redesign') || '{}')); } catch { state = structuredClone(defaults); }
+  state.sw = Object.assign({}, defaults.sw, state.sw); state.open = Object.assign({}, defaults.open, state.open);
+  const save = () => { try { localStorage.setItem('im-redesign', JSON.stringify(state)); } catch {} };
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const app = $('#app');
+
+  // ---- color helpers ----
+  const hexToRgb = h => { h = h.replace('#', ''); if (h.length === 3) h = [...h].map(c => c + c).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const rgbToHex = c => '#' + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+  const mix = (a, b, t) => rgbToHex(hexToRgb(a).map((v, i) => v + (hexToRgb(b)[i] - v) * t));
+  const lum = h => { const [r, g, b] = hexToRgb(h).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
+  const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+  const hueShift = (h, deg) => {
+    let [r, g, b] = hexToRgb(h).map(v => v / 255); const max = Math.max(r, g, b), min = Math.min(r, g, b); let hh = 0, s = 0; const l = (max + min) / 2;
+    if (max !== min) { const d = max - min; s = l > .5 ? d / (2 - max - min) : d / (max + min); hh = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4; hh /= 6; }
+    hh = (hh + deg / 360 + 1) % 1;
+    const f = (p, q, t) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    if (s === 0) return rgbToHex([l, l, l].map(v => v * 255));
+    const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    return rgbToHex([f(p, q, hh + 1 / 3), f(p, q, hh), f(p, q, hh - 1 / 3)].map(v => v * 255));
+  };
+
+  function palette() {
+    let t = THEMES[state.theme];
+    if (state.theme === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.dark : THEMES.light;
+    let accent = state.accent || t.accent;
+    // Keep a chosen accent legible on its theme: nudge it until it reads against the background.
+    for (let i = 0; i < 6 && contrast(accent, t.bg) < 3; i++) accent = mix(accent, t.dark ? '#ffffff' : '#000000', .18);
+    const onAccent = contrast(accent, '#ffffff') >= contrast(accent, '#111111') ? '#ffffff' : '#111111';
+    const frame = accent;
+    return { ...t, accent, onAccent, frame,
+      accentHover: mix(accent, t.dark ? '#ffffff' : '#000000', .14),
+      accent2: hueShift(accent, 38),
+      accentSoft: `color-mix(in srgb, ${accent} 20%, transparent)`,
+      onFrame: onAccent };
+  }
+
+  function applyTheme() {
+    const p = palette();
+    const vars = { bg: p.bg, surface: p.surface, raised: p.raised, sidebar: p.sidebar, border: p.border, soft: p.soft, text: p.text, muted: p.muted,
+      accent: p.accent, 'accent-hover': p.accentHover, 'accent-2': p.accent2, 'accent-soft': p.accentSoft, 'on-accent': p.onAccent,
+      success: p.success, warn: p.warn, err: p.err, frame: p.frame, 'on-frame': p.onFrame };
+    for (const [k, v] of Object.entries(vars)) app.style.setProperty('--' + k, v);
+    app.dataset.style = state.style;
+    app.style.colorScheme = p.dark ? 'dark' : 'light';
+    $('#accentHex').value = p.accent.toUpperCase();
+    $('#accentPicker').value = p.accent;
+  }
+
+  // ---- builders ----
+  function buildThemeTiles() {
+    $('#themes').innerHTML = Object.entries(THEMES).map(([key, t]) => {
+      const src = key === 'system' ? null : t;
+      const mini = src
+        ? `<span class="mini" style="background:${src.bg}"><i style="background:${src.sidebar}"></i><i style="background:${src.surface}"></i><i style="background:${src.accent}"></i></span>`
+        : `<span class="mini" style="background:linear-gradient(90deg,${THEMES.light.bg} 50%,${THEMES.dark.bg} 50%)"><i style="background:${THEMES.light.surface}"></i><i style="background:transparent"></i><i style="background:${THEMES.dark.accent}"></i></span>`;
+      return `<button class="theme-tile" data-theme-key="${key}">${mini}${t.name}</button>`;
+    }).join('');
+    $$('.theme-tile').forEach(b => b.onclick = () => { state.theme = b.dataset.themeKey; render(); });
+  }
+  function buildAccents() {
+    $('#accents').innerHTML = `<button class="swatch auto" data-accent="" title="Theme default" aria-label="Theme default"></button>` +
+      ACCENTS.map(([n, c]) => `<button class="swatch" data-accent="${c}" style="background:${c}" title="${n}" aria-label="${n}"></button>`).join('');
+    $$('.swatch').forEach(b => b.onclick = () => { state.accent = b.dataset.accent || null; render(); });
+    $('#accentPicker').oninput = e => { state.accent = e.target.value; render(); };
+    $('#accentHex').onchange = e => { const v = e.target.value.trim(); if (/^#?[0-9a-f]{6}$/i.test(v)) { state.accent = (v[0] === '#' ? v : '#' + v).toLowerCase(); } render(); };
+  }
+  function buildStyles() {
+    $('#styles').innerHTML = STYLES.map(([k, n]) => `<button class="style-card" data-style-key="${k}"><span class="thumb ${k}"><i></i><i></i></span>${n}</button>`).join('');
+    $$('.style-card').forEach(b => b.onclick = () => { state.style = b.dataset.styleKey; render(); });
+  }
+
+  const DEVICES = {
+    iphone: { name: "Fabian's iPhone", model: 'iPhone 15 Pro', link: 'USB', icon: 'phone' },
+    ipad: { name: 'iPad Air', model: 'iPad Air', link: 'Wi-Fi', icon: 'tablet' },
+  };
+  function renderDevices() {
+    $('#devices').innerHTML = Object.entries(DEVICES).map(([k, d]) => {
+      const live = state.mirroring && state.device === k;
+      return `<button class="device" data-dev="${k}" aria-selected="${state.device === k}">
+        <span class="dev-ico"><svg class="ico" viewBox="0 0 24 24">${ICONS[d.icon]}</svg></span>
+        <span><div class="dev-name">${d.name}</div><div class="dev-meta"><span class="dot ${live ? '' : 'idle'}"></span>${live ? 'Mirroring' : 'Ready'} · ${d.link}</div></span></button>`;
+    }).join('');
+    $$('.device').forEach(b => b.onclick = () => { state.device = b.dataset.dev; render(); });
+  }
+
+  function renderPreview() {
+    const d = DEVICES[state.device];
+    if (!state.mirroring) {
+      $('#preview').innerHTML = `<div class="empty"><span class="big"><svg class="ico" viewBox="0 0 24 24" style="width:30px;height:30px">${ICONS[d.icon]}</svg></span>
+        <h3>${d.name} is ready</h3><div class="hint">Connected over ${d.link}. Start mirroring to see the screen here.</div>
+        <button class="primary" id="emptyStart"><svg class="ico fill" viewBox="0 0 24 24">${ICONS.play}</svg>Start mirroring</button></div>`;
+      $('#emptyStart').onclick = () => { state.mirroring = true; render(); };
+      return;
+    }
+    const colors = ['#ff9f0a', '#30d158', '#0a84ff', '#ff375f', '#bf5af2', '#64d2ff', '#ffd60a', '#ff453a', '#5e5ce6', '#32ade6', '#ac8e68', '#66d4cf', '#e5e5ea', '#ff6482', '#34c759', '#007aff'];
+    const icons = colors.map(c => `<span style="background:${c}"></span>`).join('');
+    const dock = ['#30d158', '#0a84ff', '#ff9f0a', '#ff375f'].map(c => `<span style="background:${c}"></span>`).join('');
+    const time = state.usb === 'A' ? '9:41' : '10:24';
+    $('#preview').innerHTML = `<div class="phone"><div class="screen">
+      <div class="status"><span>${time}</span><span>5G ▮▮▮</span></div>
+      <div class="widget"><b>Zürich 14°</b>Partly cloudy · H 16° L 9°</div>
+      <div class="grid-icons">${icons}</div><div class="dock">${dock}</div></div>
+      <div class="homebar"><i></i></div></div>`;
+  }
+
+  function renderPills() {
+    const d = DEVICES[state.device];
+    const ctl = { off: null, wired: 'Wired control', wireless: 'Wi-Fi control', bluetooth: 'Bluetooth control' }[state.control];
+    $('#pills').innerHTML = [
+      `<span class="pill ok"><i></i>${d.name} · ${d.link}</span>`,
+      state.mirroring ? `<span class="pill on"><i></i>Mirroring</span>` : `<span class="pill"><i></i>Not mirroring</span>`,
+      ctl ? `<span class="pill on"><i></i>${ctl}</span>` : `<span class="pill"><i></i>Control off</span>`,
+      `<span class="pill ok"><i></i>AirPlay ready</span>`,
+    ].join('');
+  }
+
+  function setSum(key, text) { const el = document.querySelector(`[data-sum="${key}"]`); if (el) el.textContent = text; }
+
+  function render() {
+    applyTheme();
+    renderDevices(); renderPreview(); renderPills();
+
+    const ss = $('#startStop');
+    ss.className = 'primary' + (state.mirroring ? ' stop' : '');
+    ss.innerHTML = state.mirroring
+      ? `<svg class="ico fill" viewBox="0 0 24 24">${ICONS.stop}</svg>Stop mirroring`
+      : `<svg class="ico fill" viewBox="0 0 24 24">${ICONS.play}</svg>Start mirroring`;
+    $('#toolbar').style.visibility = state.mirroring ? 'visible' : 'hidden';
+
+    $$('#controlSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.control));
+    $('#controlHint').textContent = {
+      off: 'Mirroring only. Turn on control to tap, type and swipe on the iPhone from this PC.',
+      wired: 'Click and type in the preview. Clipboard syncs in both directions.',
+      wireless: 'Control over Wi-Fi. The picture still needs USB or AirPlay.',
+      bluetooth: 'Mouse and keyboard over Bluetooth. No clipboard and no swipe gestures.',
+    }[state.control];
+
+    $$('#usbSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.usb));
+    $('#usbHint').textContent = state.usb === 'A'
+      ? 'Video apps show their video. The status bar shows 9:41.'
+      : 'Shows the real time. Video apps like TikTok send their video by AirPlay, so only the sound stays here.';
+    setSum('usb', state.usb === 'A' ? 'A · Demo (recommended)' : 'B · AirPlay');
+    $('#res').value = state.res; $('#fps').value = state.fps; $('#dec').value = state.dec; $('#vol').value = state.vol;
+    setSum('quality', `${state.res} · ${state.fps} · ${state.dec}`);
+    setSum('sound', state.sw.iphoneAudio ? (state.sw.playPc ? `On · ${state.vol} %` : 'Muted on this PC') : 'iPhone audio off');
+
+    $$('.switch').forEach(s => s.setAttribute('aria-checked', !!state.sw[s.dataset.sw]));
+    const typing = state.control === 'off' ? 'Control is off' : state.sw.mapping ? 'Typing paused (mapping on)' : 'Typing on iPhone';
+    setSum('keyboard', typing + (state.sw.arrowSwipe && state.control !== 'bluetooth' ? ' · arrows swipe' : ''));
+    $('#mappingCallout').hidden = !state.sw.mapping;
+    setSum('mapping', state.sw.mapping ? 'On · 6 keys' : 'Off');
+    const bt = state.control === 'bluetooth';
+    $('#mouseSec').hidden = !bt; $('#mouseHint').hidden = bt;
+    setSum('mouse', 'Speed 500 % · scroll 1000 %');
+    setSum('airplay', `Ready · ${$('#airName').value || 'Unnamed'}`);
+    setSum('cast', state.sw.cast ? 'On' : 'Off');
+    setSum('appearance', `${THEMES[state.theme].name} · ${state.accent ? (ACCENTS.find(a => a[1] === state.accent)?.[0] || state.accent.toUpperCase()) : 'theme accent'} · ${STYLES.find(s => s[0] === state.style)[1]}`);
+
+    $$('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === state.tab));
+    $$('.panel').forEach(p => p.hidden = p.dataset.panel !== state.tab);
+    $$('.sec').forEach(s => s.dataset.open = !!state.open[s.dataset.sec]);
+    $$('.theme-tile').forEach(b => b.setAttribute('aria-pressed', b.dataset.themeKey === state.theme));
+    $$('.swatch').forEach(b => b.setAttribute('aria-pressed', (b.dataset.accent || null) === state.accent));
+    $$('.style-card').forEach(b => b.setAttribute('aria-pressed', b.dataset.styleKey === state.style));
+
+    $('#body').classList.toggle('collapsed', !state.sidebar);
+    $('#sidebarToggle').setAttribute('aria-pressed', state.sidebar);
+    $('#statsbar').dataset.open = state.stats;
+    $('#statsHead').setAttribute('aria-expanded', state.stats);
+    $('#statsGrid').hidden = !state.stats;
+    $('#statsbar').hidden = !state.mirroring;
+    $('#statsQuick').textContent = state.stats ? '' : '41 ms · 60 fps · 1179 × 2556';
+    save();
+  }
+
+  // ---- wiring ----
+  buildThemeTiles(); buildAccents(); buildStyles();
+  $('#startStop').onclick = () => { state.mirroring = !state.mirroring; render(); };
+  $('#tbStop').onclick = () => { state.mirroring = false; render(); };
+  $$('#controlSeg button').forEach(b => b.onclick = () => { state.control = b.dataset.v; render(); });
+  $$('#usbSeg button').forEach(b => b.onclick = () => { state.usb = b.dataset.v; render(); });
+  $$('.switch').forEach(s => s.onclick = () => { state.sw[s.dataset.sw] = !state.sw[s.dataset.sw]; render(); });
+  ['res', 'fps', 'dec'].forEach(id => $('#' + id).onchange = e => { state[id] = e.target.value; render(); });
+  $('#vol').oninput = e => { state.vol = +e.target.value; render(); };
+  $('#airName').oninput = () => render();
+  $$('.tab').forEach(t => t.onclick = () => { state.tab = t.dataset.tab; render(); });
+  $$('.sec-head').forEach(h => h.onclick = () => { const k = h.parentElement.dataset.sec; state.open[k] = !state.open[k]; render(); });
+  $('#sidebarToggle').onclick = () => { state.sidebar = !state.sidebar; render(); };
+  $('#collapseInner').onclick = () => { state.sidebar = false; render(); };
+  $('#statsHead').onclick = () => { state.stats = !state.stats; render(); };
+  const menu = $('#menu'), menuBtn = $('#menuBtn');
+  menuBtn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', !menu.hidden); };
+  document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) { menu.hidden = true; menuBtn.setAttribute('aria-expanded', 'false'); } });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (state.theme === 'system') render(); });
+  render();
+})();
+</script>
