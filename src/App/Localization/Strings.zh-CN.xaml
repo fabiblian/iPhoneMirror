@@ -213,7 +213,7 @@
     <system:String x:Key="LiveLogHeader" xml:space="preserve">实时日志  ·  Ctrl+L</system:String>
     <system:String x:Key="ClearView">清空视图</system:String>
 
-    <system:String x:Key="ControlTitle">投屏设置</system:String>
+    <system:String x:Key="ControlTitle">设置</system:String>
     <system:String x:Key="CurrentDevice">当前设备</system:String>
     <system:String x:Key="ImageAndSound">画面与声音</system:String>
     <system:String x:Key="RenderLimitHelp">只限制 Windows 本地渲染；不会改变来源分辨率，也不会强制 iOS 固定输出帧率</system:String>
@@ -226,7 +226,7 @@
     <system:String x:Key="PlayAudioWindows">在 Windows 播放声音</system:String>
     <system:String x:Key="PlaybackVolume">播放音量</system:String>
     <system:String x:Key="BluetoothMouseSensitivity">蓝牙鼠标灵敏度</system:String>
-    <system:String x:Key="BluetoothMouseSettingsTitle">反向控制设置</system:String>
+    <system:String x:Key="BluetoothMouseSettingsTitle">鼠标（蓝牙）</system:String>
     <system:String x:Key="BluetoothWheelSensitivity">滚轮灵敏度</system:String>
     <system:String x:Key="ApplyBluetoothMouseSettings">应用设置</system:String>
     <system:String x:Key="BluetoothMouseSettingsSaveFailed">蓝牙反向控制鼠标设置保存失败</system:String>
@@ -876,7 +876,7 @@
     <system:String x:Key="NavExpandDescription">展开导航</system:String>
     <system:String x:Key="NavCollapseDescription">收起导航</system:String>
     <system:String x:Key="NavExpandToolTip">展开左侧导航</system:String>
-    <system:String x:Key="AppPreferencesTitle">应用设置</system:String>
+    <system:String x:Key="AppPreferencesTitle">通用</system:String>
     <system:String x:Key="InstanceConflictTitle">iPhoneMirror 已在运行</system:String>
     <system:String x:Key="InstanceConflictBody">检测到另一个 iPhoneMirror 程序正在运行。请选择要保留的窗口。</system:String>
     <system:String x:Key="InstanceConflictHint">关闭其他窗口后，当前窗口会继续启动；关闭当前窗口不会影响已经运行的投屏。</system:String>

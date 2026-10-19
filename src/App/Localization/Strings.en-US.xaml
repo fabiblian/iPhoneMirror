@@ -9,7 +9,7 @@
     <system:String x:Key="LanguageChinese">简体中文</system:String>
     <system:String x:Key="LanguageTraditionalChineseHongKong">Traditional Chinese (Hong Kong)</system:String>
     <system:String x:Key="LanguageEnglish">English</system:String>
-    <system:String x:Key="LanguageToolTip">Interface language</system:String>
+    <system:String x:Key="LanguageToolTip">Language</system:String>
     <system:String x:Key="DriverManagerButton">Driver manager</system:String>
     <system:String x:Key="DriverManagerToolTip">Open the driver installation, repair, and removal tool</system:String>
     <system:String x:Key="DriverManagerTitle">Driver manager</system:String>
@@ -199,7 +199,7 @@
     <system:String x:Key="IndependentWindowImageSettings">Adjust image</system:String>
     <system:String x:Key="IndependentWindowProjectionSettings">Mirroring settings</system:String>
     <system:String x:Key="ProjectionSettingsTitle">Mirroring settings</system:String>
-    <system:String x:Key="ApplicationModeLabel">Application mode</system:String>
+    <system:String x:Key="ApplicationModeLabel">App mode</system:String>
     <system:String x:Key="ApplicationModeLightweight">Lightweight</system:String>
     <system:String x:Key="ApplyLightweightMode">Switch to lightweight mode</system:String>
     <system:String x:Key="ApplicationModeComplete">Complete</system:String>
@@ -213,25 +213,25 @@
     <system:String x:Key="LiveLogHeader" xml:space="preserve">Live log  ·  Ctrl+L</system:String>
     <system:String x:Key="ClearView">Clear view</system:String>
 
-    <system:String x:Key="ControlTitle">Mirroring settings</system:String>
+    <system:String x:Key="ControlTitle">Settings</system:String>
     <system:String x:Key="CurrentDevice">Current device</system:String>
     <system:String x:Key="ImageAndSound">Video and audio</system:String>
-    <system:String x:Key="RenderLimitHelp">Limits Windows rendering only; it does not change source resolution or force iOS to output a fixed frame rate</system:String>
-    <system:String x:Key="RenderResolutionLimit">Render resolution limit</system:String>
-    <system:String x:Key="TargetFrameRate">Local rendering frame-rate limit</system:String>
+    <system:String x:Key="RenderLimitHelp">Limits only how the picture is drawn on this PC. The iPhone keeps sending the same resolution and frame rate.</system:String>
+    <system:String x:Key="RenderResolutionLimit">Maximum resolution</system:String>
+    <system:String x:Key="TargetFrameRate">Maximum frame rate</system:String>
     <system:String x:Key="ActualStream">Actual AirPlay stream currently being received</system:String>
     <system:String x:Key="ActualResolution">Actual resolution</system:String>
     <system:String x:Key="ActualFrameRate">Actual frame rate</system:String>
-    <system:String x:Key="ApplyVideoSettings">Apply video settings</system:String>
-    <system:String x:Key="PlayAudioWindows">Play audio on Windows</system:String>
-    <system:String x:Key="PlaybackVolume">Playback volume</system:String>
-    <system:String x:Key="BluetoothMouseSensitivity">Bluetooth mouse sensitivity</system:String>
-    <system:String x:Key="BluetoothMouseSettingsTitle">Reverse control settings</system:String>
-    <system:String x:Key="BluetoothWheelSensitivity">Wheel sensitivity</system:String>
-    <system:String x:Key="ApplyBluetoothMouseSettings">Apply settings</system:String>
+    <system:String x:Key="ApplyVideoSettings">Apply</system:String>
+    <system:String x:Key="PlayAudioWindows">Play sound on this PC</system:String>
+    <system:String x:Key="PlaybackVolume">Volume</system:String>
+    <system:String x:Key="BluetoothMouseSensitivity">Pointer speed</system:String>
+    <system:String x:Key="BluetoothMouseSettingsTitle">Mouse (Bluetooth)</system:String>
+    <system:String x:Key="BluetoothWheelSensitivity">Scroll speed</system:String>
+    <system:String x:Key="ApplyBluetoothMouseSettings">Apply</system:String>
     <system:String x:Key="BluetoothMouseSettingsSaveFailed">Could not save Bluetooth control mouse settings</system:String>
-    <system:String x:Key="BluetoothPortraitMouseDirection">Portrait mouse direction</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseDirection">Landscape mouse direction</system:String>
+    <system:String x:Key="BluetoothPortraitMouseDirection">Portrait direction</system:String>
+    <system:String x:Key="BluetoothLandscapeMouseDirection">Landscape direction</system:String>
     <system:String x:Key="BluetoothMouseDirectionUp">Up</system:String>
     <system:String x:Key="BluetoothMouseDirectionRight">Right</system:String>
     <system:String x:Key="BluetoothMouseDirectionDown">Down</system:String>
@@ -239,7 +239,7 @@
     <system:String x:Key="BluetoothReverseHorizontal">Reverse left/right</system:String>
     <system:String x:Key="BluetoothReverseVertical">Reverse up/down</system:String>
     <system:String x:Key="BluetoothCurrentOrientationFormat">Current device orientation: {0} ({1})</system:String>
-    <system:String x:Key="BluetoothMouseDirectionHelp">Orientation is detected from the current frame size; independent-window rotation is included automatically.</system:String>
+    <system:String x:Key="BluetoothMouseDirectionHelp">Portrait or landscape is detected from the picture size, including rotated preview windows.</system:String>
     <system:String x:Key="BluetoothDeviceOrientationPortrait">Portrait</system:String>
     <system:String x:Key="BluetoothDeviceOrientationLandscape">Landscape</system:String>
     <system:String x:Key="BluetoothDeviceOrientationUnknown">Unknown</system:String>
@@ -366,7 +366,7 @@
     <system:String x:Key="DeviceProfileGuidanceWiredBody" xml:space="preserve">A new wired iPhone/iPad was detected. Create a device profile now so wired mirroring, wireless mirroring, and reverse control always resolve to the same physical device.&#xA;&#xA;Keep the device unlocked and complete the “Trust This Computer” prompt. Click Continue to open the device binder and confirm or manage this profile; click Cancel to open it later from the Reverse control menu.</system:String>
     <system:String x:Key="DeviceProfileGuidanceWirelessTitle">First connection for this wireless device</system:String>
     <system:String x:Key="DeviceProfileGuidanceWirelessBody" xml:space="preserve">A new AirPlay device was detected. Create a device profile now so wireless mirroring can match its wired identity and reverse control can target the correct device.&#xA;&#xA;Make sure the phone and computer are on the same local network and keep the device name recognizable. Click Continue to open the device binder and bind this AirPlay device; click Cancel to open it later from the Reverse control menu.</system:String>
-    <system:String x:Key="ClearBluetoothBindings">Clear all Bluetooth bindings</system:String>
+    <system:String x:Key="ClearBluetoothBindings">Remove Bluetooth bindings</system:String>
     <system:String x:Key="ClearBluetoothBindingsTitle">Clear Bluetooth bindings</system:String>
     <system:String x:Key="ClearBluetoothBindingsBody">This removes the Bluetooth identity from every device profile. Other USB and AirPlay identities remain bound.</system:String>
     <system:String x:Key="ClearBluetoothBindingsFailed">Could not update the device binding profiles.</system:String>
@@ -541,7 +541,7 @@
     <system:String x:Key="AdvancedResolutionInvalid">Enter valid width and height values from 16 to 8192.</system:String>
     <system:String x:Key="AdvancedModeEnabled">Advanced mode enabled</system:String>
     <system:String x:Key="AdvancedModeDisabled">Advanced mode disabled; normal presets restored</system:String>
-    <system:String x:Key="UsbProjectionModeTitle">USB mirroring protocol</system:String>
+    <system:String x:Key="UsbProjectionModeTitle">USB mode</system:String>
     <system:String x:Key="UsbModeDemoLabel">A Demo (recommended)</system:String>
     <system:String x:Key="UsbModeAirPlayLabel">B AirPlay (real time; videos play audio only)</system:String>
     <system:String x:Key="UsbModeAisiLabel">C Aisi mode</system:String>
@@ -566,7 +566,7 @@
     <system:String x:Key="DecoderAuto">Auto (recommended)</system:String>
     <system:String x:Key="DecoderHardwarePreferred">Hardware preferred</system:String>
     <system:String x:Key="DecoderSoftwareCompatible">Software compatibility</system:String>
-    <system:String x:Key="VideoPipelinePreferenceHelp">Software compatibility disables hardware video decoding, but the D3D preview still uses the GPU. Decoder changes normally apply at the next keyframe.</system:String>
+    <system:String x:Key="VideoPipelinePreferenceHelp">Software decoding turns off hardware video decoding; the preview still uses the graphics card. A new decoder usually takes effect at the next keyframe.</system:String>
     <system:String x:Key="PendingVideoSettingsFormat">Pending: {0} · {1} fps · {2}</system:String>
     <system:String x:Key="VideoSettingsAppliedFormat">Settings submitted: {0} · {1} fps · {2}</system:String>
     <system:String x:Key="VideoSettingsSavedFormat">Saved for the next cast: {0} · {1} fps · {2}</system:String>
@@ -604,9 +604,9 @@
     <system:String x:Key="VideoPipelineAppliedFormat">Video pipeline applied: {0}</system:String>
     <system:String x:Key="WindowTitleConnectivity">iPhoneMirror - iPhone/iPad Mirroring</system:String>
     <system:String x:Key="AppSubtitleConnectivity">Low-latency USB and wireless AirPlay mirroring for Windows</system:String>
-    <system:String x:Key="WirelessReceiverTitle">Wireless AirPlay</system:String>
-    <system:String x:Key="WirelessReceiverNameLabel">Receiver name</system:String>
-    <system:String x:Key="WirelessBackendLabel">Receiver implementation</system:String>
+    <system:String x:Key="WirelessReceiverTitle">AirPlay receiver</system:String>
+    <system:String x:Key="WirelessReceiverNameLabel">Name shown on the iPhone</system:String>
+    <system:String x:Key="WirelessBackendLabel">Receiver</system:String>
     <system:String x:Key="WirelessBackendOriginal">Original</system:String>
     <system:String x:Key="WirelessBackendUxPlay">UxPlay (fallback)</system:String>
     <system:String x:Key="WirelessBackendChangeFormat">Receiver implementation: {0} → {1}</system:String>
@@ -626,8 +626,8 @@
     <system:String x:Key="WirelessSettingsUnchanged">The receiver name and connection resolution have not changed.</system:String>
     <system:String x:Key="Continue">Continue</system:String>
     <system:String x:Key="Cancel">Cancel</system:String>
-    <system:String x:Key="WirelessResolutionLabel">Connection resolution</system:String>
-    <system:String x:Key="WirelessResolutionHelp">Applying re-advertises the AirPlay receiver capability. Use 720p or 540p on a weak network.</system:String>
+    <system:String x:Key="WirelessResolutionLabel">Resolution</system:String>
+    <system:String x:Key="WirelessResolutionHelp">Applying announces the receiver again. On a weak network, use 720p or 540p.</system:String>
     <system:String x:Key="WirelessProfileMaximum">Original quality (2880 long edge in either orientation · 60 fps)</system:String>
     <system:String x:Key="WirelessProfile1080p">1080p (recommended · 60 fps)</system:String>
     <system:String x:Key="WirelessProfile720p">720p (smooth · 30 fps)</system:String>
@@ -638,7 +638,7 @@
     <system:String x:Key="WirelessProfileReconnectInstructionsFormat">“{0}” is now advertised. On iPhone, open Control Center → Screen Mirroring and select “{1}” again. If the old connection remains listed, tap Stop Mirroring first, then select the receiver again.</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningTitle">Original quality notice</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningBody">Original quality may freeze on some devices or network conditions. 1080p is recommended. If you still need original quality, use a stable local network and connect from iPhone Control Center → Screen Mirroring.</system:String>
-    <system:String x:Key="WirelessServiceAlwaysOn">Starts automatically</system:String>
+    <system:String x:Key="WirelessServiceAlwaysOn">Starts with the app</system:String>
     <system:String x:Key="WirelessConnected">AirPlay connected</system:String>
     <system:String x:Key="WirelessLocalNetwork">Local network</system:String>
     <system:String x:Key="WirelessReady">AirPlay receiver ready</system:String>
@@ -792,7 +792,7 @@
     <system:String x:Key="AllowUpdateMirrorFallbackDescription">Tests GitHub and every mirror, then downloads a 256 KB sample from reachable routes; downloads must still pass SHA-256 verification from trusted release metadata.</system:String>
     <system:String x:Key="NotifyStableReleases">Notify me about stable releases</system:String>
     <system:String x:Key="NotifyPrereleaseReleases">Notify me about Beta preview releases</system:String>
-    <system:String x:Key="ThemeTitle">App theme</system:String>
+    <system:String x:Key="ThemeTitle">Theme</system:String>
     <system:String x:Key="ThemeSystem">Use system setting</system:String>
     <system:String x:Key="ThemeDark">Dark</system:String>
     <system:String x:Key="ThemeLight">Light</system:String>
@@ -876,7 +876,7 @@
     <system:String x:Key="NavExpandDescription">Expand navigation</system:String>
     <system:String x:Key="NavCollapseDescription">Collapse navigation</system:String>
     <system:String x:Key="NavExpandToolTip">Expand left navigation</system:String>
-    <system:String x:Key="AppPreferencesTitle">App settings</system:String>
+    <system:String x:Key="AppPreferencesTitle">General</system:String>
     <system:String x:Key="InstanceConflictTitle">iPhoneMirror is already running</system:String>
     <system:String x:Key="InstanceConflictBody">Another iPhoneMirror instance is currently running. Choose which window to keep.</system:String>
     <system:String x:Key="InstanceConflictHint">Closing the other windows continues this launch. Closing this window leaves active mirroring sessions untouched.</system:String>
@@ -1270,8 +1270,8 @@
     <sys:String x:Key="UxPlayDownloadIntegrityFailed">Component integrity verification failed. Nothing was installed. Please download it again.</sys:String>
     <sys:String x:Key="UxPlayDownloadStorageFailed">Cannot write to the component cache. Check free disk space and file permissions, then retry.</sys:String>
     <system:String x:Key="MappingTitle">Keyboard mapping</system:String>
-    <system:String x:Key="MappingDescription">Bind Windows keyboard keys to iPhone/iPad touch actions.</system:String>
-    <system:String x:Key="MappingManage">Manage keyboard mappings</system:String>
+    <system:String x:Key="MappingDescription">Bind PC keys to taps and swipes on the iPhone or iPad, for example for games.</system:String>
+    <system:String x:Key="MappingManage">Edit keyboard mappings</system:String>
     <system:String x:Key="MappingEnable">Enable keyboard mapping</system:String>
     <system:String x:Key="MappingEnabled">Enabled</system:String>
     <system:String x:Key="MappingSuppress">Block the original Windows action of mapped ordinary keys</system:String>
@@ -1414,7 +1414,7 @@
 
     <!-- First run setup -->
     <system:String x:Key="SetupTitle">First run setup</system:String>
-    <system:String x:Key="SetupReopen">First run setup · Run again</system:String>
+    <system:String x:Key="SetupReopen">Run first-time setup again</system:String>
     <system:String x:Key="SetupBegin">Get started →</system:String>
     <system:String x:Key="SetupDefer">Set up later</system:String>
     <system:String x:Key="SetupCancelOperation">Cancel task</system:String>

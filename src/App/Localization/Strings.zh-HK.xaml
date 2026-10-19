@@ -213,7 +213,7 @@
     <system:String x:Key="LiveLogHeader" xml:space="preserve">即時記錄  ·  Ctrl+L</system:String>
     <system:String x:Key="ClearView">清除檢視</system:String>
 
-    <system:String x:Key="ControlTitle">螢幕鏡像設定</system:String>
+    <system:String x:Key="ControlTitle">設定</system:String>
     <system:String x:Key="CurrentDevice">目前裝置</system:String>
     <system:String x:Key="ImageAndSound">畫面與音訊</system:String>
     <system:String x:Key="RenderLimitHelp">只限制 Windows 本機繪製；不會改變來源解像度，也不會強制 iOS 固定輸出幀率</system:String>
@@ -226,7 +226,7 @@
     <system:String x:Key="PlayAudioWindows">在 Windows 播放音訊</system:String>
     <system:String x:Key="PlaybackVolume">播放音量</system:String>
     <system:String x:Key="BluetoothMouseSensitivity">藍牙滑鼠靈敏度</system:String>
-    <system:String x:Key="BluetoothMouseSettingsTitle">反向控制設定</system:String>
+    <system:String x:Key="BluetoothMouseSettingsTitle">滑鼠（藍牙）</system:String>
     <system:String x:Key="BluetoothWheelSensitivity">滾輪靈敏度</system:String>
     <system:String x:Key="ApplyBluetoothMouseSettings">套用設定</system:String>
     <system:String x:Key="BluetoothMouseSettingsSaveFailed">藍牙反向控制滑鼠設定儲存失敗</system:String>
@@ -876,7 +876,7 @@
     <system:String x:Key="NavExpandDescription">展開導覽</system:String>
     <system:String x:Key="NavCollapseDescription">收起導覽</system:String>
     <system:String x:Key="NavExpandToolTip">展開左側導覽</system:String>
-    <system:String x:Key="AppPreferencesTitle">應用程式設定</system:String>
+    <system:String x:Key="AppPreferencesTitle">一般</system:String>
     <system:String x:Key="InstanceConflictTitle">iPhoneMirror 正在執行</system:String>
     <system:String x:Key="InstanceConflictBody">偵測到另一個 iPhoneMirror 程式正在執行。請選擇要保留的視窗。</system:String>
     <system:String x:Key="InstanceConflictHint">關閉其他視窗後，目前視窗會繼續啟動；關閉目前視窗不會影響進行中的螢幕鏡像。</system:String>
