@@ -79,6 +79,33 @@
             <Setter Property="Padding" Value="0,14,0,0"/>
             <Setter Property="Margin" Value="0,14,0,0"/>
         </Style>
+        <Style x:Key="PanelResizeThumb" TargetType="Thumb">
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Grip" Width="4" Height="44" CornerRadius="2"
+                                    Background="{DynamicResource BorderBrush}" Opacity="0.7"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Grip" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Grip" Property="Opacity" Value="1"/>
+                                <Setter TargetName="Grip" Property="Height" Value="88"/>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="Grip" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Grip" Property="Opacity" Value="1"/>
+                                <Setter TargetName="Grip" Property="Height" Value="88"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="StatusPill" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource ControlFillBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}"/>
@@ -1102,6 +1129,9 @@
                                       AutomationProperties.AutomationId="MoreMenuAbout"/>
                             <MenuItem Header="{DynamicResource DiagnosticsTitle}" Click="OnMoreMenuDiagnosticsClick"
                                       AutomationProperties.AutomationId="MoreMenuDiagnostics"/>
+                            <MenuItem x:Name="VersionLauncherMenuItem" Header="{DynamicResource OpenVersionLauncher}"
+                                      Click="OnOpenVersionLauncherClick" Visibility="Collapsed"
+                                      AutomationProperties.AutomationId="MoreMenuVersionLauncher"/>
                             <Separator/>
                             <MenuItem x:Name="ExitAppMenuItem" Header="{DynamicResource TrayExit}" Click="OnCloseWindowClick"
                                       Foreground="{DynamicResource ErrorBrush}"
@@ -1966,6 +1996,19 @@
 
             </Grid>
 
+            <Thumb x:Name="LeftPanelResizeThumb" Grid.Column="1" Grid.RowSpan="2"
+                   Style="{StaticResource PanelResizeThumb}"
+                   DragDelta="OnLeftPanelResizeDelta" DragCompleted="OnPanelResizeCompleted"
+                   MouseDoubleClick="OnLeftPanelResizeReset"
+                   ToolTip="{DynamicResource PanelResizeToolTip}"
+                   AutomationProperties.AutomationId="LeftPanelResizeThumb"/>
+            <Thumb x:Name="SettingsPanelResizeThumb" Grid.Column="3" Grid.RowSpan="2"
+                   Style="{StaticResource PanelResizeThumb}"
+                   DragDelta="OnSettingsPanelResizeDelta" DragCompleted="OnPanelResizeCompleted"
+                   MouseDoubleClick="OnSettingsPanelResizeReset"
+                   ToolTip="{DynamicResource PanelResizeToolTip}"
+                   AutomationProperties.AutomationId="SettingsPanelResizeThumb"/>
+
             <controls:WorkspaceRevealPanel x:Name="ControlPanel" Grid.Column="4" Width="0" ContentWidth="336"
                                            Visibility="Collapsed" IsVisibleChanged="OnWorkspacePanelVisibilityChanged">
             <Border x:Name="ControlPanelContent"
@@ -2073,16 +2116,16 @@
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <ListBox.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <UniformGrid Rows="1" Columns="3"/>
+                                                <StackPanel/>
                                             </ItemsPanelTemplate>
                                         </ListBox.ItemsPanel>
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid>
-                                                    <TextBlock Text="{Binding Label}" FontSize="{DynamicResource CaptionFontSize}"
+                                                    <TextBlock Text="{Binding Label}" FontSize="{DynamicResource SecondaryFontSize}"
                                                                FontWeight="SemiBold" TextWrapping="Wrap"
-                                                               TextAlignment="Center" VerticalAlignment="Center"
-                                                               Margin="0,0,20,0"
+                                                               TextAlignment="Left" VerticalAlignment="Center"
+                                                               Margin="4,0,28,0"
                                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
                                                     <Button Style="{StaticResource UsbModeInfoButton}"
                                                             HorizontalAlignment="Right" VerticalAlignment="Center"

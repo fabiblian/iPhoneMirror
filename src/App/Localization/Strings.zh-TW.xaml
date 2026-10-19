@@ -832,6 +832,9 @@
     <system:String x:Key="MoreActions">更多</system:String>
     <system:String x:Key="StatusPillMirroring">螢幕鏡像中</system:String>
     <system:String x:Key="StatusPillAirPlay">AirPlay</system:String>
+    <system:String x:Key="OpenVersionLauncher">選擇版本…</system:String>
+    <system:String x:Key="VersionLauncherFailedFormat">無法開啟版本啟動器：{0}</system:String>
+    <system:String x:Key="PanelResizeToolTip">拖曳以調整寬度，按兩下恢復預設值。</system:String>
     <system:String x:Key="AppearanceFrameHelp">預覽視窗的邊框使用強調色，其他邊框顏色可在預覽設定中選擇。</system:String>
     <system:String x:Key="CheckingForUpdates">正在連線更新服務檢查新版本…</system:String>
     <system:String x:Key="AlreadyUpToDate">目前已是所選發布通道的最新版本。</system:String>

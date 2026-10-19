@@ -58,6 +58,10 @@ internal sealed class UpdateSettings
     public string SettingsTab { get; set; } = "Video";
     /// <summary>Whether the stream statistics below the preview are expanded.</summary>
     public bool StatsExpanded { get; set; } = true;
+    /// <summary>Width in DIPs of the devices/mirroring panel left of the preview.</summary>
+    public double LeftPanelWidth { get; set; } = 300;
+    /// <summary>Width in DIPs of the settings sidebar right of the preview.</summary>
+    public double SettingsPanelWidth { get; set; } = 336;
     public ApplicationDisplayMode ApplicationDisplayMode { get; set; } =
         ApplicationDisplayMode.Complete;
     public WirelessReceiverBackend WirelessReceiverBackend { get; set; } =
@@ -151,6 +155,8 @@ internal sealed class UpdateSettings
         UiStyle = UiStyle,
         SettingsTab = SettingsTab,
         StatsExpanded = StatsExpanded,
+        LeftPanelWidth = LeftPanelWidth,
+        SettingsPanelWidth = SettingsPanelWidth,
         ApplicationDisplayMode = ApplicationDisplayMode,
         WirelessReceiverBackend = WirelessReceiverBackend,
         WirelessDisplayProfileId = WirelessDisplayProfileId,

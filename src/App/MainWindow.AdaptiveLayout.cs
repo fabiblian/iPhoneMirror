@@ -87,5 +87,7 @@ public partial class MainWindow
         ControlColumn.MaxWidth = stack ? 0 : double.PositiveInfinity;
         RightGapColumn.MaxWidth = stack ? 0 : double.PositiveInfinity;
         LeftPanelHost.Margin = stack ? new Thickness(0, 0, 0, 8) : new Thickness(0);
+        LeftPanelResizeThumb.Visibility = SettingsPanelResizeThumb.Visibility =
+            stack ? Visibility.Collapsed : Visibility.Visible;
     }
 }

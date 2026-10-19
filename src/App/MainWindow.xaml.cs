@@ -360,6 +360,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                     app.UpdateSettings, action);
         }
         InitializeSettingsTabs();
+        InitializePanelWidths();
         _themeControlReady = true;
         _workspaceControlsReady = true;
         _viewModel = new MainViewModel();
@@ -2182,10 +2183,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             LeftGapColumn.Width = new GridLength(showLeftPanel ? 18 : 0);
             RightGapColumn.Width = new GridLength(showSettings ? 18 : 0);
-            SetWorkspaceSurfaceImmediate(LeftPanelHost, showLeftPanel, 300);
+            SetWorkspaceSurfaceImmediate(LeftPanelHost, showLeftPanel, _leftPanelWidth);
             SetWorkspacePageImmediate(DevicePanel, showDevices);
             SetWorkspacePageImmediate(MirroringPanel, showMirroring);
-            SetWorkspaceSurfaceImmediate(ControlPanel, showSettings, 336);
+            SetWorkspaceSurfaceImmediate(ControlPanel, showSettings, _settingsPanelWidth);
             ReleaseLightweightCenterWidth();
             if (_viewModel.IsLightweightApplicationMode && IsVisible)
                 QueueInitialLightweightWorkspaceFit();
@@ -2226,9 +2227,9 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             : currentCenterWidth;
 
         _workspaceLeftSurfaceStartWidth = currentLeftWidth;
-        _workspaceLeftSurfaceTargetWidth = showLeftPanel ? 300 : 0;
+        _workspaceLeftSurfaceTargetWidth = showLeftPanel ? _leftPanelWidth : 0;
         _workspaceRightSurfaceStartWidth = currentRightWidth;
-        _workspaceRightSurfaceTargetWidth = showSettings ? 336 : 0;
+        _workspaceRightSurfaceTargetWidth = showSettings ? _settingsPanelWidth : 0;
         _workspaceLeftGapStartWidth = currentLeftGap;
         _workspaceLeftGapTargetWidth = showLeftPanel ? 18 : 0;
         _workspaceRightGapStartWidth = currentRightGap;
@@ -2390,8 +2391,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         var hasPanels = showLeftPanel || showSettings;
         DeviceColumn.Width = GridLength.Auto;
         ControlColumn.Width = GridLength.Auto;
-        SetWorkspaceSurfaceImmediate(LeftPanelHost, showLeftPanel, 300);
-        SetWorkspaceSurfaceImmediate(ControlPanel, showSettings, 336);
+        SetWorkspaceSurfaceImmediate(LeftPanelHost, showLeftPanel, _leftPanelWidth);
+        SetWorkspaceSurfaceImmediate(ControlPanel, showSettings, _settingsPanelWidth);
         LeftGapColumn.Width = new GridLength(showLeftPanel ? 18 : 0);
         RightGapColumn.Width = new GridLength(showSettings ? 18 : 0);
         SetLightweightCenterColumnFill();
@@ -6535,10 +6536,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             SizeToContent = SizeToContent.Manual;
             PreviewPanel.ClearValue(WidthProperty);
             SetNavigationPaneVisible(false);
-            SetWorkspaceSurfaceImmediate(LeftPanelHost, visible: false, width: 300);
+            SetWorkspaceSurfaceImmediate(LeftPanelHost, visible: false, width: _leftPanelWidth);
             SetWorkspacePageImmediate(DevicePanel, visible: false);
             SetWorkspacePageImmediate(MirroringPanel, visible: false);
-            SetWorkspaceSurfaceImmediate(ControlPanel, visible: false, width: 336);
+            SetWorkspaceSurfaceImmediate(ControlPanel, visible: false, width: _settingsPanelWidth);
             HeaderPanel.Visibility = Visibility.Collapsed;
             EnvironmentPanel.Visibility = Visibility.Collapsed;
             StatsPanel.Visibility = Visibility.Collapsed;
