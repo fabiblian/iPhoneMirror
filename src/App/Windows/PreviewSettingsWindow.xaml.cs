@@ -116,6 +116,9 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             FrameOptions.IsEnabled = settings.Enabled;
             FrameOptions.Opacity = settings.Enabled ? 1.0 : 0.5;
             ThicknessSlider.Value = settings.ThicknessDips;
+            AccentColorCheckBox.IsChecked = settings.UseAccentColor;
+            OtherColorOptions.IsEnabled = !settings.UseAccentColor;
+            OtherColorOptions.Opacity = settings.UseAccentColor ? 0.5 : 1.0;
             AutoColorCheckBox.IsChecked = settings.AutoColor;
             FixedColorOptions.IsEnabled = !settings.AutoColor;
             FixedColorOptions.Opacity = settings.AutoColor ? 0.5 : 1.0;
@@ -123,7 +126,7 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             if (!ColorTextBox.IsKeyboardFocusWithin) ColorTextBox.Text = settings.Color;
             foreach (var child in Swatches.Children.OfType<Button>())
             {
-                var selected = !settings.AutoColor && string.Equals(child.Tag as string,
+                var selected = !settings.UseAccentColor && !settings.AutoColor && string.Equals(child.Tag as string,
                     settings.Color, StringComparison.OrdinalIgnoreCase);
                 child.BorderThickness = new Thickness(selected ? 3 : 1);
                 child.SetResourceReference(BorderBrushProperty,
@@ -158,6 +161,12 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
 
     private void OnThicknessChanged(object sender, RoutedPropertyChangedEventArgs<double> e) =>
         Update(s => s.ThicknessDips = e.NewValue);
+
+    private void OnAccentColorChanged(object sender, RoutedEventArgs e)
+    {
+        var accent = AccentColorCheckBox.IsChecked == true;
+        Update(s => s.UseAccentColor = accent);
+    }
 
     private void OnAutoColorChanged(object sender, RoutedEventArgs e)
     {

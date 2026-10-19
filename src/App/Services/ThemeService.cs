@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using IPhoneMirror.App.Updater;
 using Microsoft.Win32;
@@ -25,6 +26,24 @@ internal static class ThemeService
 
     internal static bool IsDark { get; private set; } = true;
     internal static AppTheme Preference { get; private set; } = AppTheme.System;
+    internal static AppColorTheme ColorTheme { get; private set; } = AppColorTheme.Default;
+    internal static string AccentHex { get; private set; } = "";
+    internal static UiStyle Style { get; private set; } = UiStyle.Modern;
+    /// <summary>The accent currently shown, after contrast adjustment.</summary>
+    internal static Color Accent { get; private set; } = ThemePalette.DarkAccent;
+    /// <summary>A colour preset paints its own background instead of Mica.</summary>
+    internal static bool UsesCustomBackground => !SystemParameters.HighContrast &&
+        ThemePalette.EffectiveColorTheme(ColorTheme, IsDark) != AppColorTheme.Default;
+    private static ResourceDictionary? _appearanceOverrides;
+    private static Color? _wpfUiDefaultAccent;
+
+    internal static void Apply(AppTheme theme, AppColorTheme colorTheme, string? accentHex, UiStyle style)
+    {
+        ColorTheme = Enum.IsDefined(colorTheme) ? colorTheme : AppColorTheme.Default;
+        AccentHex = ThemePalette.NormalizeHex(accentHex);
+        Style = Enum.IsDefined(style) ? style : UiStyle.Modern;
+        Apply(theme);
+    }
 
     internal static void Apply(AppTheme theme)
     {
@@ -44,6 +63,8 @@ internal static class ThemeService
         ApplicationThemeManager.Apply(
             applicationTheme, Wpf.Ui.Controls.WindowBackdropType.None,
             updateAccent: false);
+        ApplyAppearance(application.Resources, applicationTheme);
+        // Added after the appearance layer so high-contrast colours still win.
         IPhoneMirror.UI.Services.AccessibilityAppearance.Apply(application);
         foreach (Window window in application.Windows)
         {
@@ -79,6 +100,35 @@ internal static class ThemeService
         if (!_systemEventsAttached) return;
         SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
         _systemEventsAttached = false;
+    }
+
+    private static void ApplyAppearance(ResourceDictionary resources, ApplicationTheme applicationTheme)
+    {
+        Accent = ThemePalette.EffectiveAccent(ColorTheme, AccentHex, IsDark);
+        if (_appearanceOverrides is not null) resources.MergedDictionaries.Remove(_appearanceOverrides);
+        _appearanceOverrides = null;
+        var values = SystemParameters.HighContrast
+            ? []
+            : ThemePalette.BuildOverrides(IsDark, ColorTheme, AccentHex, Style);
+        if (values.Count > 0)
+        {
+            var overrides = new ResourceDictionary();
+            foreach (var (key, value) in values) overrides[key] = value;
+            resources.MergedDictionaries.Add(overrides);
+            _appearanceOverrides = overrides;
+        }
+        // WPF-UI controls (toggle switches, navigation) read their own accent
+        // keys. Leave them untouched unless a custom accent is (or was) active.
+        if (values.ContainsKey("ThemeAccentColor"))
+        {
+            _wpfUiDefaultAccent ??= ApplicationAccentColorManager.SystemAccent;
+            ApplicationAccentColorManager.Apply(Accent, applicationTheme);
+        }
+        else if (_wpfUiDefaultAccent is { } original)
+        {
+            ApplicationAccentColorManager.Apply(original, applicationTheme);
+            _wpfUiDefaultAccent = null;
+        }
     }
 
     private static void SwapThemeDictionary(ResourceDictionary resources, string path)
@@ -135,7 +185,7 @@ internal static class ThemeService
             var backdrop = window is Wpf.Ui.Controls.FluentWindow fluentWindow
                 ? fluentWindow.WindowBackdropType
                 : Wpf.Ui.Controls.WindowBackdropType.None;
-            if (SystemParameters.HighContrast)
+            if (SystemParameters.HighContrast || UsesCustomBackground)
                 window.SetResourceReference(Window.BackgroundProperty, "AppBackgroundBrush");
             else WindowBackgroundManager.UpdateBackground(window, applicationTheme, backdrop);
         }
@@ -170,7 +220,7 @@ internal static class ThemeService
         var acrylic = window is Wpf.Ui.Controls.FluentWindow fluentWindow &&
                       fluentWindow.WindowBackdropType ==
                           Wpf.Ui.Controls.WindowBackdropType.Acrylic;
-        var backdrop = SystemParameters.HighContrast || edgeToEdge
+        var backdrop = SystemParameters.HighContrast || edgeToEdge || UsesCustomBackground
             ? DwmBackdropNone
             : acrylic ? DwmBackdropAcrylic : DwmBackdropMica;
         var border = flushToDisplayEdge ? DwmColorNone : DwmColorDefault;

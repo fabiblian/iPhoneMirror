@@ -65,7 +65,8 @@ public partial class App : Application
             LaunchOptions = CompactLaunchOptions.Parse(e.Args);
             AppIdentity.Initialize();
             UpdateSettings = _settingsStore.Load();
-            ThemeService.Apply(UpdateSettings.Theme);
+            ThemeService.Apply(UpdateSettings.Theme, UpdateSettings.ColorTheme,
+                UpdateSettings.AccentColor, UpdateSettings.UiStyle);
             EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
                 new RoutedEventHandler((sender, _) =>
                 {

@@ -1965,6 +1965,14 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
         "frame color normalizes hex");
     Equal(0x800A84FFu, new PreviewFrameSettings { Color = "#0A84FF", Opacity = 0.5 }.ToArgb(),
         "frame opacity becomes alpha");
+    Equal(true, defaults.UseAccentColor, "frame follows the accent colour by default");
+    Equal(0xFF3B82F6u, defaults.ToArgb(0x3B82F6), "accent frame uses the accent colour");
+    Equal(0xFF2B2B2Bu, new PreviewFrameSettings { UseAccentColor = false }.ToArgb(0x3B82F6),
+        "fixed frame colour ignores the accent");
+    Equal(false, new PreviewFrameSettings { AutoColor = true }.FollowsImageEdge,
+        "accent colour wins over the image edge");
+    Equal(true, new PreviewFrameSettings { AutoColor = true, UseAccentColor = false }.FollowsImageEdge,
+        "image edge colour applies without the accent");
 
     var frameSettingsPath = Path.Combine(Path.GetTempPath(),
         $"iPhoneMirror-frame-{Guid.NewGuid():N}.json");
@@ -1974,7 +1982,7 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
         frameStore.Update(settings => settings.PreviewFrame = new PreviewFrameSettings
         {
             Enabled = false, ThicknessDips = 30, Color = "#FF453A", Opacity = 0.4,
-            AutoColor = true, HomeButton = PreviewHomeButtonStyle.Pill,
+            AutoColor = true, UseAccentColor = false, HomeButton = PreviewHomeButtonStyle.Pill,
             HomeButtonPosition = PreviewHomeButtonPosition.Right, AutoStartControl = false,
         });
         var reloaded = frameStore.Load().PreviewFrame;
@@ -1983,12 +1991,89 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
         Equal("#FF453A", reloaded.Color, "frame color persists");
         Equal(0.4, reloaded.Opacity, "frame opacity persists");
         Equal(true, reloaded.AutoColor, "frame auto colour persists");
+        Equal(false, reloaded.UseAccentColor, "frame accent choice persists");
         Equal(PreviewHomeButtonStyle.Pill, reloaded.HomeButton, "home style persists");
         Equal(PreviewHomeButtonPosition.Right, reloaded.HomeButtonPosition, "home position persists");
         Equal(false, reloaded.AutoStartControl, "auto control persists");
         Equal(30d, frameStore.Load().Clone().PreviewFrame.ThicknessDips, "settings clone keeps frame");
     }
     finally { File.Delete(frameSettingsPath); }
+}
+{
+    // Appearance: colour presets, accent colours and styles over the base themes.
+    static double ContrastOf(object foreground, object background) => ThemePalette.Contrast(
+        ((System.Windows.Media.SolidColorBrush)foreground).Color,
+        ((System.Windows.Media.SolidColorBrush)background).Color);
+    Equal("#3B82F6", ThemePalette.NormalizeHex(" 3b82f6 "), "accent hex normalizes");
+    Equal("#AABBCC", ThemePalette.NormalizeHex("#abc"), "short accent hex expands");
+    Equal("", ThemePalette.NormalizeHex("blue"), "invalid accent hex is cleared");
+    Equal(0, ThemePalette.BuildOverrides(true, AppColorTheme.Default, "", UiStyle.Modern).Count,
+        "default dark appearance keeps the base theme untouched");
+    Equal(0, ThemePalette.BuildOverrides(false, AppColorTheme.Default, "", UiStyle.Modern).Count,
+        "default light appearance keeps the base theme untouched");
+    Equal(AppColorTheme.Default, ThemePalette.EffectiveColorTheme(AppColorTheme.Nord, false),
+        "colour presets apply only to the dark theme");
+    foreach (var preset in ThemePalette.Presets.Keys)
+    {
+        var values = ThemePalette.BuildOverrides(true, preset, "", UiStyle.Modern);
+        Equal(true, ContrastOf(values["TextBrush"], values["BackgroundBrush"]) >= 7,
+            $"{preset} text reads on its background");
+        Equal(true, ContrastOf(values["MutedTextBrush"], values["BackgroundBrush"]) >= 4.5,
+            $"{preset} muted text reads on its background");
+        Equal(true, ContrastOf(values["AccentBrush"], values["BackgroundBrush"]) >= 3,
+            $"{preset} accent stands out from its background");
+        Equal(true, ContrastOf(values["PrimaryActionTextBrush"], values["PrimaryActionBrush"]) >= 4.5,
+            $"{preset} primary button text reads");
+    }
+    foreach (var dark in new[] { true, false })
+    foreach (var (name, hex) in ThemePalette.AccentChoices)
+    {
+        var values = ThemePalette.BuildOverrides(dark, AppColorTheme.Default, hex, UiStyle.Modern);
+        var background = new System.Windows.Media.SolidColorBrush(dark
+            ? System.Windows.Media.Color.FromRgb(0x1F, 0x1F, 0x1F)
+            : System.Windows.Media.Color.FromRgb(0xF3, 0xF3, 0xF5));
+        Equal(true, ContrastOf(values["AccentBrush"], background) >= 3,
+            $"{name} accent stays visible on the {(dark ? "dark" : "light")} theme");
+        Equal(true, ContrastOf(values["OnAccentBrush"], values["AccentBrush"]) >= 4.5,
+            $"{name} text on the accent reads");
+        Equal(true, ContrastOf(new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
+                values["CaptureStartBrush"]) >= 4.5,
+            $"{name} start button keeps readable white text");
+    }
+    var playful = ThemePalette.BuildOverrides(true, AppColorTheme.Default, "", UiStyle.Playful);
+    Equal(new System.Windows.CornerRadius(22), playful["CardCornerRadius"], "playful style rounds cards more");
+    Equal(false, playful.ContainsKey("AccentBrush"), "a style alone keeps the theme accent");
+    var minimal = ThemePalette.BuildOverrides(false, AppColorTheme.Default, "", UiStyle.Minimal);
+    Equal(new System.Windows.CornerRadius(6), minimal["CardCornerRadius"], "minimal style squares cards");
+    Equal(System.Windows.Media.Colors.Transparent, minimal["CardShadowColor"], "minimal style drops shadows");
+
+    var appearancePath = Path.Combine(Path.GetTempPath(), $"iPhoneMirror-appearance-{Guid.NewGuid():N}.json");
+    try
+    {
+        var appearanceStore = new UpdateSettingsStore(appearancePath);
+        appearanceStore.Update(settings =>
+        {
+            settings.ColorTheme = AppColorTheme.Sunset;
+            settings.AccentColor = "#ec4899";
+            settings.UiStyle = UiStyle.Minimal;
+        });
+        var reloaded = appearanceStore.Load();
+        Equal(AppColorTheme.Sunset, reloaded.ColorTheme, "colour preset persists");
+        Equal("#EC4899", reloaded.AccentColor, "accent colour persists normalized");
+        Equal(UiStyle.Minimal, reloaded.UiStyle, "style persists");
+        Equal(UiStyle.Minimal, reloaded.Clone().UiStyle, "settings clone keeps the style");
+        appearanceStore.Update(settings =>
+        {
+            settings.ColorTheme = (AppColorTheme)42;
+            settings.AccentColor = "not a colour";
+            settings.UiStyle = (UiStyle)42;
+        });
+        var repaired = appearanceStore.Load();
+        Equal(AppColorTheme.Default, repaired.ColorTheme, "unknown colour preset falls back");
+        Equal("", repaired.AccentColor, "invalid accent falls back to the theme accent");
+        Equal(UiStyle.Modern, repaired.UiStyle, "unknown style falls back");
+    }
+    finally { File.Delete(appearancePath); }
 }
 Equal(true,
     nativePreviewWindowCode.Contains("internal void HideForShutdown()",

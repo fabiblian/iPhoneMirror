@@ -1426,10 +1426,11 @@ internal sealed class NativePreviewWindow : IDisposable
             Top = layout.Insets.Top,
             Right = layout.Insets.Right,
             Bottom = layout.Insets.Bottom,
-            Argb = settings.ToArgb(),
+            Argb = settings.ToArgb(((uint)ThemeService.Accent.R << 16) |
+                ((uint)ThemeService.Accent.G << 8) | ThemeService.Accent.B),
             // Outer corners stay concentric with the iPhone's rounded corners.
             Roundness = 0,
-            Flags = (settings.AutoColor ? NativeCore.NativeWindowFrame.AutoColorFlag : 0) |
+            Flags = (settings.FollowsImageEdge ? NativeCore.NativeWindowFrame.AutoColorFlag : 0) |
                 (_homeHover ? NativeCore.NativeWindowFrame.ButtonHoverFlag : 0),
         };
         if (!layout.HomePill.IsEmpty)
@@ -1516,7 +1517,13 @@ internal sealed class NativePreviewWindow : IDisposable
 
     private void OnThemeChanged(object? sender, EventArgs e)
     {
-        if (_disposed || _managedContent is null || _handle == 0) return;
+        if (_disposed || _handle == 0) return;
+        if (_managedContent is null)
+        {
+            // The frame can follow the accent colour.
+            OnPreviewFrameChanged();
+            return;
+        }
         var dark = ThemeService.IsDark ? 1 : 0;
         _ = DwmSetWindowAttribute(_handle, DwmUseImmersiveDarkMode, ref dark, sizeof(int));
     }

@@ -354,7 +354,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             handledEventsToo: true);
         if (Application.Current is App app)
         {
-            ThemeComboBox.SelectedValue = app.UpdateSettings.Theme.ToString();
+            InitializeAppearanceControls();
             foreach (var action in Enum.GetValues<BluetoothShortcutAction>())
                 _bluetoothShortcuts[action] = KeyboardShortcut.FromSettings(
                     app.UpdateSettings, action);
@@ -2495,13 +2495,25 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_themeControlReady || sender is not ComboBox { SelectedValue: string value } ||
-            !Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme) ||
-            Application.Current is not App app || app.UpdateSettings.Theme == theme)
-            return;
-        app.UpdateSettings.Theme = theme;
-        ThemeService.Apply(theme);
-        app.SaveUpdateSettings();
+        if (!_themeControlReady || _appearanceSyncing ||
+            sender is not ComboBox { SelectedValue: string value } ||
+            Application.Current is not App app) return;
+        // Colour presets are dark palettes, stored as the dark theme plus a preset.
+        AppTheme theme;
+        var colorTheme = AppColorTheme.Default;
+        if (Enum.TryParse<AppColorTheme>(value, ignoreCase: true, out var preset) &&
+            preset != AppColorTheme.Default)
+        {
+            theme = AppTheme.Dark;
+            colorTheme = preset;
+        }
+        else if (!Enum.TryParse(value, ignoreCase: true, out theme)) return;
+        if (app.UpdateSettings.Theme == theme && app.UpdateSettings.ColorTheme == colorTheme) return;
+        ChangeAppearance(settings =>
+        {
+            settings.Theme = theme;
+            settings.ColorTheme = colorTheme;
+        });
     }
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e) =>

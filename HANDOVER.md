@@ -1,5 +1,19 @@
 # Übergabe: Etappen-Plan iPhoneMirror (Stand 2026-10-15)
 
+## Redesign (Branch `redesign`, Stand 2026-10-19)
+
+Mockup: `docs/redesign/mockup.html` (im Browser öffnen). Etappen: 0 Mockup · 1 Theme-System · 2 Seitenleiste mit Reitern · 3 Icons/Status-Pillen/Start-Stop · 4 klarere Texte.
+
+| Etappe | Status |
+|---|---|
+| 0 – Mockup | ✅ von Fabian abgenommen |
+| 1 – Theme-System | umgesetzt, kompiliert (Linux-Compile-Check), **Test unter Windows offen**. App settings: Theme-Liste mit Midnight/Nord/Sunset/Forest, Akzentfarbe (8 Farben + Hex), Stil Modern/Playful/Minimal. Vorschaurahmen nutzt standardmässig die Akzentfarbe (Preview settings → „Use the accent color“). |
+| 2–4 | offen |
+
+Testen: Theme × Stil durchschalten, eigene Hex-Farbe eingeben, Vorschaufenster öffnen (Rahmen folgt Akzent), App neu starten (alles bleibt gespeichert).
+
+---
+
 Branch **`feature/preview-frame`** (GitHub: fabiblian/iPhoneMirror). `main` = alte Version zum Vergleich.
 
 ## Auf dem anderen PC starten

@@ -12,6 +12,24 @@ public enum AppTheme
     Light,
 }
 
+/// <summary>Colour preset layered on the dark theme; Default keeps the base palette.</summary>
+public enum AppColorTheme
+{
+    Default,
+    Midnight,
+    Nord,
+    Sunset,
+    Forest,
+}
+
+/// <summary>Shape and depth of cards and controls.</summary>
+public enum UiStyle
+{
+    Modern,
+    Playful,
+    Minimal,
+}
+
 public enum ApplicationDisplayMode
 {
     Complete,
@@ -32,6 +50,10 @@ internal sealed class UpdateSettings
     public bool NotifyStableReleases { get; set; } = true;
     public bool NotifyPrereleaseReleases { get; set; }
     public AppTheme Theme { get; set; } = AppTheme.System;
+    public AppColorTheme ColorTheme { get; set; } = AppColorTheme.Default;
+    /// <summary>#RRGGBB accent, or empty for the theme's own accent.</summary>
+    public string AccentColor { get; set; } = "";
+    public UiStyle UiStyle { get; set; } = UiStyle.Modern;
     public ApplicationDisplayMode ApplicationDisplayMode { get; set; } =
         ApplicationDisplayMode.Complete;
     public WirelessReceiverBackend WirelessReceiverBackend { get; set; } =
@@ -120,6 +142,9 @@ internal sealed class UpdateSettings
         NotifyStableReleases = NotifyStableReleases,
         NotifyPrereleaseReleases = NotifyPrereleaseReleases,
         Theme = Theme,
+        ColorTheme = ColorTheme,
+        AccentColor = AccentColor,
+        UiStyle = UiStyle,
         ApplicationDisplayMode = ApplicationDisplayMode,
         WirelessReceiverBackend = WirelessReceiverBackend,
         WirelessDisplayProfileId = WirelessDisplayProfileId,
@@ -235,6 +260,22 @@ internal sealed class UpdateSettingsStore
             if (!Enum.IsDefined(settings.ApplicationDisplayMode))
             {
                 settings.ApplicationDisplayMode = ApplicationDisplayMode.Complete;
+                migrationChanged = true;
+            }
+            if (!Enum.IsDefined(settings.ColorTheme))
+            {
+                settings.ColorTheme = AppColorTheme.Default;
+                migrationChanged = true;
+            }
+            if (!Enum.IsDefined(settings.UiStyle))
+            {
+                settings.UiStyle = UiStyle.Modern;
+                migrationChanged = true;
+            }
+            var normalizedAccent = ThemePalette.NormalizeHex(settings.AccentColor);
+            if (!string.Equals(settings.AccentColor, normalizedAccent, StringComparison.Ordinal))
+            {
+                settings.AccentColor = normalizedAccent;
                 migrationChanged = true;
             }
             if (!Enum.IsDefined(settings.WirelessReceiverBackend))

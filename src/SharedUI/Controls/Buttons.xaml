@@ -21,7 +21,7 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Root" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="{StaticResource ButtonCornerRadius}" Padding="{TemplateBinding Padding}"
+                            CornerRadius="{DynamicResource ButtonCornerRadius}" Padding="{TemplateBinding Padding}"
                             SnapsToDevicePixels="True">
                         <ContentPresenter x:Name="ButtonContent" RecognizesAccessKey="True"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"

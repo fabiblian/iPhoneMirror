@@ -13,7 +13,7 @@
     <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}"/>
     <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
      <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-       CornerRadius="{StaticResource CardCornerRadius}" Padding="{TemplateBinding Padding}">
+       CornerRadius="{DynamicResource CardCornerRadius}" Padding="{TemplateBinding Padding}">
       <Grid><ContentPresenter/><ui:SymbolIcon x:Name="SelectedMark" Symbol="Checkmark20" Visibility="Collapsed"
         Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"/></Grid>
      </Border>

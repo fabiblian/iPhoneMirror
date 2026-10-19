@@ -30,7 +30,7 @@
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="{StaticResource CardCornerRadius}"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}"/>
             <Setter Property="Padding" Value="{StaticResource CardPadding}"/>
             <Setter Property="Effect">
                 <Setter.Value>
@@ -63,7 +63,7 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{StaticResource PopupCornerRadius}" Padding="{TemplateBinding Padding}">
+                                CornerRadius="{DynamicResource PopupCornerRadius}" Padding="{TemplateBinding Padding}">
                             <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
                         </Border>
                     </ControlTemplate>
@@ -112,7 +112,7 @@
                     <ControlTemplate TargetType="MenuItem">
                         <Grid>
                             <Border x:Name="MenuRoot" Background="{TemplateBinding Background}"
-                                    CornerRadius="{StaticResource ControlCornerRadius}" Padding="{TemplateBinding Padding}">
+                                    CornerRadius="{DynamicResource ControlCornerRadius}" Padding="{TemplateBinding Padding}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -131,7 +131,7 @@
                                    IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
                                 <Border Background="{DynamicResource PanelRaisedBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="{StaticResource PopupCornerRadius}" Padding="5">
+                                        BorderThickness="1" CornerRadius="{DynamicResource PopupCornerRadius}" Padding="5">
                                     <StackPanel IsItemsHost="True"
                                                 KeyboardNavigation.DirectionalNavigation="Cycle"/>
                                 </Border>

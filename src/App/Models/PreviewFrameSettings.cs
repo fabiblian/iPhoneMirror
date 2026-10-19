@@ -59,6 +59,8 @@ internal sealed class PreviewFrameSettings
     public bool Enabled { get; set; } = true;
     public double ThicknessDips { get; set; } = DefaultThicknessDips;
     public string Color { get; set; } = DefaultColor;
+    /// <summary>Use the app's accent colour; wins over <see cref="AutoColor"/> and <see cref="Color"/>.</summary>
+    public bool UseAccentColor { get; set; } = true;
     /// <summary>Follow the colour at the edge of the phone image instead of <see cref="Color"/>.</summary>
     public bool AutoColor { get; set; }
     public double Opacity { get; set; } = DefaultOpacity;
@@ -72,6 +74,7 @@ internal sealed class PreviewFrameSettings
         Enabled = Enabled,
         ThicknessDips = ThicknessDips,
         Color = Color,
+        UseAccentColor = UseAccentColor,
         AutoColor = AutoColor,
         Opacity = Opacity,
         HomeButton = HomeButton,
@@ -87,6 +90,7 @@ internal sealed class PreviewFrameSettings
             ? Math.Clamp(Math.Round(ThicknessDips), MinThicknessDips, MaxThicknessDips)
             : DefaultThicknessDips,
         Color = TryParseColor(Color, out var rgb) ? FormatColor(rgb) : DefaultColor,
+        UseAccentColor = UseAccentColor,
         AutoColor = AutoColor,
         Opacity = double.IsFinite(Opacity) ? Math.Clamp(Opacity, 0.0, 1.0) : DefaultOpacity,
         HomeButton = Enum.IsDefined(HomeButton) ? HomeButton : PreviewHomeButtonStyle.Bar,
@@ -99,16 +103,24 @@ internal sealed class PreviewFrameSettings
         Enabled == other.Enabled &&
         ThicknessDips == other.ThicknessDips &&
         string.Equals(Color, other.Color, StringComparison.OrdinalIgnoreCase) &&
+        UseAccentColor == other.UseAccentColor &&
         AutoColor == other.AutoColor &&
         Opacity == other.Opacity &&
         HomeButton == other.HomeButton &&
         HomeButtonPosition == other.HomeButtonPosition &&
         AutoStartControl == other.AutoStartControl;
 
-    /// <summary>Straight-alpha 0xAARRGGBB for the native renderer.</summary>
-    internal uint ToArgb()
+    /// <summary>Whether the renderer samples the phone image edge for the colour.</summary>
+    internal bool FollowsImageEdge => AutoColor && !UseAccentColor;
+
+    /// <summary>
+    /// Straight-alpha 0xAARRGGBB for the native renderer. <paramref name="accentRgb"/>
+    /// (0xRRGGBB) is used when <see cref="UseAccentColor"/> is set.
+    /// </summary>
+    internal uint ToArgb(uint? accentRgb = null)
     {
-        var rgb = TryParseColor(Color, out var parsed) ? parsed : 0x2B2B2Bu;
+        var rgb = UseAccentColor && accentRgb is { } accent ? accent & 0xFFFFFFu
+            : TryParseColor(Color, out var parsed) ? parsed : 0x2B2B2Bu;
         var alpha = (uint)Math.Round(Math.Clamp(double.IsFinite(Opacity) ? Opacity : 1.0, 0, 1) * 255);
         return (alpha << 24) | rgb;
     }

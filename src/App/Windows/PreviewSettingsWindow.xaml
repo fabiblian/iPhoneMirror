@@ -59,6 +59,13 @@
                                 AutomationProperties.AutomationId="PreviewFrameThicknessSlider"
                                 AutomationProperties.Name="{DynamicResource PreviewFrameThickness}"/>
                         <TextBlock Text="{DynamicResource PreviewFrameColor}"/>
+                        <CheckBox x:Name="AccentColorCheckBox" Margin="0,8,0,0"
+                                  Content="{DynamicResource PreviewFrameAccentColor}"
+                                  Checked="OnAccentColorChanged" Unchecked="OnAccentColorChanged"
+                                  AutomationProperties.AutomationId="PreviewFrameAccentColorCheckBox"/>
+                        <TextBlock Text="{DynamicResource PreviewFrameAccentColorHelp}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                        <StackPanel x:Name="OtherColorOptions">
                         <CheckBox x:Name="AutoColorCheckBox" Margin="0,8,0,0"
                                   Content="{DynamicResource PreviewFrameAutoColor}"
                                   Checked="OnAutoColorChanged" Unchecked="OnAutoColorChanged"
@@ -73,6 +80,7 @@
                                      LostKeyboardFocus="OnColorTextCommitted" KeyDown="OnColorTextKeyDown"
                                      AutomationProperties.AutomationId="PreviewFrameColorTextBox"
                                      AutomationProperties.Name="{DynamicResource PreviewFrameColorHex}"/>
+                        </StackPanel>
                         </StackPanel>
                         <Grid Margin="0,4,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

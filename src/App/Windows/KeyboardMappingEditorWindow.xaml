@@ -45,7 +45,7 @@
    <Button x:Name="SaveButton" Grid.Column="3" Content="{Binding NextText}" Click="OnNextClick" MinWidth="100"
     Style="{StaticResource PrimaryButton}" AutomationProperties.AutomationId="MappingNext"/>
   </Grid>
-  <Border x:Name="DiscardPanel" Grid.RowSpan="3" Visibility="Collapsed" Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}">
+  <Border x:Name="DiscardPanel" Grid.RowSpan="3" Visibility="Collapsed" Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="{DynamicResource CardCornerRadius}">
    <StackPanel VerticalAlignment="Center" Margin="24">
     <TextBlock Text="{DynamicResource WizardDiscardTitle}" Style="{StaticResource SubWindowTitle}" TextAlignment="Center"/>
     <TextBlock Text="{DynamicResource WizardDiscardHint}" Style="{StaticResource SecondaryText}" TextAlignment="Center" Margin="0,12,0,24"/>
@@ -55,7 +55,7 @@
     </WrapPanel>
    </StackPanel>
   </Border>
-  <Border x:Name="SuccessPanel" Grid.RowSpan="3" Visibility="Collapsed" Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}">
+  <Border x:Name="SuccessPanel" Grid.RowSpan="3" Visibility="Collapsed" Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="{DynamicResource CardCornerRadius}">
    <StackPanel VerticalAlignment="Center" Margin="24">
     <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="40" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
     <TextBlock Text="{DynamicResource WizardSaved}" Style="{StaticResource SubWindowTitle}" TextAlignment="Center" Margin="0,20,0,12"/>
