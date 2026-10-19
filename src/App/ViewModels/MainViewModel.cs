@@ -357,6 +357,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         _bluetoothControlEnabled && _bluetoothControlInputEnabled
             ? "StopBluetoothControl" : "StartBluetoothControl");
     public bool IsUsbControlEnabled => _usbControlEnabled || _wirelessControlEnabled;
+    /// <summary>Name of the active control route for the status pill; empty when control is off.</summary>
+    public string ActiveControlLabel => _bluetoothControlEnabled ? LocalizationService.Get("BluetoothControlLabel")
+        : _wirelessControlEnabled ? LocalizationService.Get("WirelessControlLabel")
+        : _usbControlEnabled ? LocalizationService.Get("WiredControlLabel")
+        : string.Empty;
     internal bool IsWirelessControlEnabled => _wirelessControlEnabled;
     public bool UsbControlIsInputEnabled => (_usbControlEnabled && _usbControlConnected) ||
         (_wirelessControlEnabled && _wirelessControlConnected);
@@ -3433,6 +3438,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
     private void NotifyUsbControlStateChanged()
     {
         OnPropertyChanged(nameof(IsUsbControlEnabled));
+        OnPropertyChanged(nameof(ActiveControlLabel));
         OnPropertyChanged(nameof(UsbControlIsInputEnabled));
         OnPropertyChanged(nameof(UsbControlStatus));
         OnPropertyChanged(nameof(UsbControlActionText));
@@ -3456,6 +3462,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
     private void NotifyBluetoothControlStateChanged()
     {
         OnPropertyChanged(nameof(IsBluetoothControlEnabled));
+        OnPropertyChanged(nameof(ActiveControlLabel));
         OnPropertyChanged(nameof(BluetoothControlIsConnected));
         OnPropertyChanged(nameof(BluetoothControlIsInputEnabled));
         OnPropertyChanged(nameof(BluetoothControlTargetUdid));

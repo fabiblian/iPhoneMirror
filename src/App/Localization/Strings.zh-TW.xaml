@@ -829,6 +829,9 @@
     <system:String x:Key="ShortcutsHelp">用於主畫面、螢幕截圖、顯示應用程式或預覽以及停止螢幕鏡像的按鍵。</system:String>
     <system:String x:Key="AppearanceTitle">外觀</system:String>
     <system:String x:Key="StatsTitle">即時資訊</system:String>
+    <system:String x:Key="MoreActions">更多</system:String>
+    <system:String x:Key="StatusPillMirroring">螢幕鏡像中</system:String>
+    <system:String x:Key="StatusPillAirPlay">AirPlay</system:String>
     <system:String x:Key="AppearanceFrameHelp">預覽視窗的邊框使用強調色，其他邊框顏色可在預覽設定中選擇。</system:String>
     <system:String x:Key="CheckingForUpdates">正在連線更新服務檢查新版本…</system:String>
     <system:String x:Key="AlreadyUpToDate">目前已是所選發布通道的最新版本。</system:String>

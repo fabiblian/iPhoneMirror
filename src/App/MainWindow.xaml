@@ -79,6 +79,26 @@
             <Setter Property="Padding" Value="0,14,0,0"/>
             <Setter Property="Margin" Value="0,14,0,0"/>
         </Style>
+        <Style x:Key="StatusPill" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource ControlFillBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="StatusPillDot" TargetType="Ellipse">
+            <Setter Property="Width" Value="7"/>
+            <Setter Property="Height" Value="7"/>
+            <Setter Property="Margin" Value="0,0,7,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="StatusPillText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{DynamicResource SecondaryFontSize}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
         <Style x:Key="SettingsTabButton" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
             <Setter Property="Margin" Value="2,0"/>
@@ -998,7 +1018,7 @@
                            FontSize="{DynamicResource SecondaryFontSize}" Margin="0,4,0,0"/>
             </StackPanel>
             <Border x:Name="DetectionStatus" Grid.Column="1" Padding="0" VerticalAlignment="Center"
-                    Background="Transparent" BorderThickness="0" MaxWidth="360">
+                    Background="Transparent" BorderThickness="0" MaxWidth="640">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -1009,11 +1029,55 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="6" Height="6" Fill="{DynamicResource WarningBrush}" Margin="0,0,8,0"/>
-                    <TextBlock Text="{Binding DriverState}" FontSize="{DynamicResource SecondaryFontSize}" VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
+                <WrapPanel x:Name="StatusPills" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Style="{StaticResource StatusPill}" MaxWidth="280" ToolTip="{Binding DriverState}"
+                            AutomationProperties.AutomationId="DriverStatusPill">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource StatusPillDot}" Fill="{DynamicResource WarningBrush}"/>
+                            <TextBlock Text="{Binding DriverState}" Style="{StaticResource StatusPillText}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border ToolTip="{DynamicResource StatusPillMirroring}" AutomationProperties.AutomationId="MirroringStatusPill">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource StatusPillDot}" Fill="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="{DynamicResource StatusPillMirroring}" Style="{StaticResource StatusPillText}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border AutomationProperties.AutomationId="ControlStatusPill">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveControlLabel}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource StatusPillDot}" Fill="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="{Binding ActiveControlLabel}" Style="{StaticResource StatusPillText}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatusPill}" ToolTip="{Binding WirelessStatus}"
+                            AutomationProperties.AutomationId="AirPlayStatusPill">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource StatusPillDot}" chrome:StatusAppearance.Tone="{Binding WirelessStatusTone}"/>
+                            <TextBlock Text="{DynamicResource StatusPillAirPlay}" Style="{StaticResource StatusPillText}"/>
+                        </StackPanel>
+                    </Border>
+                </WrapPanel>
             </Border>
             <StackPanel x:Name="HeaderCaptureActions" Grid.Column="3"
                         Orientation="Horizontal" VerticalAlignment="Center"
@@ -1023,13 +1087,28 @@
                         shell:WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{StaticResource CaptureActionButton}"
                         VerticalAlignment="Center"/>
-                <Button x:Name="ExitAppButton" Content="{DynamicResource TrayExit}"
-                        AutomationProperties.AutomationId="ExitAppButton"
-                        AutomationProperties.Name="{DynamicResource TrayExit}"
+                <Button x:Name="MoreMenuButton"
+                        AutomationProperties.AutomationId="MoreMenuButton"
+                        AutomationProperties.Name="{DynamicResource MoreActions}"
+                        ToolTip="{DynamicResource MoreActions}"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                        Style="{StaticResource ToolButton}" MinHeight="40"
-                        Margin="8,0,0,0" Padding="16,8"
-                        VerticalAlignment="Center" Click="OnCloseWindowClick"/>
+                        Style="{StaticResource ToolButton}" MinHeight="40" MinWidth="40"
+                        Margin="8,0,0,0" Padding="10,8"
+                        VerticalAlignment="Center" Click="OnMoreMenuClick">
+                    <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="MoreHorizontal20" FontSize="18"/>
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="MoreMenu" Style="{StaticResource DeviceContextMenuStyle}" Placement="Bottom">
+                            <MenuItem Header="{DynamicResource AboutTitle}" Click="OnAboutClick"
+                                      AutomationProperties.AutomationId="MoreMenuAbout"/>
+                            <MenuItem Header="{DynamicResource DiagnosticsTitle}" Click="OnMoreMenuDiagnosticsClick"
+                                      AutomationProperties.AutomationId="MoreMenuDiagnostics"/>
+                            <Separator/>
+                            <MenuItem x:Name="ExitAppMenuItem" Header="{DynamicResource TrayExit}" Click="OnCloseWindowClick"
+                                      Foreground="{DynamicResource ErrorBrush}"
+                                      AutomationProperties.AutomationId="ExitAppMenuItem"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
             </StackPanel>
             <StackPanel Grid.Column="5" Orientation="Horizontal"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True">
@@ -1291,6 +1370,27 @@
                         <StackPanel x:Name="PreviewQuickActions"
                                     Orientation="Horizontal" VerticalAlignment="Center"
                                     Visibility="{Binding PreviewAndObsVisibility}">
+                            <Button Command="{Binding StopCommand}"
+                                    ToolTip="{DynamicResource StopMirroring}"
+                                    AutomationProperties.Name="{DynamicResource StopMirroring}"
+                                    AutomationProperties.AutomationId="ToolbarStopButton">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource PreviewToolButton}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Stop20" FontSize="15"
+                                                               Foreground="{DynamicResource ErrorBrush}"/>
+                                    <TextBlock Text="{DynamicResource StopMirroring}" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </Button>
                             <Button Click="OnStartWirelessControlClick"
                                     IsEnabled="{Binding CanToggleWirelessControl}"
                                     Style="{StaticResource PreviewToolButton}"

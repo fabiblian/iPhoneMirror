@@ -41,12 +41,13 @@ internal static partial class Program
                 InteractionAssert(workspaceChoice is { IsVisible: true, IsEnabled: true, IsChecked: false } &&
                     !(bool)KeyboardField(vm, "HasCaptureSession"),
                     "Main-window USB audio choice must be visible and editable BEFORE starting capture.");
-                var exitApp = (System.Windows.Controls.Button)workspace.FindName("ExitAppButton");
+                var moreMenu = (System.Windows.Controls.Button)workspace.FindName("MoreMenuButton");
                 var captureAction = (System.Windows.Controls.Button)workspace.FindName("CaptureActionButton");
-                InteractionAssert(exitApp.IsVisible && exitApp.IsEnabled &&
-                    exitApp.TranslatePoint(new Point(), workspace).X >=
-                    captureAction.TranslatePoint(new Point(captureAction.ActualWidth, 0), workspace).X,
-                    "Exit app must remain visible immediately to the right of the capture action.");
+                InteractionAssert(moreMenu.IsVisible && moreMenu.IsEnabled &&
+                    moreMenu.TranslatePoint(new Point(), workspace).X >=
+                    captureAction.TranslatePoint(new Point(captureAction.ActualWidth, 0), workspace).X &&
+                    moreMenu.ContextMenu?.Items.Contains(workspace.FindName("ExitAppMenuItem")) == true,
+                    "Exit app must stay reachable from the menu right of the capture action.");
                 SaveWindowRender(workspace, System.IO.Path.Combine(output, "usb-video-only-main.png"));
             }
             finally

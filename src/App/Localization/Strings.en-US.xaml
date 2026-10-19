@@ -829,6 +829,9 @@
     <system:String x:Key="ShortcutsHelp">Keys for Home, screenshots, showing the app or preview and stopping mirroring.</system:String>
     <system:String x:Key="AppearanceTitle">Appearance</system:String>
     <system:String x:Key="StatsTitle">Stream statistics</system:String>
+    <system:String x:Key="MoreActions">More</system:String>
+    <system:String x:Key="StatusPillMirroring">Mirroring</system:String>
+    <system:String x:Key="StatusPillAirPlay">AirPlay</system:String>
     <system:String x:Key="AppearanceFrameHelp">Preview window frames use the accent color. Other frame colors are in Preview settings.</system:String>
     <system:String x:Key="CheckingForUpdates">Checking for updates…</system:String>
     <system:String x:Key="AlreadyUpToDate">You have the latest version in the selected release channel.</system:String>

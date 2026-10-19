@@ -829,6 +829,9 @@
     <system:String x:Key="ShortcutsHelp">用于主屏幕、截图、显示应用或预览以及停止投屏的按键。</system:String>
     <system:String x:Key="AppearanceTitle">外观</system:String>
     <system:String x:Key="StatsTitle">实时数据</system:String>
+    <system:String x:Key="MoreActions">更多</system:String>
+    <system:String x:Key="StatusPillMirroring">投屏中</system:String>
+    <system:String x:Key="StatusPillAirPlay">AirPlay</system:String>
     <system:String x:Key="AppearanceFrameHelp">预览窗口的边框使用强调色，其他边框颜色可在预览设置中选择。</system:String>
     <system:String x:Key="CheckingForUpdates">正在连接更新服务检查新版本…</system:String>
     <system:String x:Key="AlreadyUpToDate">当前已是所选发布通道的最新版本。</system:String>
