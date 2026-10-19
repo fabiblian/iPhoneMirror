@@ -126,16 +126,22 @@ try {
 
     Click-Element $settingsToggle
     Start-Sleep -Milliseconds 500
+    Click-Element (Find-ById $window 'SettingsTabApp')
+    Start-Sleep -Milliseconds 300
     $language = Find-ById $window 'LanguageComboBox'
     $settingsPath = Join-Path $OutputDirectory 'ui-polish-settings.png'
     Save-WindowCapture $process.MainWindowHandle $settingsPath
 
+    Click-Element (Find-ById $window 'SettingsTabVideo')
+    Start-Sleep -Milliseconds 300
     try {
         $combo = Find-ById $window 'ResolutionComboBox' 2
     }
     catch {
         # Source mode intentionally hides the wired render-limit selector.
         # Exercise the always-available wireless resolution selector instead.
+        Click-Element (Find-ById $window 'SettingsTabWireless')
+        Start-Sleep -Milliseconds 300
         $combo = Find-ById $window 'WirelessResolutionComboBox'
     }
     $expand = $combo.GetCurrentPattern(

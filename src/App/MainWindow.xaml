@@ -79,6 +79,130 @@
             <Setter Property="Padding" Value="0,14,0,0"/>
             <Setter Property="Margin" Value="0,14,0,0"/>
         </Style>
+        <Style x:Key="SettingsTabButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Root" Background="Transparent" CornerRadius="{DynamicResource ControlCornerRadius}"
+                                Padding="4,8,4,6">
+                            <Grid>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                <Border x:Name="Indicator" Height="2" Width="20" CornerRadius="1" Margin="0,0,0,-4"
+                                        VerticalAlignment="Bottom" Background="{DynamicResource AccentBrush}" Opacity="0"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource WorkspaceItemSelectedBrush}"/>
+                                <Setter TargetName="Indicator" Property="Opacity" Value="1"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SettingsSectionHeader" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Root" Background="Transparent" Padding="12,10"
+                                CornerRadius="{DynamicResource ButtonCornerRadius}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter VerticalAlignment="Center"/>
+                                <Path x:Name="Chevron" Grid.Column="1" Data="M 0,0 L 4,4 L 0,8" Margin="10,0,2,0"
+                                      Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.5"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                      VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                    <Path.RenderTransform>
+                                        <RotateTransform Angle="0"/>
+                                    </Path.RenderTransform>
+                                </Path>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chevron" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="90"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SettingsSection" TargetType="Expander">
+            <Setter Property="IsExpanded" Value="True"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <Border Background="{DynamicResource ControlFillBrush}"
+                                BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1"
+                                CornerRadius="{DynamicResource ButtonCornerRadius}">
+                            <DockPanel>
+                                <ToggleButton DockPanel.Dock="Top" Style="{StaticResource SettingsSectionHeader}"
+                                              Content="{TemplateBinding Header}"
+                                              AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
+                                              IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                                <ContentPresenter x:Name="Body" Margin="14,0,14,14" Visibility="Collapsed"/>
+                            </DockPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="Body" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SettingsSectionIcon" TargetType="Border">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}"/>
+            <Setter Property="Background" Value="{DynamicResource ControlFillBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="SettingsSectionSummary" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="{DynamicResource CaptionFontSize}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+            <Style.Triggers>
+                <Trigger Property="Text" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="SettingsHelpText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="{DynamicResource CaptionFontSize}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
         <Style x:Key="AccentSwatchButton" TargetType="RadioButton">
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
@@ -1647,8 +1771,39 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <Grid Grid.Row="0" Margin="13,10"
+                        <ToggleButton x:Name="StatsToggle" Grid.Row="0" Style="{StaticResource SettingsSectionHeader}"
+                                      IsChecked="True" Checked="OnStatsToggleChanged" Unchecked="OnStatsToggleChanged"
+                                      AutomationProperties.AutomationId="StatsToggle"
+                                      AutomationProperties.Name="{DynamicResource StatsTitle}">
+                            <DockPanel>
+                                <ui:SymbolIcon Symbol="DataUsage20" FontSize="16" Foreground="{DynamicResource AccentBrush}"
+                                               Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource StatsTitle}" Style="{StaticResource ControlSectionTitle}"
+                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource SettingsSectionSummary}">
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, ElementName=StatsToggle}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} · {1} · {2}">
+                                            <Binding Path="LatencyDisplay"/>
+                                            <Binding Path="FpsDisplay"/>
+                                            <Binding Path="Resolution"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DockPanel>
+                        </ToggleButton>
+                        <Grid Grid.Row="1" Margin="13,10"
                               Visibility="{Binding MediaOutputStatusVisibility}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -1675,9 +1830,9 @@
                                        FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap"
                                        AutomationProperties.AutomationId="MediaOutputStatusText"/>
                         </Grid>
-                        <Border Grid.Row="1" Height="1" Background="{DynamicResource BorderSoftBrush}"
+                        <Border Grid.Row="2" Height="1" Background="{DynamicResource BorderSoftBrush}"
                                 Visibility="{Binding MediaOutputStatusVisibility}"/>
-                        <ScrollViewer x:Name="StatisticsViewport" Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" SizeChanged="OnStatisticsSizeChanged">
+                        <ScrollViewer x:Name="StatisticsViewport" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" SizeChanged="OnStatisticsSizeChanged">
                         <UniformGrid x:Name="StatisticsItems" Columns="4">
 
                         <StackPanel Grid.Column="0" Margin="13">
@@ -1717,51 +1872,99 @@
                     Style="{StaticResource WorkspaceCardBorder}"
                     Padding="16,16,1,16"
                     ClipToBounds="True">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,0,15,0">
+                        <TextBlock Text="{DynamicResource ControlTitle}" FontSize="{DynamicResource FontSize16}" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                        <Button Style="{StaticResource WorkspaceIconButton}"
+                                Width="32" Height="32" MinHeight="32" Margin="0" Padding="0"
+                                HorizontalAlignment="Right"
+                                Click="OnCloseSettingsPanelClick" ToolTip="{DynamicResource Close}"
+                                AutomationProperties.AutomationId="CloseSettingsPanelButton">
+                            <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="16"/>
+                        </Button>
+                    </Grid>
+
+                    <UniformGrid Grid.Row="1" Rows="1" Columns="4" Margin="-2,12,13,2"
+                                 AutomationProperties.Name="{DynamicResource SettingsTabsName}">
+                        <RadioButton x:Name="SettingsTabVideo" Style="{StaticResource SettingsTabButton}" GroupName="SettingsTab"
+                                     Tag="Video" Checked="OnSettingsTabChecked"
+                                     AutomationProperties.AutomationId="SettingsTabVideo"
+                                     AutomationProperties.Name="{DynamicResource SettingsTabVideo}">
+                            <StackPanel>
+                                <ui:SymbolIcon Symbol="Video20" FontSize="18" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource SettingsTabVideo}" FontSize="{DynamicResource CaptionFontSize}"
+                                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="SettingsTabControl" Style="{StaticResource SettingsTabButton}" GroupName="SettingsTab"
+                                     Tag="Control" Checked="OnSettingsTabChecked"
+                                     AutomationProperties.AutomationId="SettingsTabControl"
+                                     AutomationProperties.Name="{DynamicResource SettingsTabControl}">
+                            <StackPanel>
+                                <ui:SymbolIcon Symbol="Keyboard20" FontSize="18" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource SettingsTabControl}" FontSize="{DynamicResource CaptionFontSize}"
+                                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="SettingsTabWireless" Style="{StaticResource SettingsTabButton}" GroupName="SettingsTab"
+                                     Tag="Wireless" Checked="OnSettingsTabChecked"
+                                     AutomationProperties.AutomationId="SettingsTabWireless"
+                                     AutomationProperties.Name="{DynamicResource SettingsTabWireless}">
+                            <StackPanel>
+                                <ui:SymbolIcon Symbol="Wifi120" FontSize="18" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource SettingsTabWireless}" FontSize="{DynamicResource CaptionFontSize}"
+                                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="SettingsTabApp" Style="{StaticResource SettingsTabButton}" GroupName="SettingsTab"
+                                     Tag="App" Checked="OnSettingsTabChecked"
+                                     AutomationProperties.AutomationId="SettingsTabApp"
+                                     AutomationProperties.Name="{DynamicResource SettingsTabApp}">
+                            <StackPanel>
+                                <ui:SymbolIcon Symbol="Options20" FontSize="18" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{DynamicResource SettingsTabApp}" FontSize="{DynamicResource CaptionFontSize}"
+                                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </UniformGrid>
+
+                <ScrollViewer x:Name="SettingsScrollViewer" Grid.Row="2"
+                              HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto"
                               PanningMode="VerticalOnly">
                     <ScrollViewer.Resources>
                         <Style TargetType="ScrollBar"
                                BasedOn="{StaticResource ContentEdgeScrollBarStyle}"/>
                     </ScrollViewer.Resources>
-                    <StackPanel Margin="0,0,10,0">
-                        <Grid>
-                            <TextBlock Text="{DynamicResource ControlTitle}" FontSize="{DynamicResource FontSize16}" FontWeight="SemiBold"
-                                       VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource WorkspaceIconButton}"
-                                    Width="32" Height="32" MinHeight="32" Margin="0" Padding="0"
-                                    HorizontalAlignment="Right"
-                                    Click="OnCloseSettingsPanelClick" ToolTip="{DynamicResource Close}"
-                                    AutomationProperties.AutomationId="CloseSettingsPanelButton">
-                                <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="16"/>
-                            </Button>
-                        </Grid>
+                    <Grid Margin="0,0,10,0">
 
-                        <Border Style="{StaticResource ControlSectionCard}"
-                                Visibility="{Binding WirelessTopSettingsVisibility}">
+                    <!-- Video & sound -->
+                    <StackPanel x:Name="SettingsPageVideo">
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource UsbProjectionModeTitle}"
+                                  Visibility="{Binding UsbProjectionSettingsVisibility}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="UsbPlug20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource UsbProjectionModeTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                        <TextBlock Text="{Binding SelectedUsbProjectionMode.Label}" Style="{StaticResource SettingsSectionSummary}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Expander.Header>
                             <StackPanel>
-                                <StackPanel><TextBlock Text="{DynamicResource WirelessReceiverTitle}" Style="{StaticResource ControlSectionTitle}"/><TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{DynamicResource WirelessServiceAlwaysOn}" HorizontalAlignment="Left" Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/></StackPanel>
-                                <TextBlock Text="{DynamicResource WirelessBackendLabel}" Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
-                                <ComboBox AutomationProperties.Name="{DynamicResource WirelessBackendLabel}" ItemsSource="{Binding WirelessReceiverBackends}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedWirelessReceiverBackend, Mode=TwoWay}"/>
-                                <TextBlock Text="{Binding AppliedWirelessBackendDisplay}" Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="1,4,0,0"/>
-                                <TextBlock Text="{DynamicResource WirelessResolutionLabel}" Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
-                                <ComboBox AutomationProperties.Name="{DynamicResource WirelessResolutionLabel}" ItemsSource="{Binding WirelessDisplayProfiles}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedWirelessDisplayProfile, Mode=TwoWay}"/>
-                                <TextBlock Text="{DynamicResource WirelessResolutionHelp}" Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                                <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBox AutomationProperties.Name="{DynamicResource WirelessReceiverNameLabel}" Text="{Binding WirelessReceiverName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource RoundedTextBox}" MaxLength="63" MinHeight="40" ToolTip="{DynamicResource WirelessReceiverNameLabel}"/><Button Grid.Column="2" Content="{DynamicResource ApplyWirelessSettings}" Command="{Binding ApplyWirelessSettingsCommand}" Style="{StaticResource ToolButton}" MinWidth="64"/></Grid>
-                                <TextBlock Text="{Binding WirelessStatus}" chrome:StatusAppearance.Tone="{Binding WirelessStatusTone}" FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="1,8,0,0"/>
-                                <TextBlock Text="{Binding AppliedWirelessProfileDisplay}" Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="1,4,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource ControlSectionCard}"
-                                Visibility="{Binding UsbProjectionSettingsVisibility}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource UsbProjectionModeTitle}"
-                                           Style="{StaticResource ControlSectionTitle}"/>
                                 <Border Background="{DynamicResource ControlFillBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1" CornerRadius="12"
-                                        Padding="2" Margin="0,9,0,0">
+                                        Padding="2">
                                     <ListBox ItemsSource="{Binding UsbProjectionModes}"
                                              SelectedItem="{Binding SelectedUsbProjectionMode, Mode=TwoWay}"
                                              IsEnabled="{Binding CanChangeUsbProjectionMode}"
@@ -1790,8 +1993,7 @@
                                     </ListBox>
                                 </Border>
                                 <TextBlock Text="{DynamicResource UsbProjectionPerDeviceHint}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
                                 <CheckBox Content="{DynamicResource UsbAudioCaptureLabel}"
                                           IsChecked="{Binding CaptureUsbAudio, Mode=TwoWay}"
                                           IsEnabled="{Binding CanChangeUsbAudioCapture}"
@@ -1799,9 +2001,9 @@
                                           Margin="0,12,0,0"
                                           AutomationProperties.AutomationId="UsbAudioCaptureCheckBox"/>
                             </StackPanel>
-                        </Border>
+                        </Expander>
 
-                        <Border Style="{StaticResource ControlSectionCard}" Visibility="Collapsed">
+                        <Border Visibility="Collapsed">
                             <StackPanel>
                                 <Grid>
                                     <TextBlock Text="{DynamicResource CurrentDevice}" Style="{StaticResource ControlSectionTitle}"/>
@@ -1824,10 +2026,9 @@
                             </StackPanel>
                         </Border>
 
-                        <Border>
-                            <Border.Style>
-                                <Style TargetType="Border"
-                                       BasedOn="{StaticResource ControlSectionCard}">
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
                                     <Setter Property="Visibility" Value="Collapsed"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
@@ -1838,13 +2039,24 @@
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Border.Style>
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource ImageAndSound}" Style="{StaticResource ControlSectionTitle}"/>
-                                <StackPanel Visibility="{Binding VideoSettingsVisibility}">
+                            </StackPanel.Style>
+                            <Expander Style="{StaticResource SettingsSection}"
+                                      AutomationProperties.Name="{DynamicResource PictureQualityTitle}"
+                                      Visibility="{Binding VideoSettingsVisibility}">
+                                <Expander.Header>
+                                    <DockPanel>
+                                        <Border Style="{StaticResource SettingsSectionIcon}">
+                                            <ui:SymbolIcon Symbol="Image20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{DynamicResource PictureQualityTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                            <TextBlock Text="{Binding SelectedDecoderPreference.Label}" Style="{StaticResource SettingsSectionSummary}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Expander.Header>
+                                <StackPanel>
                                     <TextBlock Text="{DynamicResource RenderLimitHelp}"
-                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
-                                               TextWrapping="Wrap" Margin="0,4,0,1"
+                                               Style="{StaticResource SettingsHelpText}" Margin="0,0,0,1"
                                                Visibility="{Binding WiredVideoLimitSettingsVisibility}"/>
 
                                     <StackPanel Visibility="{Binding WiredVideoLimitSettingsVisibility}">
@@ -1870,8 +2082,7 @@
                                               SelectedItem="{Binding SelectedDecoderPreference, Mode=TwoWay}"/>
 
                                     <TextBlock Text="{DynamicResource VideoPipelinePreferenceHelp}"
-                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
-                                               TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                               Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
 
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions>
@@ -1889,51 +2100,150 @@
                                                 Style="{StaticResource ToolButton}"/>
                                     </Grid>
                                     <TextBlock Text="{Binding SettingsStatus}"
-                                               Foreground="{DynamicResource MutedTextBrush}"
-                                               FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                               Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
                                 </StackPanel>
+                            </Expander>
 
-                                <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,12,0,11"/>
-                                <CheckBox x:Name="AudioPlaybackCheckBox"
-                                          Content="{DynamicResource PlayAudioWindows}"
-                                          IsChecked="{Binding PlayAudio, Mode=TwoWay}"/>
-                                <Grid Margin="0,9,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{DynamicResource PlaybackVolume}" Foreground="{DynamicResource MutedTextBrush}"
-                                               FontSize="{DynamicResource CaptionFontSize}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding PlaybackVolume, StringFormat={}{0:F0}%}"
-                                               MinWidth="42" TextAlignment="Right"
-                                               Foreground="{DynamicResource AccentHoverBrush}"
-                                               FontSize="{DynamicResource CaptionFontSize}" FontWeight="SemiBold"/>
-                                </Grid>
-                                <Slider AutomationProperties.Name="{DynamicResource PlaybackVolume}" x:Name="VolumeSlider"
-                                        Minimum="0" Maximum="100"
-                                        Value="{Binding PlaybackVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        Margin="0,4,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
+                            <Expander Style="{StaticResource SettingsSection}"
+                                      AutomationProperties.Name="{DynamicResource SoundTitle}">
+                                <Expander.Header>
+                                    <DockPanel>
+                                        <Border Style="{StaticResource SettingsSectionIcon}">
+                                            <ui:SymbolIcon Symbol="Speaker220" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{DynamicResource SoundTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                            <TextBlock Text="{Binding PlaybackVolume, StringFormat={}{0:F0}%}" Style="{StaticResource SettingsSectionSummary}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Expander.Header>
+                                <StackPanel>
+                                    <CheckBox x:Name="AudioPlaybackCheckBox"
+                                              Content="{DynamicResource PlayAudioWindows}"
+                                              IsChecked="{Binding PlayAudio, Mode=TwoWay}"/>
+                                    <Grid Margin="0,9,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{DynamicResource PlaybackVolume}" Foreground="{DynamicResource MutedTextBrush}"
+                                                   FontSize="{DynamicResource CaptionFontSize}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding PlaybackVolume, StringFormat={}{0:F0}%}"
+                                                   MinWidth="42" TextAlignment="Right"
+                                                   Foreground="{DynamicResource AccentHoverBrush}"
+                                                   FontSize="{DynamicResource CaptionFontSize}" FontWeight="SemiBold"/>
+                                    </Grid>
+                                    <Slider AutomationProperties.Name="{DynamicResource PlaybackVolume}" x:Name="VolumeSlider"
+                                            Minimum="0" Maximum="100"
+                                            Value="{Binding PlaybackVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Margin="0,4,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
 
-                        <Border Style="{StaticResource ControlSectionCard}"
-                                Visibility="{Binding VideoSettingsVisibility}">
+                        <TextBlock Text="{DynamicResource SettingsVideoIdleHint}" Margin="2,12,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource SettingsHelpText}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsMediaCasting}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- Control -->
+                    <StackPanel x:Name="SettingsPageControl" Visibility="Collapsed">
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource KeyboardSectionTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="Keyboard20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource KeyboardSectionTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource BluetoothMouseSettingsTitle}"
-                                           Style="{StaticResource ControlSectionTitle}"/>
-                                <WrapPanel Style="{StaticResource ControlActions}" Margin="-4,4,-4,-4">
-                                    <Button Margin="{StaticResource DialogActionMargin}" Content="{DynamicResource OpenShortcutSettings}"
-                                            Click="OnShortcutSettingsClick"
-                                            Style="{StaticResource ToolButton}" MinWidth="104"
+                                <TextBlock Text="{DynamicResource KeyboardTypingHelp}" Style="{StaticResource SettingsHelpText}"/>
+                                <CheckBox Content="{DynamicResource ArrowKeysSwipe}" Margin="0,12,0,0"
+                                          IsChecked="{Binding ArrowKeysSwipe, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="ArrowKeysSwipeCheckBox"/>
+                                <TextBlock Text="{DynamicResource ArrowKeysSwipeHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,4,0,0"/>
+                                <TextBlock Text="{DynamicResource ClipboardAutoSyncHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Expander>
 
-                                            AutomationProperties.AutomationId="OpenShortcutSettingsButton"/>
-                                    <Button Margin="{StaticResource DialogActionMargin}" Content="{DynamicResource ClearBluetoothBindings}"
-                                            Click="OnClearBluetoothBindingsClick"
-                                            Style="{StaticResource ToolButton}"
-                                            AutomationProperties.AutomationId="ClearBluetoothBindingsButton"/>
-                                </WrapPanel>
-                                <Grid Margin="0,10,0,0">
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource MappingTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="Games20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource MappingTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                        <TextBlock Text="{Binding KeyboardMappingStatus}" Style="{StaticResource SettingsSectionSummary}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource MappingDescription}" Style="{StaticResource SettingsHelpText}"/>
+                                <Button Command="{Binding ManageKeyboardMappingCommand}" Style="{StaticResource ToolButton}" Margin="0,10,0,0"
+                                        AutomationProperties.AutomationId="OpenKeyboardMappingButton">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Keyboard20" Style="{StaticResource ButtonSymbolIcon}" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{DynamicResource MappingManage}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Text="{Binding KeyboardMappingStatus}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource ShortcutsTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="KeyCommand20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource ShortcutsTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource ShortcutsHelp}" Style="{StaticResource SettingsHelpText}"/>
+                                <Button Content="{DynamicResource OpenShortcutSettings}"
+                                        Click="OnShortcutSettingsClick"
+                                        Style="{StaticResource ToolButton}" MinWidth="104" Margin="0,10,0,0"
+                                        HorizontalAlignment="Left"
+                                        AutomationProperties.AutomationId="OpenShortcutSettingsButton"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Style="{StaticResource SettingsSection}" IsExpanded="False"
+                                  AutomationProperties.Name="{DynamicResource BluetoothMouseSettingsTitle}"
+                                  Visibility="{Binding VideoSettingsVisibility}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="Cursor20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource BluetoothMouseSettingsTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                        <TextBlock Text="{Binding BluetoothMouseSensitivity, StringFormat={}{0:F0}%}" Style="{StaticResource SettingsSectionSummary}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -1968,11 +2278,9 @@
                                         Value="{Binding BluetoothWheelSensitivity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                         Margin="0,4,0,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding BluetoothDeviceOrientationDisplay}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="0,10,0,0"/>
                                 <TextBlock Text="{DynamicResource BluetoothMouseDirectionHelp}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="0,5,0,0"/>
                                 <Grid Margin="0,10,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -2001,45 +2309,39 @@
                                               IsChecked="{Binding BluetoothMouseReverseVertical, Mode=TwoWay}"
                                               Margin="18,0,0,0"/>
                                 </WrapPanel>
-                                <Button Content="{DynamicResource ApplyBluetoothMouseSettings}"
-                                        Command="{Binding ApplyBluetoothMouseSettingsCommand}"
-                                        Style="{StaticResource ToolButton}" Margin="0,12,0,0"
-                                        AutomationProperties.AutomationId="ApplyBluetoothMouseSettingsButton"/>
+                                <WrapPanel Style="{StaticResource ControlActions}" Margin="-4,8,-4,-4">
+                                    <Button Margin="{StaticResource DialogActionMargin}" Content="{DynamicResource ApplyBluetoothMouseSettings}"
+                                            Command="{Binding ApplyBluetoothMouseSettingsCommand}"
+                                            Style="{StaticResource ToolButton}"
+                                            AutomationProperties.AutomationId="ApplyBluetoothMouseSettingsButton"/>
+                                    <Button Margin="{StaticResource DialogActionMargin}" Content="{DynamicResource ClearBluetoothBindings}"
+                                            Click="OnClearBluetoothBindingsClick"
+                                            Style="{StaticResource ToolButton}"
+                                            AutomationProperties.AutomationId="ClearBluetoothBindingsButton"/>
+                                </WrapPanel>
                             </StackPanel>
-                        </Border>
+                        </Expander>
+                    </StackPanel>
 
-                        <Border Style="{StaticResource ControlSectionCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource MappingTitle}" Style="{StaticResource ControlSectionTitle}"/>
-                                <TextBlock Text="{DynamicResource MappingDescription}" TextWrapping="Wrap" Margin="0,6,0,0"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                                <Button Command="{Binding ManageKeyboardMappingCommand}" Style="{StaticResource ToolButton}" Margin="0,10,0,0"
-                                        AutomationProperties.AutomationId="OpenKeyboardMappingButton">
-                                    <StackPanel Orientation="Horizontal">
-                                        <ui:SymbolIcon Symbol="Keyboard20" Style="{StaticResource ButtonSymbolIcon}" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{DynamicResource MappingManage}" TextWrapping="Wrap"/>
+                    <!-- Wireless -->
+                    <StackPanel x:Name="SettingsPageWireless" Visibility="Collapsed">
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource WirelessReceiverTitle}"
+                                  Visibility="{Binding WirelessReceiverSettingsVisibility}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="Cast20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource WirelessReceiverTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                        <TextBlock Text="{Binding WirelessStatus}" Style="{StaticResource SettingsSectionSummary}"/>
                                     </StackPanel>
-                                </Button>
-                                <TextBlock Text="{Binding KeyboardMappingStatus}" TextWrapping="Wrap" Margin="0,6,0,0"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                                <CheckBox Content="{DynamicResource ArrowKeysSwipe}" Margin="0,12,0,0"
-                                          IsChecked="{Binding ArrowKeysSwipe, Mode=TwoWay}"
-                                          AutomationProperties.AutomationId="ArrowKeysSwipeCheckBox"/>
-                                <TextBlock Text="{DynamicResource ArrowKeysSwipeHelp}" TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                                <TextBlock Text="{DynamicResource ClipboardAutoSyncHelp}" TextWrapping="Wrap" Margin="0,10,0,0"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource ControlSectionCard}"
-                                Visibility="{Binding WirelessBottomSettingsVisibility}">
+                                </DockPanel>
+                            </Expander.Header>
                             <StackPanel>
-                                <StackPanel><TextBlock Text="{DynamicResource WirelessReceiverTitle}"
-                                               Style="{StaticResource ControlSectionTitle}"/>
-                                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{DynamicResource WirelessServiceAlwaysOn}"
-                                               HorizontalAlignment="Left" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/></StackPanel>
+                                <TextBlock TextWrapping="Wrap" Text="{DynamicResource WirelessServiceAlwaysOn}"
+                                           Style="{StaticResource SettingsHelpText}"/>
                                 <TextBlock Text="{DynamicResource WirelessBackendLabel}"
                                            Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
                                 <ComboBox AutomationProperties.Name="{DynamicResource WirelessBackendLabel}" ItemsSource="{Binding WirelessReceiverBackends}"
@@ -2047,8 +2349,7 @@
                                           SelectedItem="{Binding SelectedWirelessReceiverBackend, Mode=TwoWay}"
                                           AutomationProperties.AutomationId="WirelessBackendComboBox"/>
                                 <TextBlock Text="{Binding AppliedWirelessBackendDisplay}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="1,4,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="1,4,0,0"/>
                                 <TextBlock Text="{DynamicResource WirelessResolutionLabel}"
                                            Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
                                 <ComboBox AutomationProperties.Name="{DynamicResource WirelessResolutionLabel}" ItemsSource="{Binding WirelessDisplayProfiles}"
@@ -2056,8 +2357,7 @@
                                           SelectedItem="{Binding SelectedWirelessDisplayProfile, Mode=TwoWay}"
                                           AutomationProperties.AutomationId="WirelessResolutionComboBox"/>
                                 <TextBlock Text="{DynamicResource WirelessResolutionHelp}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
                                 <Grid Margin="0,10,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -2079,21 +2379,28 @@
                                                FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap"/>
                                 </DockPanel>
                                 <TextBlock Text="{Binding AppliedWirelessProfileDisplay}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="1,4,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="1,4,0,0"/>
                             </StackPanel>
-                        </Border>
+                        </Expander>
 
-                        <Border Style="{StaticResource ControlSectionCard}">
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource MediaCastTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="VideoClip20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource MediaCastTitle}" Style="{StaticResource ControlSectionTitle}"/>
+                                        <TextBlock Text="{Binding MediaCastStatus}" Style="{StaticResource SettingsSectionSummary}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Expander.Header>
                             <StackPanel>
-                                <StackPanel><TextBlock Text="{DynamicResource MediaCastTitle}"
-                                               Style="{StaticResource ControlSectionTitle}"/>
-                                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{DynamicResource WirelessServiceAlwaysOn}"
-                                               HorizontalAlignment="Left" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/></StackPanel>
+                                <TextBlock TextWrapping="Wrap" Text="{DynamicResource WirelessServiceAlwaysOn}"
+                                           Style="{StaticResource SettingsHelpText}"/>
                                 <TextBlock Text="{DynamicResource MediaCastDescription}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                           Style="{StaticResource SettingsHelpText}" Margin="0,8,0,0"/>
                                 <TextBlock Text="{Binding MediaCastReceiverName}"
                                            FontSize="{DynamicResource BodyFontSize}" FontWeight="SemiBold" Margin="0,10,0,0"/>
                                 <DockPanel Margin="1,7,0,0">
@@ -2103,41 +2410,25 @@
                                                FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap"/>
                                 </DockPanel>
                             </StackPanel>
-                        </Border>
+                        </Expander>
+                    </StackPanel>
 
-                        <Border x:Name="AdvancedSettingsCard"
-                                Style="{StaticResource ControlSectionCard}">
+                    <!-- App -->
+                    <StackPanel x:Name="SettingsPageApp" Visibility="Collapsed">
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource AppearanceTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="Color20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource AppearanceTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource AppPreferencesTitle}"
-                                           Style="{StaticResource ControlSectionTitle}"/>
-                                <Button Content="{DynamicResource SetupReopen}" Click="OnFirstRunSetupClick" Margin="0,10,0,8"/>
-                                <TextBlock Text="{DynamicResource ApplicationModeLabel}"
-                                           Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
-                                <ComboBox AutomationProperties.Name="{DynamicResource ApplicationModeLabel}" SelectedValue="{Binding SelectedApplicationDisplayMode, Mode=TwoWay}"
-                                          SelectedValuePath="Tag"
-                                          AutomationProperties.AutomationId="ApplicationDisplayModeComboBox">
-                                    <ComboBoxItem Tag="{x:Static updater:ApplicationDisplayMode.Lightweight}"
-                                                  Content="{DynamicResource ApplicationModeLightweight}"/>
-                                    <ComboBoxItem Tag="{x:Static updater:ApplicationDisplayMode.Complete}"
-                                                  Content="{DynamicResource ApplicationModeComplete}"/>
-                                    <ComboBoxItem Tag="{x:Static updater:ApplicationDisplayMode.Tray}"
-                                                  Content="{DynamicResource ApplicationModeTray}"/>
-                                </ComboBox>
-                                <TextBlock Text="{DynamicResource LanguageToolTip}"
-                                           Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
-                                <ComboBox AutomationProperties.Name="{DynamicResource LanguageToolTip}" x:Name="LanguageComboBox" MinHeight="40"
-                                          AutomationProperties.AutomationId="LanguageComboBox"
-                                          SelectedValue="{Binding SelectedLanguage, Mode=TwoWay}"
-                                          SelectedValuePath="Tag"
-                                          ToolTip="{DynamicResource LanguageToolTip}">
-                                    <ComboBoxItem Tag="system" Content="{DynamicResource LanguageSystem}"/>
-                                    <ComboBoxItem Tag="zh-CN" Content="{DynamicResource LanguageChinese}"/>
-                                    <ComboBoxItem Tag="zh-HK" Content="{DynamicResource LanguageTraditionalChineseHongKong}"/>
-                                    <ComboBoxItem Tag="zh-TW" Content="{DynamicResource LanguageTraditionalChineseTaiwan}"/>
-                                    <ComboBoxItem Tag="en-US" Content="{DynamicResource LanguageEnglish}"/>
-                                </ComboBox>
                                 <TextBlock Text="{DynamicResource ThemeTitle}"
-                                           Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
+                                           Style="{StaticResource DetailLabel}" Margin="0,0,0,5"/>
                                 <ComboBox AutomationProperties.Name="{DynamicResource ThemeTitle}" x:Name="ThemeComboBox" MinHeight="40"
                                           AutomationProperties.AutomationId="ThemeComboBox"
                                           SelectedValuePath="Tag"
@@ -2171,17 +2462,62 @@
                                     <ComboBoxItem Tag="Playful" Content="{DynamicResource UiStylePlayful}"/>
                                     <ComboBoxItem Tag="Minimal" Content="{DynamicResource UiStyleMinimal}"/>
                                 </ComboBox>
-                                <TextBlock Text="{DynamicResource AppearanceFrameHelp}" TextWrapping="Wrap" Margin="0,6,0,0"
-                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                                <Button Content="{DynamicResource AdvancedSettings}"
-                                        Command="{Binding AdvancedSettingsCommand}"
-                                        Style="{StaticResource ToolButton}"
-                                        Margin="0,10,0,0"
-                                        Visibility="{Binding AdvancedSettingsVisibility}"/>
+                                <TextBlock Text="{DynamicResource AppearanceFrameHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
                             </StackPanel>
-                        </Border>
+                        </Expander>
+
+                        <Expander x:Name="AdvancedSettingsCard" Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource AppPreferencesTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="Settings20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource AppPreferencesTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource ApplicationModeLabel}"
+                                           Style="{StaticResource DetailLabel}" Margin="0,0,0,5"/>
+                                <ComboBox AutomationProperties.Name="{DynamicResource ApplicationModeLabel}" SelectedValue="{Binding SelectedApplicationDisplayMode, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
+                                          AutomationProperties.AutomationId="ApplicationDisplayModeComboBox">
+                                    <ComboBoxItem Tag="{x:Static updater:ApplicationDisplayMode.Lightweight}"
+                                                  Content="{DynamicResource ApplicationModeLightweight}"/>
+                                    <ComboBoxItem Tag="{x:Static updater:ApplicationDisplayMode.Complete}"
+                                                  Content="{DynamicResource ApplicationModeComplete}"/>
+                                    <ComboBoxItem Tag="{x:Static updater:ApplicationDisplayMode.Tray}"
+                                                  Content="{DynamicResource ApplicationModeTray}"/>
+                                </ComboBox>
+                                <TextBlock Text="{DynamicResource LanguageToolTip}"
+                                           Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
+                                <ComboBox AutomationProperties.Name="{DynamicResource LanguageToolTip}" x:Name="LanguageComboBox" MinHeight="40"
+                                          AutomationProperties.AutomationId="LanguageComboBox"
+                                          SelectedValue="{Binding SelectedLanguage, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
+                                          ToolTip="{DynamicResource LanguageToolTip}">
+                                    <ComboBoxItem Tag="system" Content="{DynamicResource LanguageSystem}"/>
+                                    <ComboBoxItem Tag="zh-CN" Content="{DynamicResource LanguageChinese}"/>
+                                    <ComboBoxItem Tag="zh-HK" Content="{DynamicResource LanguageTraditionalChineseHongKong}"/>
+                                    <ComboBoxItem Tag="zh-TW" Content="{DynamicResource LanguageTraditionalChineseTaiwan}"/>
+                                    <ComboBoxItem Tag="en-US" Content="{DynamicResource LanguageEnglish}"/>
+                                </ComboBox>
+                                <WrapPanel Style="{StaticResource ControlActions}" Margin="-4,10,-4,-4">
+                                    <Button Margin="{StaticResource DialogActionMargin}" Content="{DynamicResource SetupReopen}"
+                                            Click="OnFirstRunSetupClick" Style="{StaticResource ToolButton}"/>
+                                    <Button Margin="{StaticResource DialogActionMargin}" Content="{DynamicResource AdvancedSettings}"
+                                            Command="{Binding AdvancedSettingsCommand}"
+                                            Style="{StaticResource ToolButton}"
+                                            Visibility="{Binding AdvancedSettingsVisibility}"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Expander>
                     </StackPanel>
+
+                    </Grid>
                 </ScrollViewer>
+                </Grid>
             </Border>
             </controls:WorkspaceRevealPanel>
         </Grid>

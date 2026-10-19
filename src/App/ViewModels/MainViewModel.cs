@@ -637,6 +637,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         ? Visibility.Visible : Visibility.Collapsed;
     public Visibility WirelessBottomSettingsVisibility => IsWirelessSelected || IsMediaCastSelected
         ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility WirelessReceiverSettingsVisibility => IsMediaCastSelected
+        ? Visibility.Collapsed : Visibility.Visible;
     public Visibility UsbProjectionSettingsVisibility => SelectedDevice is not null &&
         !IsWirelessSelected && !IsMediaCastSelected && !IsBusy && !HasCaptureSession
         ? Visibility.Visible : Visibility.Collapsed;
@@ -4467,6 +4469,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(WirelessActualVideoSettingsVisibility));
         OnPropertyChanged(nameof(WirelessTopSettingsVisibility));
         OnPropertyChanged(nameof(WirelessBottomSettingsVisibility));
+        OnPropertyChanged(nameof(WirelessReceiverSettingsVisibility));
         OnPropertyChanged(nameof(UsbProjectionSettingsVisibility));
         OnPropertyChanged(nameof(SelectedUsbProjectionMode));
         OnPropertyChanged(nameof(UsbVideoOnly));

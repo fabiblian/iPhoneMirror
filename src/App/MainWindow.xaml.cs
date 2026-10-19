@@ -359,6 +359,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 _bluetoothShortcuts[action] = KeyboardShortcut.FromSettings(
                     app.UpdateSettings, action);
         }
+        InitializeSettingsTabs();
         _themeControlReady = true;
         _workspaceControlsReady = true;
         _viewModel = new MainViewModel();

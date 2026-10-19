@@ -54,6 +54,10 @@ internal sealed class UpdateSettings
     /// <summary>#RRGGBB accent, or empty for the theme's own accent.</summary>
     public string AccentColor { get; set; } = "";
     public UiStyle UiStyle { get; set; } = UiStyle.Modern;
+    /// <summary>Selected settings sidebar tab: Video, Control, Wireless or App.</summary>
+    public string SettingsTab { get; set; } = "Video";
+    /// <summary>Whether the stream statistics below the preview are expanded.</summary>
+    public bool StatsExpanded { get; set; } = true;
     public ApplicationDisplayMode ApplicationDisplayMode { get; set; } =
         ApplicationDisplayMode.Complete;
     public WirelessReceiverBackend WirelessReceiverBackend { get; set; } =
@@ -145,6 +149,8 @@ internal sealed class UpdateSettings
         ColorTheme = ColorTheme,
         AccentColor = AccentColor,
         UiStyle = UiStyle,
+        SettingsTab = SettingsTab,
+        StatsExpanded = StatsExpanded,
         ApplicationDisplayMode = ApplicationDisplayMode,
         WirelessReceiverBackend = WirelessReceiverBackend,
         WirelessDisplayProfileId = WirelessDisplayProfileId,
@@ -270,6 +276,11 @@ internal sealed class UpdateSettingsStore
             if (!Enum.IsDefined(settings.UiStyle))
             {
                 settings.UiStyle = UiStyle.Modern;
+                migrationChanged = true;
+            }
+            if (settings.SettingsTab is not ("Video" or "Control" or "Wireless" or "App"))
+            {
+                settings.SettingsTab = "Video";
                 migrationChanged = true;
             }
             var normalizedAccent = ThemePalette.NormalizeHex(settings.AccentColor);

@@ -132,6 +132,8 @@ try {
         $process.MainWindowHandle)
     Click-Element (Find-ById $window 'SettingsPanelToggle')
     Start-Sleep -Milliseconds 500
+    Click-Element (Find-ById $window 'SettingsTabApp')
+    Start-Sleep -Milliseconds 300
     $language = Find-ById $window 'LanguageComboBox'
 
     Select-Index $language 4
