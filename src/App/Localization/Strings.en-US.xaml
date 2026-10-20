@@ -1709,4 +1709,19 @@ Pair, select and save.</system:String>
     <system:String x:Key="PreviewKeyboardInactive">Keyboard does not reach the iPhone</system:String>
     <system:String x:Key="PreviewControlActive">Control is on</system:String>
     <system:String x:Key="PreviewControlInactive">Control is off</system:String>
+    <system:String x:Key="StatusPillMuted">Muted</system:String>
+    <system:String x:Key="PreviewLookTitle">Look</system:String>
+    <system:String x:Key="PreviewLookBorderless">Borderless</system:String>
+    <system:String x:Key="PreviewLookBorderlessHelp">Only the image with rounded corners. The smallest window.</system:String>
+    <system:String x:Key="PreviewLookCase">iPhone case</system:String>
+    <system:String x:Key="PreviewLookCaseHelp">A slim device frame around the image, color selectable.</system:String>
+    <system:String x:Key="PreviewCaseBlack">Black</system:String>
+    <system:String x:Key="PreviewCaseSilver">Silver</system:String>
+    <system:String x:Key="PreviewCaseTitanium">Titanium</system:String>
+    <system:String x:Key="PreviewCaseBlue">Blue</system:String>
+    <system:String x:Key="PreviewControlsTitle">Controls on the preview</system:String>
+    <system:String x:Key="PreviewStatusIcons">Status icons top left (keyboard, control, mute, pin)</system:String>
+    <system:String x:Key="PreviewControlsOnHover">Show the dots and the bar only while the pointer is over the preview</system:String>
+    <system:String x:Key="PreviewSnapToEdges">Snap to screen edges and corners</system:String>
+    <system:String x:Key="PreviewControlsHelp">Top dot: drag to move. Bottom right dot: drag to resize. Ctrl+Alt+arrow moves the preview into a corner.</system:String>
 </ResourceDictionary>

@@ -73,6 +73,7 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             swatch.Click += (_, _) => PreviewFrameService.Update(s => s.Color = color);
             Swatches.Children.Add(swatch);
         }
+        BuildCaseColors();
         PreviewFrameService.Changed += Sync;
         NativePreviewWindow.VisibilityChanged += Sync;
         if (VisibilityOwner is { } main) main.WindowVisibilityChanged += Sync;
@@ -136,6 +137,7 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             Select(HomePositionComboBox, settings.HomeButtonPosition.ToString());
             HomePositionComboBox.IsEnabled = settings.HomeButton != PreviewHomeButtonStyle.Off;
             AutoStartControlCheckBox.IsChecked = settings.AutoStartControl;
+            SyncLook(settings);
         }
         finally { _syncing = false; }
     }

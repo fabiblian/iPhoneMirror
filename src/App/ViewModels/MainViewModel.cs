@@ -1225,6 +1225,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         }
         _core = new NativeCore();
         NativeCore.SetPreviewSharpening(Everyday.SharpenSmallPreview);
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(SelectedDevice) or nameof(CaptureUsbAudio) or nameof(UsbVideoOnly))
+                OnPropertyChanged(nameof(AudioOnIphone));
+        };
         _captureStatusReader = _core.GetDeviceSessionStatus;
         var wirelessReceiver = new WirelessReceiverService();
         _wireless = new WirelessReceiverController(_core, wirelessReceiver);

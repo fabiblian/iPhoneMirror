@@ -21,6 +21,18 @@ public partial class MainWindow
         _viewModel.AddUiLog(LocalizationService.Get(_viewModel.IsMuted ? "AudioMuted" : "AudioUnmuted"));
     }
 
+    private void OnHeaderMuteClick(object sender, System.Windows.RoutedEventArgs e) =>
+        ToggleAppMute(_viewModel.SelectedDevice?.Udid);
+
+    private void OnHeaderIphoneVolumeDownClick(object sender, System.Windows.RoutedEventArgs e) =>
+        _ = PressIphoneConsumerButtonAsync(CoreDeviceTouchProtocol.IndigoVolumeDown, _viewModel.SelectedDevice?.Udid);
+
+    private void OnHeaderIphoneVolumeUpClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (_viewModel.IsMuted) _viewModel.IsMuted = false;
+        _ = PressIphoneConsumerButtonAsync(CoreDeviceTouchProtocol.IndigoVolumeUp, _viewModel.SelectedDevice?.Udid);
+    }
+
     private async Task StepAppVolumeAsync(bool up)
     {
         if (!_viewModel.AudioOnIphone)

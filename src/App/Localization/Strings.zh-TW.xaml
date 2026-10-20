@@ -1709,4 +1709,19 @@
     <system:String x:Key="PreviewKeyboardInactive">鍵盤輸入不會傳到 iPhone</system:String>
     <system:String x:Key="PreviewControlActive">控制已開啟</system:String>
     <system:String x:Key="PreviewControlInactive">控制已關閉</system:String>
+    <system:String x:Key="StatusPillMuted">已靜音</system:String>
+    <system:String x:Key="PreviewLookTitle">外觀</system:String>
+    <system:String x:Key="PreviewLookBorderless">無邊框</system:String>
+    <system:String x:Key="PreviewLookBorderlessHelp">只顯示帶圓角的畫面，視窗最小。</system:String>
+    <system:String x:Key="PreviewLookCase">iPhone 外殼</system:String>
+    <system:String x:Key="PreviewLookCaseHelp">畫面周圍的纖薄機身邊框，可選顏色。</system:String>
+    <system:String x:Key="PreviewCaseBlack">黑色</system:String>
+    <system:String x:Key="PreviewCaseSilver">銀色</system:String>
+    <system:String x:Key="PreviewCaseTitanium">鈦金屬色</system:String>
+    <system:String x:Key="PreviewCaseBlue">藍色</system:String>
+    <system:String x:Key="PreviewControlsTitle">預覽上的控制項</system:String>
+    <system:String x:Key="PreviewStatusIcons">左上角狀態圖示（鍵盤、控制、靜音、置頂）</system:String>
+    <system:String x:Key="PreviewControlsOnHover">僅在指標位於預覽上時顯示圓點和工具列</system:String>
+    <system:String x:Key="PreviewSnapToEdges">吸附到螢幕邊緣和角落</system:String>
+    <system:String x:Key="PreviewControlsHelp">頂部圓點：拖曳以移動。右下圓點：拖曳以調整大小。Ctrl+Alt+方向鍵將預覽移到角落。</system:String>
 </ResourceDictionary>
