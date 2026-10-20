@@ -855,6 +855,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                     _mediaCastPlayAudio, clamped / 100.0);
                 return;
             }
+            // Moving the volume unmutes, like the Windows volume flyout.
+            if (IsMuted) IsMuted = false;
             if (Math.Abs(_playbackVolume - clamped) < 0.001) return;
             var session = CurrentDeviceSession;
             (bool Success, string Message) result;
@@ -6422,7 +6424,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             state.RenderHeight,
             state.FrameRate,
             state.PlayAudio,
-            state.Volume,
+            MutedVolume(state.Volume),
             IsAdvancedMode ? state.AdvancedUsbWidth : 0,
             IsAdvancedMode ? state.AdvancedUsbHeight : 0,
             state.UsbProjectionMode,

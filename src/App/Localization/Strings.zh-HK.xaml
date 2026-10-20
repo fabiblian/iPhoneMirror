@@ -1693,4 +1693,7 @@
     <system:String x:Key="PreviewDropTooLarge">檔案太大，無法放入剪貼簿（圖片最大 64 MB，文字最大 1 MB）。</system:String>
     <system:String x:Key="PreviewDropFailed">無法讀取拖入的檔案，或剪貼簿正忙。請重試。</system:String>
     <system:String x:Key="PreviewDropUnsupported">只能將圖片和文字檔拖到預覽上。</system:String>
+    <system:String x:Key="AudioMuted">iPhoneMirror 已靜音（Ctrl+Alt+M）。</system:String>
+    <system:String x:Key="AudioUnmuted">iPhoneMirror 聲音已恢復。</system:String>
+    <system:String x:Key="IphoneVolumeNeedsControl">聲音在 iPhone 上播放。請開啟有線、無線或藍牙控制，才能從這裡調整音量。</system:String>
 </ResourceDictionary>

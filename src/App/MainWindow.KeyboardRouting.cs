@@ -82,6 +82,12 @@ public partial class MainWindow
             if (Application.Current is App app) app.ShowAboutWindow(this, _viewModel, showDiagnostics: true);
         }, () => !_bossKeyHidden);
         Local(0x4D, KeyboardShortcut.Control, "Audio", () => _viewModel.PlayAudio = !_viewModel.PlayAudio);
+        const uint controlAlt = KeyboardShortcut.Control | KeyboardShortcut.Alt;
+        Local(0x4D, controlAlt, "Mute", ToggleAppMute, anyPreview: true);
+        foreach (var plus in new[] { 0xBB, 0x6B }) // OEM plus, numpad plus
+            Local(plus, controlAlt, "VolumeUp", () => _ = StepAppVolumeAsync(true), anyPreview: true);
+        foreach (var minus in new[] { 0xBD, 0x6D }) // OEM minus, numpad minus
+            Local(minus, controlAlt, "VolumeDown", () => _ = StepAppVolumeAsync(false), anyPreview: true);
         Local(0x53, KeyboardShortcut.Control, "Screenshot", () => _ = CaptureScreenshotAsync());
         _keyboardRouter.Shortcuts.Configure(bindings);
     }
