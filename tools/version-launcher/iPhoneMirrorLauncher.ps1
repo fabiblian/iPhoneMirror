@@ -52,6 +52,9 @@ $State = @{
     Busy = $false
     Summary = New-Object System.Collections.Generic.List[string]
     Branches = @()
+    DevBranch = $null
+    SelectedIndex = -1
+    ListWidth = 0
 }
 
 function Show-Message([string]$Text, [string]$Icon = 'Information', [string]$Buttons = 'OK') {
@@ -151,11 +154,18 @@ function Get-BuildInfo([string]$Branch) { Read-Json (Join-Path (Get-BranchDir $B
 
 function Get-CurrentExe([string]$Branch) { Join-Path (Get-BranchDir $Branch) 'current\iPhoneMirror.exe' }
 
-function Get-ProcessesUnder([string]$Directory) {
-    $prefix = $Directory.TrimEnd('\') + '\'
-    @(Get-Process -ErrorAction SilentlyContinue | Where-Object {
-        try { $_.Path -and $_.Path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) } catch { $false }
+# Every executable of a build is named iPhoneMirror*; reading the path of
+# all ~400 processes instead took about half a second per call.
+function Get-AppProcessPaths {
+    @(Get-Process -Name 'iPhoneMirror*' -ErrorAction SilentlyContinue | ForEach-Object {
+        try { if ($_.Path) { [pscustomobject]@{ Process = $_; Path = $_.Path } } } catch { }
     })
+}
+
+function Get-ProcessesUnder([string]$Directory, $AppProcesses = (Get-AppProcessPaths)) {
+    $prefix = $Directory.TrimEnd('\') + '\'
+    @($AppProcesses | Where-Object { $_.Path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) } |
+        ForEach-Object { $_.Process })
 }
 
 function Complete-Staging([string]$Branch) {
@@ -282,12 +292,12 @@ function Switch-Pin([string]$Branch) {
     else { $pinned += $Branch }
     $State.Config.Pinned = $pinned
     Save-Config
-    Update-List
+    Update-List -Cached
 }
 
-function Get-StatusKind($Branch) {
+function Get-StatusKind($Branch, $AppProcesses) {
     $current = Join-Path (Get-BranchDir $Branch.Name) 'current'
-    if ((Test-Path -LiteralPath $current) -and (Get-ProcessesUnder $current).Count -gt 0) { return 'Running' }
+    if ((Get-ProcessesUnder $current $AppProcesses).Count -gt 0) { return 'Running' }
     $text = Get-StatusText $Branch
     if ($text -eq 'Aktuell') { return 'Built' }
     if ($text -like '*fehlgeschlagen*') { return 'Failed' }
@@ -308,6 +318,47 @@ $form.ForeColor = $Theme.Text
 $iconFile = @((Join-Path $InstallDir 'iPhoneMirror.ico'), (Join-Path $PSScriptRoot '..\..\src\App\Assets\iPhoneMirror.ico')) |
     Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 if ($iconFile) { try { $form.Icon = New-Object System.Drawing.Icon($iconFile) } catch { } }
+
+# The title bar takes the header's colour (Windows 11) and dark mode (Windows 10
+# and 11). The small native helper is compiled once and kept next to the
+# launcher, so later starts load it without compiling.
+$DwmSource = @'
+using System;
+using System.Runtime.InteropServices;
+public static class IPhoneMirrorLauncherDwm
+{
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr window, int attribute, ref int value, int size);
+
+    public static void Apply(IntPtr window, bool dark, int caption, int text)
+    {
+        int value = dark ? 1 : 0;
+        DwmSetWindowAttribute(window, 20, ref value, 4);   // DWMWA_USE_IMMERSIVE_DARK_MODE
+        DwmSetWindowAttribute(window, 34, ref caption, 4); // DWMWA_BORDER_COLOR
+        DwmSetWindowAttribute(window, 35, ref caption, 4); // DWMWA_CAPTION_COLOR
+        DwmSetWindowAttribute(window, 36, ref text, 4);    // DWMWA_TEXT_COLOR
+    }
+}
+'@
+
+function Set-ThemedTitleBar([System.Windows.Forms.Form]$Window) {
+    try {
+        if (-not ('IPhoneMirrorLauncherDwm' -as [type])) {
+            $dll = Join-Path $InstallDir 'IPhoneMirrorLauncherDwm.v1.dll'
+            if (-not (Test-Path -LiteralPath $dll -PathType Leaf)) {
+                New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+                Add-Type -TypeDefinition $DwmSource -OutputAssembly $dll -OutputType Library
+            }
+            Add-Type -LiteralPath $dll
+        }
+        # COLORREF is 0x00BBGGRR; the channels are bytes, so widen them before shifting.
+        $colorRef = { param($c) [int]$c.R -bor ([int]$c.G -shl 8) -bor ([int]$c.B -shl 16) }
+        [IPhoneMirrorLauncherDwm]::Apply($Window.Handle, ($Theme.Bg.GetBrightness() -lt 0.5),
+            (& $colorRef $Theme.Sidebar), (& $colorRef $Theme.Text))
+    }
+    catch { }
+}
+$form.Add_HandleCreated({ Set-ThemedTitleBar $form })
 
 $headerPanel = New-Object System.Windows.Forms.Panel
 $headerPanel.Dock = 'Top'
@@ -346,6 +397,26 @@ $titleFont = New-Object System.Drawing.Font('Segoe UI Semibold', 11)
 $smallFont = New-Object System.Drawing.Font('Segoe UI', 8.5)
 $headingFont = New-Object System.Drawing.Font('Segoe UI Semibold', 8.5)
 $monoFont = New-Object System.Drawing.Font('Consolas', 9)
+$starFont = New-Object System.Drawing.Font('Segoe UI Symbol', 14)
+
+# Brushes, pens and formats are made once: creating them for every card on
+# every repaint cost more than 100 ms per paint in PowerShell.
+$Paint = @{ Brushes = @{} }
+function Get-Brush([System.Drawing.Color]$Color) {
+    $key = $Color.ToArgb()
+    if (-not $Paint.Brushes.ContainsKey($key)) { $Paint.Brushes[$key] = New-Object System.Drawing.SolidBrush($Color) }
+    return $Paint.Brushes[$key]
+}
+$Paint.SelectedPen = New-Object System.Drawing.Pen($Theme.Accent, 2)
+$Paint.BorderPen = New-Object System.Drawing.Pen($Theme.Border, 1)
+$Paint.Ellipsis = New-Object System.Drawing.StringFormat
+$Paint.Ellipsis.Trimming = 'EllipsisCharacter'
+$Paint.Ellipsis.FormatFlags = 'NoWrap'
+$Paint.Buffers = [System.Drawing.BufferedGraphicsManager]::Current
+$Paint.Kinds = @{
+    Running = @('Läuft', $Theme.Ok); Built = @('Gebaut, aktuell', $Theme.Accent)
+    Stale = @('Veraltet', $Theme.Warn); Failed = @('Build fehlgeschlagen', $Theme.Error); None = @('Nicht gebaut', $Theme.Muted)
+}
 
 $list.Add_MeasureItem({
     param($sender, $e)
@@ -356,58 +427,59 @@ $list.Add_MeasureItem({
 $list.Add_DrawItem({
     param($sender, $e)
     if ($e.Index -lt 0 -or $e.Index -ge $list.Items.Count) { return }
-    $g = $e.Graphics
+    # Paint off screen and copy the finished card, so it never flickers.
+    $buffer = $Paint.Buffers.Allocate($e.Graphics, $e.Bounds)
+    try {
+        Write-ListItem $buffer.Graphics $e
+        $buffer.Render($e.Graphics)
+    }
+    finally { $buffer.Dispose() }
+})
+
+function Write-ListItem([System.Drawing.Graphics]$g, $e) {
+    # The buffer starts black; clear it whole so no anti-aliased edge shows it.
+    $g.Clear($Theme.Bg)
     $g.SmoothingMode = 'AntiAlias'
     $g.TextRenderingHint = 'ClearTypeGridFit'
-    $bgBrush = New-Object System.Drawing.SolidBrush($Theme.Bg)
-    $g.FillRectangle($bgBrush, $e.Bounds)
     $item = $list.Items[$e.Index]
     if ($item.Kind -eq 'Heading') {
-        $mutedBrush = New-Object System.Drawing.SolidBrush($Theme.Muted)
-        $g.DrawString($item.Text.ToUpperInvariant(), $headingFont, $mutedBrush, $e.Bounds.X + 2, $e.Bounds.Y + 10)
+        $g.DrawString($item.Text.ToUpperInvariant(), $headingFont, (Get-Brush $Theme.Muted), $e.Bounds.X + 2, $e.Bounds.Y + 10)
         return
     }
     $branch = $item.Branch
     $selected = ($e.State -band [System.Windows.Forms.DrawItemState]::Selected) -ne 0
     $card = New-Object System.Drawing.RectangleF(($e.Bounds.X + 1), ($e.Bounds.Y + 3), ($e.Bounds.Width - 3), ($e.Bounds.Height - 7))
     $path = New-RoundedPath $card 10
-    $fill = if ($selected) { $Theme.Raised } else { $Theme.Surface }
-    $g.FillPath((New-Object System.Drawing.SolidBrush($fill)), $path)
-    $pen = if ($selected) { New-Object System.Drawing.Pen($Theme.Accent, 2) } else { New-Object System.Drawing.Pen($Theme.Border, 1) }
-    $g.DrawPath($pen, $path)
+    $g.FillPath((Get-Brush $(if ($selected) { $Theme.Raised } else { $Theme.Surface })), $path)
+    $g.DrawPath($(if ($selected) { $Paint.SelectedPen } else { $Paint.BorderPen }), $path)
+    $path.Dispose()
 
     # Pin star on the left; a click on it toggles the pin.
     $starColor = if ($item.Pinned) { $Theme.Warn } else { $Theme.Muted }
     $g.DrawString($(if ($item.Pinned) { [string][char]0x2605 } else { [string][char]0x2606 }),
-        (New-Object System.Drawing.Font('Segoe UI Symbol', 14)), (New-Object System.Drawing.SolidBrush($starColor)),
-        $card.X + 12, $card.Y + 24)
+        $starFont, (Get-Brush $starColor), $card.X + 12, $card.Y + 24)
 
     $x = $card.X + 46
-    $textBrush = New-Object System.Drawing.SolidBrush($Theme.Text)
+    $textBrush = Get-Brush $Theme.Text
     $g.DrawString($branch.Name, $titleFont, $textBrush, $x, $card.Y + 9)
     $nameWidth = $g.MeasureString($branch.Name, $titleFont).Width
 
-    $kinds = @{
-        Running = @('Läuft', $Theme.Ok); Built = @('Gebaut, aktuell', $Theme.Accent)
-        Stale = @('Veraltet', $Theme.Warn); Failed = @('Build fehlgeschlagen', $Theme.Error); None = @('Nicht gebaut', $Theme.Muted)
-    }
-    $badge = $kinds[$item.StatusKind]
+    $badge = $Paint.Kinds[$item.StatusKind]
     $badgeWidth = $g.MeasureString($badge[0], $smallFont).Width + 24
     $badgeRect = New-Object System.Drawing.RectangleF(($x + $nameWidth + 8), ($card.Y + 11), $badgeWidth, 20)
     $badgeFill = [System.Drawing.Color]::FromArgb(40, $badge[1].R, $badge[1].G, $badge[1].B)
-    $g.FillPath((New-Object System.Drawing.SolidBrush($badgeFill)), (New-RoundedPath $badgeRect 10))
-    $g.FillEllipse((New-Object System.Drawing.SolidBrush($badge[1])), $badgeRect.X + 9, $badgeRect.Y + 7, 6, 6)
-    $g.DrawString($badge[0], $smallFont, (New-Object System.Drawing.SolidBrush($badge[1])), $badgeRect.X + 17, $badgeRect.Y + 3)
+    $badgePath = New-RoundedPath $badgeRect 10
+    $g.FillPath((Get-Brush $badgeFill), $badgePath)
+    $badgePath.Dispose()
+    $g.FillEllipse((Get-Brush $badge[1]), $badgeRect.X + 9, $badgeRect.Y + 7, 6, 6)
+    $g.DrawString($badge[0], $smallFont, (Get-Brush $badge[1]), $badgeRect.X + 17, $badgeRect.Y + 3)
 
     $info = $item.Info
     $hash = $branch.Sha.Substring(0, 7)
-    $g.DrawString($hash, $monoFont, (New-Object System.Drawing.SolidBrush($Theme.Accent)), $x, $card.Y + 36)
+    $g.DrawString($hash, $monoFont, (Get-Brush $Theme.Accent), $x, $card.Y + 36)
     $subjectX = $x + $g.MeasureString($hash, $monoFont).Width + 6
     $subjectRect = New-Object System.Drawing.RectangleF($subjectX, ($card.Y + 35), ($card.Right - $subjectX - 12), 20)
-    $format = New-Object System.Drawing.StringFormat
-    $format.Trimming = 'EllipsisCharacter'
-    $format.FormatFlags = 'NoWrap'
-    $g.DrawString($branch.Subject, $form.Font, $textBrush, $subjectRect, $format)
+    $g.DrawString($branch.Subject, $form.Font, $textBrush, $subjectRect, $Paint.Ellipsis)
 
     $meta = "Stand GitHub: $($branch.Date)"
     if ($info -and $info.Sha) {
@@ -416,8 +488,8 @@ $list.Add_DrawItem({
             try { $meta += ' am ' + ([datetime]$info.BuiltAt).ToString('dd.MM.yyyy HH:mm') } catch { }
         }
     }
-    $g.DrawString($meta, $smallFont, (New-Object System.Drawing.SolidBrush($Theme.Muted)), $x, $card.Y + 58)
-})
+    $g.DrawString($meta, $smallFont, (Get-Brush $Theme.Muted), $x, $card.Y + 58)
+}
 
 $bottom = New-Object System.Windows.Forms.Panel
 $bottom.Dock = 'Bottom'
@@ -479,15 +551,17 @@ function Get-SelectedBranch {
     return $item.Branch
 }
 
-function Update-List {
+# -Cached reuses the branches already read, so a pin click needs no git.
+function Update-List([switch]$Cached) {
     $selected = Get-SelectedBranch
     $keep = if ($selected) { $selected.Name } else { $State.Config.LastBranch }
-    $State.Branches = Get-RemoteBranches
+    if (-not $Cached) { $State.Branches = Get-RemoteBranches }
     $pinned = @(Get-Pinned)
+    $appProcesses = Get-AppProcessPaths
     $cards = foreach ($branch in $State.Branches) {
         [pscustomobject]@{
             Kind = 'Branch'; Branch = $branch; Pinned = ($pinned -contains $branch.Name)
-            Info = (Get-BuildInfo $branch.Name); StatusKind = (Get-StatusKind $branch); Text = $branch.Name
+            Info = (Get-BuildInfo $branch.Name); StatusKind = (Get-StatusKind $branch $appProcesses); Text = $branch.Name
         }
     }
     $list.BeginUpdate()
@@ -506,17 +580,28 @@ function Update-List {
         for ($i = 0; $i -lt $list.Items.Count; $i++) { if ($list.Items[$i].Kind -eq 'Branch') { $list.SelectedIndex = $i; break } }
     }
     $list.EndUpdate()
-    $devBranch = (Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD')).Text
+    $State.SelectedIndex = $list.SelectedIndex
+    if ($Cached -and $State.DevBranch) { return }
+    $State.DevBranch = $devBranch = (Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD')).Text
     $header.Text = "Dev-Repo: $($State.Repo)   ·   ausgecheckt: $devBranch   ·   Theme wie die App ($($Theme.Name))"
 }
 
-$list.Add_Resize({ $list.Invalidate() })
+# Cards stretch with the width; a height change only reveals more of them.
+$list.Add_Resize({
+    if ($list.Width -eq $State.ListWidth) { return }
+    $State.ListWidth = $list.Width
+    $list.Invalidate()
+})
 
-# Headings are not selectable; the star toggles the pin.
+# Headings are not selectable; the star toggles the pin. Only the cards whose
+# selection changed are repainted.
 $list.Add_SelectedIndexChanged({
     $item = $list.SelectedItem
-    if ($item -and $item.Kind -eq 'Heading' -and $list.SelectedIndex + 1 -lt $list.Items.Count) { $list.SelectedIndex++ }
-    $list.Invalidate()
+    if ($item -and $item.Kind -eq 'Heading' -and $list.SelectedIndex + 1 -lt $list.Items.Count) { $list.SelectedIndex++; return }
+    foreach ($index in @($State.SelectedIndex, $list.SelectedIndex)) {
+        if ($index -ge 0 -and $index -lt $list.Items.Count) { $list.Invalidate($list.GetItemRectangle($index)) }
+    }
+    $State.SelectedIndex = $list.SelectedIndex
 })
 $list.Add_MouseDown({
     param($sender, $e)
