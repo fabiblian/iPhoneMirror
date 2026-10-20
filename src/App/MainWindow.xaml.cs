@@ -384,6 +384,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         _secondaryMirrors.KeyboardFocusChanged += OnIndependentKeyboardFocusChanged;
         _secondaryMirrors.HomeRequested += OnIndependentHomeRequested;
         _secondaryMirrors.PreviewOpened += OnIndependentPreviewOpened;
+        InitializePreviewDrop();
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         InitializeAutoMirror();

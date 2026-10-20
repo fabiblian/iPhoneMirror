@@ -31,6 +31,7 @@ internal sealed class MultiDevicePreviewManager : IDisposable
     internal event Action<string, nint, bool>? KeyboardFocusChanged;
     // The frame's home pill was clicked (device UDID, preview window).
     internal event Action<string, nint>? HomeRequested;
+    internal event Action<string, string[]>? FilesDropped;
     // A device preview window was created and shown (device UDID, window).
     internal event Action<string, nint>? PreviewOpened;
 
@@ -225,6 +226,7 @@ internal sealed class MultiDevicePreviewManager : IDisposable
         window.ActivationChanged += active =>
             KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, active);
         window.HomeRequested += () => HomeRequested?.Invoke(device.Udid, window.Handle);
+        window.FilesDropped += files => FilesDropped?.Invoke(device.Udid, files);
         KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, true);
         if (_protectionStates.TryGetValue(device.Udid, out var protection))
             window.SetProtectedContent(protection.IsProtected,

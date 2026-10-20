@@ -1687,4 +1687,10 @@
     <system:String x:Key="WiredWheelScroll">有线和无线控制时用滚轮滚动</system:String>
     <system:String x:Key="ReverseWheelDirection">反转滚动方向</system:String>
     <system:String x:Key="WheelScrollHelp">滚轮向下时内容向上移动，就像在 iPhone 上向上滑动。触控板双指滚动会平滑滑动。速度使用鼠标设置中的滚轮灵敏度，与蓝牙共用。</system:String>
+    <system:String x:Key="PreviewDropImage">图片已放入 iPhone 剪贴板，请在 iPhone 上粘贴。</system:String>
+    <system:String x:Key="PreviewDropText">文本已放入 iPhone 剪贴板，请在 iPhone 上粘贴。</system:String>
+    <system:String x:Key="PreviewDropNeedsControl">已复制到 Windows 剪贴板。请开启有线或无线控制，才能传到 iPhone。</system:String>
+    <system:String x:Key="PreviewDropTooLarge">文件太大，无法放入剪贴板（图片最大 64 MB，文本最大 1 MB）。</system:String>
+    <system:String x:Key="PreviewDropFailed">无法读取拖入的文件，或剪贴板正忙。请重试。</system:String>
+    <system:String x:Key="PreviewDropUnsupported">只能将图片和文本文件拖到预览上。</system:String>
 </ResourceDictionary>

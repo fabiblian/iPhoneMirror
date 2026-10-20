@@ -1687,4 +1687,10 @@ Pair, select and save.</system:String>
     <system:String x:Key="WiredWheelScroll">Scroll with the wheel during wired and wireless control</system:String>
     <system:String x:Key="ReverseWheelDirection">Reverse scroll direction</system:String>
     <system:String x:Key="WheelScrollHelp">Wheel down moves the content up, like a swipe up on the iPhone. Two-finger touchpad scrolling glides smoothly. The speed is the Scroll speed in the mouse settings, shared with Bluetooth.</system:String>
+    <system:String x:Key="PreviewDropImage">Image placed on the iPhone clipboard. Paste it on the iPhone.</system:String>
+    <system:String x:Key="PreviewDropText">Text placed on the iPhone clipboard. Paste it on the iPhone.</system:String>
+    <system:String x:Key="PreviewDropNeedsControl">Copied to the Windows clipboard. Turn on wired or wireless control so it reaches the iPhone.</system:String>
+    <system:String x:Key="PreviewDropTooLarge">This file is too large for the clipboard (images up to 64 MB, text up to 1 MB).</system:String>
+    <system:String x:Key="PreviewDropFailed">The dropped file could not be read or the clipboard is busy. Try again.</system:String>
+    <system:String x:Key="PreviewDropUnsupported">Only images and text files can be dropped on the preview.</system:String>
 </ResourceDictionary>

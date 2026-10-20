@@ -59,6 +59,10 @@ internal sealed class NativePreviewWindow : IDisposable
     private const int WmSysKeyDown = 0x0104;
     private const int WmSysKeyUp = 0x0105;
     private const int WmDpiChanged = 0x02E0;
+    private const int WmDropFiles = 0x0233;
+    private const int WmCopyData = 0x004A;
+    private const int WmCopyGlobalData = 0x0049;
+    private const uint MsgFltAllow = 1;
     private const int VkEscape = 0x1B;
     private const int VkReturn = 0x0D;
     private const int VkF11 = 0x7A;
@@ -343,7 +347,15 @@ internal sealed class NativePreviewWindow : IDisposable
         _handle = _source.Handle;
         if (_handle == 0) throw new InvalidOperationException(
             "Could not create the native preview window.");
-        if (managedContent is null) NativeTouchInput.RegisterTouchWindow(_handle);
+        if (managedContent is null)
+        {
+            NativeTouchInput.RegisterTouchWindow(_handle);
+            // Files dragged from Explorer go to the iPhone clipboard. Let the
+            // drop messages through when an elevated build runs.
+            foreach (var message in new[] { WmDropFiles, WmCopyData, WmCopyGlobalData })
+                _ = ChangeWindowMessageFilterEx(_handle, (uint)message, MsgFltAllow, 0);
+            DragAcceptFiles(_handle, true);
+        }
 
         if (managedContent is not null)
         {
@@ -409,6 +421,8 @@ internal sealed class NativePreviewWindow : IDisposable
     internal event Action<bool>? ActivationChanged;
     // Raised on the UI thread when the home pill in the frame is clicked.
     internal event Action? HomeRequested;
+    // Raised on the UI thread with the paths of files dropped on the window.
+    internal event Action<string[]>? FilesDropped;
     private bool _previewHidden;
     private bool _appHidden;
     private bool _restoreVisible;
@@ -776,6 +790,13 @@ internal sealed class NativePreviewWindow : IDisposable
     private nint WindowProcedure(nint hwnd, int message, nint wParam, nint lParam,
         ref bool handled)
     {
+        if (message == WmDropFiles)
+        {
+            var files = ReadDroppedFiles(wParam);
+            if (files.Length > 0) FilesDropped?.Invoke(files);
+            handled = true;
+            return 0;
+        }
         if (message == NativeTouchInput.WmTouch && _managedContent is null)
         {
             GetClientRect(hwnd, out var touchRect);
@@ -1589,6 +1610,37 @@ internal sealed class NativePreviewWindow : IDisposable
             }
         }
     }
+
+    private static string[] ReadDroppedFiles(nint drop)
+    {
+        try
+        {
+            var count = DragQueryFileW(drop, uint.MaxValue, null, 0);
+            var files = new List<string>((int)count);
+            for (uint index = 0; index < count; index++)
+            {
+                var length = DragQueryFileW(drop, index, null, 0);
+                var buffer = new char[length + 1];
+                if (DragQueryFileW(drop, index, buffer, (uint)buffer.Length) > 0)
+                    files.Add(new string(buffer, 0, (int)length));
+            }
+            return files.ToArray();
+        }
+        finally { DragFinish(drop); }
+    }
+
+    [DllImport("shell32.dll")]
+    private static extern void DragAcceptFiles(nint hwnd, [MarshalAs(UnmanagedType.Bool)] bool accept);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint DragQueryFileW(nint drop, uint index, char[]? file, uint length);
+
+    [DllImport("shell32.dll")]
+    private static extern void DragFinish(nint drop);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ChangeWindowMessageFilterEx(nint hwnd, uint message, uint action, nint filterInfo);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
