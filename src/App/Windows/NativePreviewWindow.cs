@@ -18,7 +18,7 @@ namespace IPhoneMirror.App.Windows;
 /// DWM from allocating a second WPF redirection surface, allowing the native
 /// renderer to attach its visual tree directly to this HWND.
 /// </summary>
-internal sealed class NativePreviewWindow : IDisposable
+internal sealed partial class NativePreviewWindow : IDisposable
 {
     internal const string StableTitle = "iPhoneMirror OBS Preview";
     private static readonly HashSet<NativePreviewWindow> OpenWindows = [];
@@ -508,7 +508,8 @@ internal sealed class NativePreviewWindow : IDisposable
         Action<nint>? requestReverseControl = null,
         Func<bool>? isUsbControlEnabled = null,
         Action<nint>? requestUsbControl = null,
-        Action<nint>? requestWirelessControl = null)
+        Action<nint>? requestWirelessControl = null,
+        PreviewPlacement? placement = null)
     {
         window = null;
         NativePreviewWindow? candidate = null;
@@ -536,6 +537,7 @@ internal sealed class NativePreviewWindow : IDisposable
             // Apply the frame while hidden so the first visible bounds
             // already include it.
             candidate.ApplyFrame(reflow: false);
+            candidate._initialPlacement = placement;
             candidate.ShowInitially();
             if (Volatile.Read(ref BossKeyHidden) != 0)
                 candidate.SetBossKeyHidden(true);
@@ -603,22 +605,24 @@ internal sealed class NativePreviewWindow : IDisposable
 
     private void ShowInitially()
     {
-        var boundsApplied = _aspectController.ApplyInitialBounds();
-        _isTopMost = false;
+        var boundsApplied = ApplyInitialPlacement() || _aspectController.ApplyInitialBounds();
+        _isTopMost = _initialPlacement?.TopMost == true;
+        UpdateContextMenuLabels();
         if (Volatile.Read(ref BossKeyHidden) != 0)
         {
             _appHidden = true;
             _restoreVisible = true;
             return;
         }
-        if (!SetWindowPos(_handle, HwndNoTopMost, 0, 0, 0, 0,
+        var zOrder = _isTopMost ? HwndTopMost : HwndNoTopMost;
+        if (!SetWindowPos(_handle, zOrder, 0, 0, 0, 0,
                 SwpNoSize | SwpNoMove | SwpNoActivate | SwpShowWindow))
         {
             // Keep the window usable if the combined show/z-order operation is
             // rejected by the shell. Its final bounds were already applied
             // while hidden, so this fallback still cannot expose a move.
             _ = ShowWindow(_handle, SwShow);
-            _ = SetWindowPos(_handle, HwndNoTopMost, 0, 0, 0, 0,
+            _ = SetWindowPos(_handle, zOrder, 0, 0, 0, 0,
                 SwpNoSize | SwpNoMove | SwpNoActivate);
         }
         Log("independent_window_initial_layout",
@@ -790,6 +794,7 @@ internal sealed class NativePreviewWindow : IDisposable
     private nint WindowProcedure(nint hwnd, int message, nint wParam, nint lParam,
         ref bool handled)
     {
+        if (message is WmEnterSizeMove or WmExitSizeMove) ObservePlacementMessage(message);
         if (message == WmDropFiles)
         {
             var files = ReadDroppedFiles(wParam);
@@ -1278,6 +1283,7 @@ internal sealed class NativePreviewWindow : IDisposable
         _ = SetWindowPos(_handle, _isTopMost ? HwndTopMost : HwndNoTopMost,
             0, 0, 0, 0, SwpNoSize | SwpNoMove | SwpNoActivate);
         UpdateContextMenuLabels();
+        PublishPlacement();
         Log("independent_window_topmost",
             ("mode", WindowMode), ("enabled", _isTopMost));
     }
@@ -1552,6 +1558,7 @@ internal sealed class NativePreviewWindow : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
+        PublishPlacement();
         Log("independent_window_dispose_begin",
             ("mode", WindowMode), ("attached", _attached),
             ("full_screen", _isFullScreen));

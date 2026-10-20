@@ -48,5 +48,19 @@ internal sealed class EverydaySettings
     /// <summary>The app's own PC audio is muted.</summary>
     public bool Muted { get; set; }
 
-    internal EverydaySettings Clone() => (EverydaySettings)MemberwiseClone();
+    /// <summary>Snap a preview window to the screen edges and corners while moving it.</summary>
+    public bool SnapPreviewToEdges { get; set; } = true;
+
+    /// <summary>Last preview window position, size and pin state per device UDID.</summary>
+    public Dictionary<string, PreviewPlacement> PreviewPlacements { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    internal EverydaySettings Clone()
+    {
+        var copy = (EverydaySettings)MemberwiseClone();
+        copy.PreviewPlacements = new(StringComparer.OrdinalIgnoreCase);
+        foreach (var (udid, placement) in PreviewPlacements ?? [])
+            if (placement is not null) copy.PreviewPlacements[udid] = placement.Clone();
+        return copy;
+    }
 }

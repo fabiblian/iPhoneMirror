@@ -88,6 +88,11 @@ public partial class MainWindow
             Local(plus, controlAlt, "VolumeUp", () => _ = StepAppVolumeAsync(true), anyPreview: true);
         foreach (var minus in new[] { 0xBD, 0x6D }) // OEM minus, numpad minus
             Local(minus, controlAlt, "VolumeDown", () => _ = StepAppVolumeAsync(false), anyPreview: true);
+        // Ctrl+Alt+arrow moves the focused preview window into a corner.
+        foreach (var (vk, horizontal, vertical) in new[] { (0x25, -1, 0), (0x26, 0, -1), (0x27, 1, 0), (0x28, 0, 1) })
+            Local(vk, controlAlt, "PreviewCorner",
+                () => _secondaryMirrors.MoveWindowToCorner(_keyboardForegroundWindow(), horizontal, vertical),
+                () => _secondaryMirrors.ContainsWindow(_keyboardForegroundWindow()), anyPreview: true);
         Local(0x53, KeyboardShortcut.Control, "Screenshot", () => _ = CaptureScreenshotAsync());
         _keyboardRouter.Shortcuts.Configure(bindings);
     }
