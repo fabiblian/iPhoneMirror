@@ -361,6 +361,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
         InitializeSettingsTabs();
         InitializePanelWidths();
+        InitializeBuildLabel();
         _themeControlReady = true;
         _workspaceControlsReady = true;
         _viewModel = new MainViewModel();

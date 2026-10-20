@@ -1040,7 +1040,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel x:Name="WorkspaceHeading" ToolTip="{DynamicResource AppSubtitleConnectivity}">
-                <TextBlock TextWrapping="Wrap" Text="iPhoneMirror" FontSize="{DynamicResource FontSize24}" FontWeight="SemiBold"/>
+                <TextBlock TextWrapping="Wrap" FontSize="{DynamicResource FontSize24}" FontWeight="SemiBold"><Run Text="iPhoneMirror"/><Run x:Name="WorkspaceBuildLabel" FontSize="{DynamicResource SecondaryFontSize}" FontWeight="Normal" Foreground="{DynamicResource MutedTextBrush}"/></TextBlock>
                 <TextBlock x:Name="WorkspaceSubtitle" TextWrapping="Wrap" Text="{DynamicResource AppSubtitleConnectivity}" Foreground="{DynamicResource MutedTextBrush}"
                            FontSize="{DynamicResource SecondaryFontSize}" Margin="0,4,0,0"/>
             </StackPanel>

@@ -294,7 +294,7 @@ function Set-Busy([bool]$Busy) {
 # A step is a hashtable: Title, Run (returns a Process or $null), Done (gets
 # the step and exit code). Steps run one after another on the UI thread timer.
 
-function Start-LoggedProcess([string]$CommandLine, [string]$Directory, [string]$Log) {
+function Start-LoggedProcess([string]$CommandLine, [string]$Directory, [string]$Log, [hashtable]$Environment = @{}) {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Log) | Out-Null
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = Join-Path $env:SystemRoot 'System32\cmd.exe'
@@ -303,6 +303,7 @@ function Start-LoggedProcess([string]$CommandLine, [string]$Directory, [string]$
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true
     $info.EnvironmentVariables['GIT_TERMINAL_PROMPT'] = '0'
+    foreach ($name in $Environment.Keys) { $info.EnvironmentVariables[$name] = [string]$Environment[$name] }
     return [System.Diagnostics.Process]::Start($info)
 }
 
@@ -436,7 +437,8 @@ function Add-BuildSteps($Branch) {
                 Run = {
                     param($b)
                     $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-                    Start-LoggedProcess "`"$powershell`" -NoProfile -ExecutionPolicy Bypass -File `"$($b.Worktree)\build.ps1`" $BuildArguments" $b.Worktree $b.Log
+                    # The worktree is detached; tell the build which branch it is for the window title.
+                    Start-LoggedProcess "`"$powershell`" -NoProfile -ExecutionPolicy Bypass -File `"$($b.Worktree)\build.ps1`" $BuildArguments" $b.Worktree $b.Log @{ IPHONEMIRROR_BUILD_BRANCH = $b.Branch.Name }
                 }
                 Done = { param($b, $buildCode) Complete-Build $b $buildCode }
             }
