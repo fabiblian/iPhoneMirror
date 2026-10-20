@@ -392,6 +392,9 @@ internal sealed class NativeCore : IDisposable
     private static extern int im_set_preview_corner_profile(float normalizedRadius, float curveExponent);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int im_set_preview_sharpening(int enabled);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern int im_session_set_window_opacity(ulong handle, nint hwnd, float opacity);
 
     internal static bool SetDeviceWindowOpacity(ulong handle, nint hwnd, double opacity)
@@ -661,6 +664,21 @@ internal sealed class NativeCore : IDisposable
         {
             DiagnosticLogger.ExceptionOnce("native-session-force-refresh", "native",
                 "session_force_refresh_unavailable", error);
+            return false;
+        }
+    }
+
+    internal static bool SetPreviewSharpening(bool enabled)
+    {
+        try
+        {
+            return im_set_preview_sharpening(enabled ? 1 : 0) == 0;
+        }
+        catch (Exception error) when (error is EntryPointNotFoundException or DllNotFoundException)
+        {
+            // An older native DLL simply renders without the sharpening pass.
+            DiagnosticLogger.ExceptionOnce("native-preview-sharpening", "native",
+                "preview_sharpening_entrypoint_missing", error);
             return false;
         }
     }

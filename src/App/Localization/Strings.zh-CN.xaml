@@ -1696,4 +1696,6 @@
     <system:String x:Key="AudioMuted">iPhoneMirror 已静音（Ctrl+Alt+M）。</system:String>
     <system:String x:Key="AudioUnmuted">iPhoneMirror 声音已恢复。</system:String>
     <system:String x:Key="IphoneVolumeNeedsControl">声音在 iPhone 上播放。请开启有线、无线或蓝牙控制，才能从这里调整音量。</system:String>
+    <system:String x:Key="SharpenSmallPreview">小预览窗口中锐化文字</system:String>
+    <system:String x:Key="SharpenSmallPreviewHelp">仅在预览明显小于 iPhone 画面时生效。录制、直播和截图不受影响。</system:String>
 </ResourceDictionary>

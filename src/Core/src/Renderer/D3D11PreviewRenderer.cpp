@@ -32,6 +32,10 @@ std::uint64_t pack_corner_profile(float normalized_radius, float curve_exponent)
         std::bit_cast<std::uint32_t>(curve_exponent);
 }
 
+// Text sharpening for a strongly downscaled preview; see sharpenMain.
+std::atomic_bool small_preview_sharpening{true};
+constexpr float SmallPreviewSharpenStrength = 0.5F;
+
 constexpr std::uint32_t DiagnosticMonitorShift = 0U;
 constexpr std::uint32_t DiagnosticSourceHdrShift = 2U;
 constexpr std::uint32_t DiagnosticHdrSurfaceShift = 4U;
@@ -413,6 +417,22 @@ float4 ambientPillMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : S
 }
 )";
 
+// Compiled together with PreviewPixelShaders but on its own, so a problem in
+// this optional pass can never take the main preview shaders down with it.
+// Unsharp mask for the mipmapped downscale path: the next coarser mip level
+// is the blur. It ramps in from about 1.4x downscaling, so a preview near the
+// source size stays untouched; shapePadding.y carries the strength.
+constexpr const char* SharpenPixelShader = R"(
+float4 sharpenMain(float4 position : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
+    float2 sourceUv = rotateUv(uv);
+    float lod = image.CalculateLevelOfDetail(linearSampler, sourceUv);
+    float3 sharp = image.Sample(linearSampler, sourceUv).rgb;
+    float3 blur = image.SampleBias(linearSampler, sourceUv, 1.0).rgb;
+    float amount = shapePadding.y * saturate((lod - 0.5) / 1.5);
+    return premultiplyForCorner(max(sharp + amount * (sharp - blur), 0.0), position.xy);
+}
+)";
+
 } // namespace
 
 struct D3D11PreviewRenderer::Impl {
@@ -509,6 +529,7 @@ struct D3D11PreviewRenderer::Impl {
     ComPtr<ID3D11VertexShader> vertex_shader;
     ComPtr<ID3D11PixelShader> pixel_shader;
     ComPtr<ID3D11PixelShader> copy_pixel_shader;
+    ComPtr<ID3D11PixelShader> sharpen_pixel_shader;
     ComPtr<ID3D11PixelShader> mask_pixel_shader;
     ComPtr<ID3D11Buffer> shape_constants;
     ComPtr<ID3D11SamplerState> sampler;
@@ -793,6 +814,16 @@ struct D3D11PreviewRenderer::Impl {
         check(device->CreatePixelShader(mask_pixel_blob->GetBufferPointer(),
             mask_pixel_blob->GetBufferSize(), nullptr, &mask_pixel_shader),
             "Create mask PixelShader");
+        try {
+            const auto sharpen_source = std::string(PreviewPixelShaders) + SharpenPixelShader;
+            const auto sharpen_blob = compile_shader(sharpen_source.c_str(), "sharpenMain", "ps_5_0");
+            if (FAILED(device->CreatePixelShader(sharpen_blob->GetBufferPointer(),
+                    sharpen_blob->GetBufferSize(), nullptr, &sharpen_pixel_shader)))
+                sharpen_pixel_shader.Reset();
+        } catch (const std::exception& error) {
+            sharpen_pixel_shader.Reset();
+            logging::write(std::format("d3d_preview sharpen_unavailable error={}", error.what()));
+        }
         if (composition_mode) {
             const auto create_pixel_shader = [&](const char* entry,
                 ComPtr<ID3D11PixelShader>& shader) {
@@ -875,6 +906,7 @@ struct D3D11PreviewRenderer::Impl {
         shape_constants.Reset();
         mask_pixel_shader.Reset();
         copy_pixel_shader.Reset();
+        sharpen_pixel_shader.Reset();
         pixel_shader.Reset();
         vertex_shader.Reset();
         composition_visual.Reset();
@@ -1134,13 +1166,16 @@ struct D3D11PreviewRenderer::Impl {
         return result.applied || result.needs_redraw;
     }
 
-    // shape_alpha is exposed to shaders as shapePadding.x (ambient outputs).
+    // shape_alpha is exposed to shaders as shapePadding.x (ambient outputs),
+    // sharpen_strength as shapePadding.y (sharpenMain).
     void update_shape_constants(UINT width, UINT height, bool enabled, int rotation = 0,
-        const media::DecodedFrame* frame = nullptr, float shape_alpha = 0.0F) {
+        const media::DecodedFrame* frame = nullptr, float shape_alpha = 0.0F,
+        float sharpen_strength = 0.0F) {
         ShapeConstantData values{};
         values.output_width = static_cast<float>(width);
         values.output_height = static_cast<float>(height);
         values.padding[0] = shape_alpha;
+        values.padding[1] = sharpen_strength;
         const auto packed_profile = corner_profile.load(std::memory_order_relaxed);
         const auto normalized_radius = std::bit_cast<float>(
             static_cast<std::uint32_t>(packed_profile >> 32U));
@@ -2008,8 +2043,12 @@ struct D3D11PreviewRenderer::Impl {
             context->ClearRenderTargetView(target.Get(), composition_mode ? transparent : black);
             if (composition_mode) draw_black_background(rounded);
             context->RSSetViewports(1, &viewport);
-            context->PSSetShader(copy_pixel_shader.Get(), nullptr, 0);
-            update_shape_constants(target_width, target_height, rounded);
+            const bool sharpen = sharpen_pixel_shader &&
+                small_preview_sharpening.load(std::memory_order_relaxed);
+            context->PSSetShader(sharpen ? sharpen_pixel_shader.Get() : copy_pixel_shader.Get(),
+                nullptr, 0);
+            update_shape_constants(target_width, target_height, rounded, 0, nullptr, 0.0F,
+                sharpen ? SmallPreviewSharpenStrength : 0.0F);
             ID3D11ShaderResourceView* copy_view = mip_view.Get();
             context->PSSetShaderResources(2, 1, &copy_view);
             context->PSSetSamplers(0, 1, mip_sampler.GetAddressOf());
@@ -2278,6 +2317,10 @@ void D3D11PreviewRenderer::set_render_size_limit(std::uint32_t width,
     const auto packed = (static_cast<std::uint64_t>(width) << 32U) | height;
     impl_->render_size_limit.store(packed, std::memory_order_relaxed);
     impl_->refresh_requested.store(true, std::memory_order_release);
+}
+
+void D3D11PreviewRenderer::set_small_preview_sharpening(bool enabled) noexcept {
+    small_preview_sharpening.store(enabled, std::memory_order_relaxed);
 }
 
 void D3D11PreviewRenderer::set_corner_profile(float normalized_radius,

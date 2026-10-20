@@ -1224,6 +1224,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             _appliedBluetoothMouseReverseVertical = _bluetoothMouseReverseVertical;
         }
         _core = new NativeCore();
+        NativeCore.SetPreviewSharpening(Everyday.SharpenSmallPreview);
         _captureStatusReader = _core.GetDeviceSessionStatus;
         var wirelessReceiver = new WirelessReceiverService();
         _wireless = new WirelessReceiverController(_core, wirelessReceiver);

@@ -1696,4 +1696,6 @@ Pair, select and save.</system:String>
     <system:String x:Key="AudioMuted">iPhoneMirror is muted (Ctrl+Alt+M).</system:String>
     <system:String x:Key="AudioUnmuted">iPhoneMirror sound is on again.</system:String>
     <system:String x:Key="IphoneVolumeNeedsControl">The sound plays on the iPhone. Turn on wired, wireless or Bluetooth control to change its volume from here.</system:String>
+    <system:String x:Key="SharpenSmallPreview">Sharpen text in a small preview</system:String>
+    <system:String x:Key="SharpenSmallPreviewHelp">Only when the preview is clearly smaller than the iPhone image. Recording, streaming and screenshots stay unchanged.</system:String>
 </ResourceDictionary>

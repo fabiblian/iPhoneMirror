@@ -1,4 +1,5 @@
 using System.Windows;
+using IPhoneMirror.App.Interop;
 using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
 
@@ -60,6 +61,17 @@ internal sealed partial class MainViewModel
         get => Everyday.ReverseWheelDirection;
         set => SetEveryday(value, s => s.ReverseWheelDirection, (s, v) => s.ReverseWheelDirection = v,
             "reverse_wheel_direction");
+    }
+
+    public bool SharpenSmallPreview
+    {
+        get => Everyday.SharpenSmallPreview;
+        set
+        {
+            if (SetEveryday(value, s => s.SharpenSmallPreview, (s, v) => s.SharpenSmallPreview = v,
+                    "sharpen_small_preview"))
+                NativeCore.SetPreviewSharpening(Everyday.SharpenSmallPreview);
+        }
     }
 
     /// <summary>Starts mirroring the selected device and completes once the start finished.</summary>

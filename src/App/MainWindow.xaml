@@ -2227,6 +2227,12 @@
                                     <TextBlock Text="{DynamicResource VideoPipelinePreferenceHelp}"
                                                Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
 
+                                    <CheckBox Content="{DynamicResource SharpenSmallPreview}" Margin="0,10,0,0"
+                                              IsChecked="{Binding SharpenSmallPreview, Mode=TwoWay}"
+                                              AutomationProperties.AutomationId="SharpenSmallPreviewCheckBox"/>
+                                    <TextBlock Text="{DynamicResource SharpenSmallPreviewHelp}"
+                                               Style="{StaticResource SettingsHelpText}" Margin="0,4,0,0"/>
+
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
