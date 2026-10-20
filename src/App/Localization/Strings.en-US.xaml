@@ -1673,4 +1673,10 @@ Pair, select and save.</system:String>
     <system:String x:Key="ShortcutFilterPlaceholder">Search shortcuts…</system:String>
     <system:String x:Key="ShortcutFilterClear">Clear search</system:String>
     <system:String x:Key="ShortcutFilterEmpty">No shortcuts found.</system:String>
+    <system:String x:Key="AutoConnectTitle">When an iPhone is plugged in</system:String>
+    <system:String x:Key="AutoMirrorOnConnect">Start mirroring automatically</system:String>
+    <system:String x:Key="AutoOpenPreviewOnConnect">Open the preview window</system:String>
+    <system:String x:Key="AutoStartControlOnConnect">Start wired control</system:String>
+    <system:String x:Key="AutoConnectHelp">Also applies to an iPhone that is already plugged in when the app starts. Only while nothing else is mirrored. The control notice is shown only the first time.</system:String>
+    <system:String x:Key="AutoMirrorStartedFormat">{0} plugged in: mirroring started automatically.</system:String>
 </ResourceDictionary>

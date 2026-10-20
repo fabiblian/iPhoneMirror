@@ -2784,9 +2784,10 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
 
     private async Task<bool> ConfirmReverseControlPrerequisitesAsync(DeviceControlSession control, bool wireless, CancellationToken cancellationToken)
     {
+        var everyday = (Application.Current as App)?.UpdateSettings.Everyday;
         var acknowledged = wireless
-            ? _wirelessControlPrerequisiteAcknowledged
-            : _wiredControlPrerequisiteAcknowledged;
+            ? _wirelessControlPrerequisiteAcknowledged || everyday?.WirelessControlNoticeAcknowledged == true
+            : _wiredControlPrerequisiteAcknowledged || everyday?.WiredControlNoticeAcknowledged == true;
         if (acknowledged) return true;
 
         var result = await control.ControlStatus.RequestPromptAsync(new(
@@ -2809,6 +2810,14 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
 
         if (wireless) _wirelessControlPrerequisiteAcknowledged = true;
         else _wiredControlPrerequisiteAcknowledged = true;
+        // Remember the confirmation so the notice does not come back on every
+        // start of control, also not after a restart.
+        if (Application.Current is App app)
+        {
+            if (wireless) app.UpdateSettings.Everyday.WirelessControlNoticeAcknowledged = true;
+            else app.UpdateSettings.Everyday.WiredControlNoticeAcknowledged = true;
+            app.SaveUpdateSettings();
+        }
         DiagnosticLogger.ReverseControl(wireless ? "wireless" : "usb",
             "prerequisites_acknowledged");
         return true;
@@ -3837,6 +3846,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             var currentSelectionUdid = SelectedDevice?.Udid;
             ReconcileDevices(devices, currentSelectionUdid, captureActive,
                 newlyConnectedWirelessUdid);
+            ObserveWiredArrivals(enumerateWired);
             await RefreshActiveSessionStatusAsync();
             await PollBackgroundSessionErrorsAsync(coreGateHeld: true);
 

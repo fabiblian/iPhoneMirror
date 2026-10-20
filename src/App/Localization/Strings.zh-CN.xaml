@@ -1673,4 +1673,10 @@
     <system:String x:Key="ShortcutFilterPlaceholder">搜索快捷键…</system:String>
     <system:String x:Key="ShortcutFilterClear">清除搜索</system:String>
     <system:String x:Key="ShortcutFilterEmpty">未找到快捷键。</system:String>
+    <system:String x:Key="AutoConnectTitle">插入 iPhone 时</system:String>
+    <system:String x:Key="AutoMirrorOnConnect">自动开始投屏</system:String>
+    <system:String x:Key="AutoOpenPreviewOnConnect">打开预览窗口</system:String>
+    <system:String x:Key="AutoStartControlOnConnect">启动有线控制</system:String>
+    <system:String x:Key="AutoConnectHelp">应用启动时已连接的 iPhone 也适用。仅在没有其他设备投屏时生效。控制提示只在第一次显示。</system:String>
+    <system:String x:Key="AutoMirrorStartedFormat">已插入 {0}：已自动开始投屏。</system:String>
 </ResourceDictionary>

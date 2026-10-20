@@ -2609,6 +2609,33 @@
                             </StackPanel>
                         </Expander>
 
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource AutoConnectTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="PhoneCheckmark20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource AutoConnectTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <CheckBox Content="{DynamicResource AutoMirrorOnConnect}"
+                                          IsChecked="{Binding AutoMirrorOnConnect, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="AutoMirrorOnConnectCheckBox"/>
+                                <CheckBox Content="{DynamicResource AutoOpenPreviewOnConnect}" Margin="24,8,0,0"
+                                          IsChecked="{Binding AutoOpenPreviewOnConnect, Mode=TwoWay}"
+                                          IsEnabled="{Binding AutoMirrorOnConnect}"
+                                          AutomationProperties.AutomationId="AutoOpenPreviewOnConnectCheckBox"/>
+                                <CheckBox Content="{DynamicResource AutoStartControlOnConnect}" Margin="24,8,0,0"
+                                          IsChecked="{Binding AutoStartControlOnConnect, Mode=TwoWay}"
+                                          IsEnabled="{Binding AutoMirrorOnConnect}"
+                                          AutomationProperties.AutomationId="AutoStartControlOnConnectCheckBox"/>
+                                <TextBlock Text="{DynamicResource AutoConnectHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Expander>
+
                         <Expander x:Name="AdvancedSettingsCard" Style="{StaticResource SettingsSection}"
                                   AutomationProperties.Name="{DynamicResource AppPreferencesTitle}">
                             <Expander.Header>
