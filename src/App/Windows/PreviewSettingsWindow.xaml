@@ -50,8 +50,7 @@
                                 AutomationProperties.AutomationId="PreviewBorderlessTile"
                                 AutomationProperties.Name="{DynamicResource PreviewLookBorderless}">
                             <DockPanel>
-                                <Border DockPanel.Dock="Left" Width="30" Height="60" CornerRadius="8" Margin="0,0,12,0"
-                                        Background="#F5F5F7"/>
+                                <Border x:Name="BorderlessTileSample" DockPanel.Dock="Left" Width="30" Height="60" CornerRadius="8" Margin="0,0,12,0"/>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{DynamicResource PreviewLookBorderless}" FontWeight="SemiBold"/>
                                     <TextBlock Text="{DynamicResource PreviewLookBorderlessHelp}" TextWrapping="Wrap"
@@ -65,8 +64,8 @@
                                 AutomationProperties.Name="{DynamicResource PreviewLookCase}">
                             <DockPanel>
                                 <Border x:Name="CaseTileSample" DockPanel.Dock="Left" Width="34" Height="64" CornerRadius="10"
-                                        Padding="3" Margin="0,0,12,0" Background="#1C1C1F">
-                                    <Border CornerRadius="7" Background="#F5F5F7"/>
+                                        Padding="3" Margin="0,0,12,0">
+                                    <Border x:Name="CaseTileScreen" CornerRadius="7"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{DynamicResource PreviewLookCase}" FontWeight="SemiBold"/>
@@ -81,15 +80,49 @@
                     <!-- Controls drawn over the preview -->
                     <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
                     <TextBlock Text="{DynamicResource PreviewControlsTitle}" FontWeight="SemiBold"/>
-                    <CheckBox x:Name="StatusIconsCheckBox" Margin="0,10,0,0" Content="{DynamicResource PreviewStatusIcons}"
-                              Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
-                              AutomationProperties.AutomationId="PreviewStatusIconsCheckBox"/>
-                    <CheckBox x:Name="HoverOnlyCheckBox" Margin="0,8,0,0" Content="{DynamicResource PreviewControlsOnHover}"
+                    <CheckBox x:Name="HoverOnlyCheckBox" Margin="0,10,0,0" Content="{DynamicResource PreviewControlsOnHover}"
                               Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
                               AutomationProperties.AutomationId="PreviewControlsOnHoverCheckBox"/>
                     <CheckBox x:Name="SnapCheckBox" Margin="0,8,0,0" Content="{DynamicResource PreviewSnapToEdges}"
                               Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
                               AutomationProperties.AutomationId="PreviewSnapToEdgesCheckBox"/>
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource PreviewMoveDotPosition}" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="MoveDotComboBox" SelectionChanged="OnDotPositionChanged"
+                                      AutomationProperties.AutomationId="PreviewMoveDotComboBox"
+                                      AutomationProperties.Name="{DynamicResource PreviewMoveDotPosition}"/>
+                            <Border x:Name="MoveDotPicker" Width="64" Height="128" Margin="0,10,0,0"
+                                    HorizontalAlignment="Left" CornerRadius="12" BorderThickness="1"
+                                    Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                                    Cursor="Hand" ToolTip="{DynamicResource PreviewDotPickerHelp}"
+                                    AutomationProperties.AutomationId="PreviewMoveDotPicker">
+                                <Canvas x:Name="MoveDotCanvas" Background="Transparent" ClipToBounds="True">
+                                    <Ellipse x:Name="MoveDotMarker" Width="12" Height="12" Fill="{DynamicResource AccentBrush}"/>
+                                </Canvas>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{DynamicResource PreviewResizeDotPosition}" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="ResizeDotComboBox" SelectionChanged="OnDotPositionChanged"
+                                      AutomationProperties.AutomationId="PreviewResizeDotComboBox"
+                                      AutomationProperties.Name="{DynamicResource PreviewResizeDotPosition}"/>
+                            <Border x:Name="ResizeDotPicker" Width="64" Height="128" Margin="0,10,0,0"
+                                    HorizontalAlignment="Left" CornerRadius="12" BorderThickness="1"
+                                    Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                                    Cursor="Hand" ToolTip="{DynamicResource PreviewDotPickerHelp}"
+                                    AutomationProperties.AutomationId="PreviewResizeDotPicker">
+                                <Canvas x:Name="ResizeDotCanvas" Background="Transparent" ClipToBounds="True">
+                                    <Ellipse x:Name="ResizeDotMarker" Width="12" Height="12" Fill="{DynamicResource AccentBrush}"/>
+                                </Canvas>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                     <TextBlock Text="{DynamicResource PreviewControlsHelp}" TextWrapping="Wrap" Margin="0,6,0,0"
                                Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
 

@@ -74,6 +74,7 @@ public partial class PreviewSettingsWindow : IPhoneMirror.UI.Controls.RoundedWin
             Swatches.Children.Add(swatch);
         }
         BuildCaseColors();
+        BuildDotChoices();
         PreviewFrameService.Changed += Sync;
         NativePreviewWindow.VisibilityChanged += Sync;
         if (VisibilityOwner is { } main) main.WindowVisibilityChanged += Sync;

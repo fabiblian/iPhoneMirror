@@ -7,7 +7,8 @@ using IPhoneMirror.App.Services;
 namespace IPhoneMirror.App.Windows;
 
 // The two look tiles (borderless with rounded corners, or a slim iPhone case
-// in a chosen color) and the switches for the controls drawn over previews.
+// in a chosen color) and the switches for the controls drawn over previews,
+// including where their move and resize dots sit.
 // The case is the preview frame with a fixed case colour; the detailed frame
 // options below the tiles stay available for anything in between.
 public partial class PreviewSettingsWindow
@@ -19,8 +20,15 @@ public partial class PreviewSettingsWindow
         ("PreviewCaseTitanium", "#8E8A83"), ("PreviewCaseBlue", "#3D4E68"),
     ];
 
+    // The tiles show a lit phone screen; the case sample starts black.
+    private const string SampleScreenHex = "#F5F5F7";
+
     private void BuildCaseColors()
     {
+        var screen = new SolidColorBrush((Color)ColorConverter.ConvertFromString(SampleScreenHex));
+        BorderlessTileSample.Background = screen;
+        CaseTileScreen.Background = screen;
+        CaseTileSample.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(CaseColorChoices[0].Hex));
         foreach (var (key, hex) in CaseColorChoices)
         {
             var swatch = new Button
@@ -55,9 +63,9 @@ public partial class PreviewSettingsWindow
             swatch.SetResourceReference(BorderBrushProperty, selected ? "AccentBrush" : "BorderSoftBrush");
         }
         var everyday = (Application.Current as App)?.UpdateSettings.Everyday ?? new();
-        StatusIconsCheckBox.IsChecked = everyday.PreviewStatusIcons;
         HoverOnlyCheckBox.IsChecked = everyday.PreviewControlsOnHoverOnly;
         SnapCheckBox.IsChecked = everyday.SnapPreviewToEdges;
+        SyncDots(everyday);
     }
 
     private static void MarkTile(Button tile, bool selected)
@@ -88,7 +96,6 @@ public partial class PreviewSettingsWindow
     {
         if (_syncing || !IsInitialized || Application.Current is not App app) return;
         var everyday = app.UpdateSettings.Everyday;
-        everyday.PreviewStatusIcons = StatusIconsCheckBox.IsChecked == true;
         everyday.PreviewControlsOnHoverOnly = HoverOnlyCheckBox.IsChecked == true;
         everyday.SnapPreviewToEdges = SnapCheckBox.IsChecked == true;
         app.SaveUpdateSettings();

@@ -1709,10 +1709,6 @@ Pair, select and save.</system:String>
     <system:String x:Key="PreviewPinButton">Always on top</system:String>
     <system:String x:Key="PreviewMute">Mute (Ctrl+Alt+M)</system:String>
     <system:String x:Key="PreviewUnmute">Sound on (Ctrl+Alt+M)</system:String>
-    <system:String x:Key="PreviewKeyboardActive">Keyboard reaches the iPhone</system:String>
-    <system:String x:Key="PreviewKeyboardInactive">Keyboard does not reach the iPhone</system:String>
-    <system:String x:Key="PreviewControlActive">Control is on</system:String>
-    <system:String x:Key="PreviewControlInactive">Control is off</system:String>
     <system:String x:Key="StatusPillMuted">Muted</system:String>
     <system:String x:Key="PreviewLookTitle">Look</system:String>
     <system:String x:Key="PreviewLookBorderless">Borderless</system:String>
@@ -1724,8 +1720,19 @@ Pair, select and save.</system:String>
     <system:String x:Key="PreviewCaseTitanium">Titanium</system:String>
     <system:String x:Key="PreviewCaseBlue">Blue</system:String>
     <system:String x:Key="PreviewControlsTitle">Controls on the preview</system:String>
-    <system:String x:Key="PreviewStatusIcons">Status icons top left (keyboard, control, mute, pin)</system:String>
     <system:String x:Key="PreviewControlsOnHover">Show the dots and the bar only while the pointer is over the preview</system:String>
     <system:String x:Key="PreviewSnapToEdges">Snap to screen edges and corners</system:String>
-    <system:String x:Key="PreviewControlsHelp">Top dot: drag to move. Bottom right dot: drag to resize. Ctrl+Alt+arrow moves the preview into a corner.</system:String>
+    <system:String x:Key="PreviewControlsHelp">Move dot (borderless only; with a case, drag the frame): moves the window. Resize dot: drag to resize from the nearest corner or edge. Ctrl+Alt+arrow moves the preview into a corner.</system:String>
+    <system:String x:Key="PreviewMoveDotPosition">Move dot</system:String>
+    <system:String x:Key="PreviewResizeDotPosition">Resize dot</system:String>
+    <system:String x:Key="PreviewDotPickerHelp">Click or drag to place the dot anywhere</system:String>
+    <system:String x:Key="PreviewDotTopCenter">Top centre</system:String>
+    <system:String x:Key="PreviewDotTopLeft">Top left</system:String>
+    <system:String x:Key="PreviewDotTopRight">Top right</system:String>
+    <system:String x:Key="PreviewDotLeftCenter">Left centre</system:String>
+    <system:String x:Key="PreviewDotRightCenter">Right centre</system:String>
+    <system:String x:Key="PreviewDotBottomLeft">Bottom left</system:String>
+    <system:String x:Key="PreviewDotBottomCenter">Bottom centre</system:String>
+    <system:String x:Key="PreviewDotBottomRight">Bottom right</system:String>
+    <system:String x:Key="PreviewDotCustom">Custom</system:String>
 </ResourceDictionary>
