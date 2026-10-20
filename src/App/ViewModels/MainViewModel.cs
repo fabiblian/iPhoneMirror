@@ -964,6 +964,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             var state = GetOrCreateDeviceState(SelectedDevice);
             if (state.UsbVideoOnly == value) return;
             state.UsbVideoOnly = value;
+            PersistDeviceVideoPreferences(state);
             OnPropertyChanged();
             OnPropertyChanged(nameof(CaptureUsbAudio));
             SetSettingsStatus(value ? "UsbVideoOnlySelected" : "UsbAudioCaptureSelected");

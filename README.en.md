@@ -255,10 +255,10 @@ the same chord is preserved; choose a free chord for Stop mirroring in that case
 
 ### USB video without phone audio (experimental)
 
-Before starting USB mirroring, clear **Use iPhone audio** under the USB modes
-in the mirroring settings. This suppresses the USB audio request, independently
-of **Play audio on Windows**, which only mutes local playback. The choice belongs
-to the selected device for this app run and is locked while its capture is active.
+Before starting USB mirroring, clear **Use iPhone audio** under **USB mode** on
+the **Video & sound** settings tab. This suppresses the USB audio request,
+independently of **Play sound on this PC**, which only mutes local playback. The
+choice is remembered per device and is locked while its capture is active.
 Stop mirroring before changing it. Select AirPods as the playback destination on
 the iPhone after starting if necessary. This mode needs real-device iOS testing;
 it does not guarantee that iOS will preserve a particular audio route. Recordings

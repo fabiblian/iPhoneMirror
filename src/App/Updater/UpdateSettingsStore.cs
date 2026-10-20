@@ -232,6 +232,61 @@ internal sealed class UpdateSettings
     };
 }
 
+/// <summary>
+/// Settings this fork added to <see cref="UpdateSettings"/>. Other iPhoneMirror
+/// builds on the same PC (the installed release, older branch builds) rewrite
+/// settings.json without fields they do not know, so these values are also kept
+/// in a sidecar file those builds never touch and restored from it on load.
+/// </summary>
+internal sealed class ForkSettings
+{
+    public PreviewFrameSettings? PreviewFrame { get; set; }
+    public Dictionary<string, DeviceVideoPreferences>? DeviceVideoPreferences { get; set; }
+    public bool? ArrowKeysSwipe { get; set; }
+    public AppColorTheme? ColorTheme { get; set; }
+    public string? AccentColor { get; set; }
+    public UiStyle? UiStyle { get; set; }
+    public string? SettingsTab { get; set; }
+    public bool? StatsExpanded { get; set; }
+    public double? LeftPanelWidth { get; set; }
+    public double? SettingsPanelWidth { get; set; }
+
+    internal static ForkSettings From(UpdateSettings settings) => new()
+    {
+        PreviewFrame = (settings.PreviewFrame ?? new()).Clone(),
+        DeviceVideoPreferences = new(settings.DeviceVideoPreferences ?? [], StringComparer.OrdinalIgnoreCase),
+        ArrowKeysSwipe = settings.ArrowKeysSwipe,
+        ColorTheme = settings.ColorTheme,
+        AccentColor = settings.AccentColor,
+        UiStyle = settings.UiStyle,
+        SettingsTab = settings.SettingsTab,
+        StatsExpanded = settings.StatsExpanded,
+        LeftPanelWidth = settings.LeftPanelWidth,
+        SettingsPanelWidth = settings.SettingsPanelWidth,
+    };
+
+    internal void ApplyTo(UpdateSettings settings)
+    {
+        if (PreviewFrame is not null) settings.PreviewFrame = PreviewFrame;
+        if (DeviceVideoPreferences is not null)
+        {
+            // Keep devices another build added; this fork's values win per device.
+            var merged = new Dictionary<string, DeviceVideoPreferences>(
+                settings.DeviceVideoPreferences ?? [], StringComparer.OrdinalIgnoreCase);
+            foreach (var (udid, preferences) in DeviceVideoPreferences) merged[udid] = preferences;
+            settings.DeviceVideoPreferences = merged;
+        }
+        if (ArrowKeysSwipe is { } arrowKeysSwipe) settings.ArrowKeysSwipe = arrowKeysSwipe;
+        if (ColorTheme is { } colorTheme) settings.ColorTheme = colorTheme;
+        if (AccentColor is not null) settings.AccentColor = AccentColor;
+        if (UiStyle is { } style) settings.UiStyle = style;
+        if (SettingsTab is not null) settings.SettingsTab = SettingsTab;
+        if (StatsExpanded is { } statsExpanded) settings.StatsExpanded = statsExpanded;
+        if (LeftPanelWidth is { } leftWidth) settings.LeftPanelWidth = leftWidth;
+        if (SettingsPanelWidth is { } settingsWidth) settings.SettingsPanelWidth = settingsWidth;
+    }
+}
+
 internal sealed class UpdateSettingsStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -244,6 +299,8 @@ internal sealed class UpdateSettingsStore
     internal static string UserDataDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "iPhoneMirror");
+
+    private string ForkPath => Path.ChangeExtension(_path, ".fork.json");
 
     internal UpdateSettingsStore(string? path = null)
     {
@@ -268,6 +325,7 @@ internal sealed class UpdateSettingsStore
             };
             var settings = JsonSerializer.Deserialize<UpdateSettings>(
                 File.ReadAllText(_path), JsonOptions) ?? new UpdateSettings();
+            LoadForkSettings()?.ApplyTo(settings);
             var migrationChanged = false;
             if (!Enum.IsDefined(settings.ApplicationDisplayMode))
             {
@@ -538,6 +596,7 @@ internal sealed class UpdateSettingsStore
             File.WriteAllText(temporary,
                 JsonSerializer.Serialize(settings, JsonOptions));
             File.Move(temporary, _path, overwrite: true);
+            SaveForkSettings(settings);
         }
         finally
         {
@@ -548,6 +607,39 @@ internal sealed class UpdateSettingsStore
                 DiagnosticLogger.Exception("settings", "temporary_cleanup_failed",
                     error, ("file", Path.GetFileName(temporary)));
             }
+        }
+    }
+
+    private ForkSettings? LoadForkSettings()
+    {
+        try
+        {
+            return File.Exists(ForkPath)
+                ? JsonSerializer.Deserialize<ForkSettings>(File.ReadAllText(ForkPath), JsonOptions)
+                : null;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
+        {
+            DiagnosticLogger.Exception("settings", "fork_settings_load_failed", error,
+                ("file", Path.GetFileName(ForkPath)));
+            return null;
+        }
+    }
+
+    private void SaveForkSettings(UpdateSettings settings)
+    {
+        var temporary = ForkPath + $".{Guid.NewGuid():N}.tmp";
+        try
+        {
+            File.WriteAllText(temporary, JsonSerializer.Serialize(ForkSettings.From(settings), JsonOptions));
+            File.Move(temporary, ForkPath, overwrite: true);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            DiagnosticLogger.Exception("settings", "fork_settings_save_failed", error,
+                ("file", Path.GetFileName(ForkPath)));
+            try { File.Delete(temporary); }
+            catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException) { }
         }
     }
 

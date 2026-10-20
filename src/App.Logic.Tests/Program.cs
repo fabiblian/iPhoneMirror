@@ -2072,8 +2072,28 @@ var multiPreviewManagerCode = File.ReadAllText(Path.Combine(sourceDirectory,
         Equal(AppColorTheme.Default, repaired.ColorTheme, "unknown colour preset falls back");
         Equal("", repaired.AccentColor, "invalid accent falls back to the theme accent");
         Equal(UiStyle.Modern, repaired.UiStyle, "unknown style falls back");
+
+        // Another build rewrites settings.json without the fork's fields.
+        appearanceStore.Update(settings =>
+        {
+            settings.PreviewFrame = new PreviewFrameSettings { UseAccentColor = false, Color = "#FF453A" };
+            settings.UiStyle = UiStyle.Playful;
+            settings.DeviceVideoPreferences["phone"] = new DeviceVideoPreferences(0, 0, 60,
+                DecoderPreference.Auto, UsbProjectionMode.AirPlay, UsbVideoOnly: true);
+        });
+        File.WriteAllText(appearancePath, "{\"Theme\":1}");
+        var restored = appearanceStore.Load();
+        Equal(false, restored.PreviewFrame.UseAccentColor, "frame colour choice survives another build's save");
+        Equal("#FF453A", restored.PreviewFrame.Color, "frame colour survives another build's save");
+        Equal(UiStyle.Playful, restored.UiStyle, "style survives another build's save");
+        Equal(true, restored.DeviceVideoPreferences["phone"].UsbVideoOnly,
+            "per-device iPhone audio choice survives another build's save");
     }
-    finally { File.Delete(appearancePath); }
+    finally
+    {
+        File.Delete(appearancePath);
+        File.Delete(Path.ChangeExtension(appearancePath, ".fork.json"));
+    }
 }
 Equal(true,
     nativePreviewWindowCode.Contains("internal void HideForShutdown()",
