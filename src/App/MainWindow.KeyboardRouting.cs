@@ -202,7 +202,7 @@ public partial class MainWindow
         // Mapped keys play their gesture; with mixing on, every other key
         // types on the iPhone. Type-only skips the mappings entirely.
         var lookupMappings = mappingAllowed && !_typeOnly;
-        var mixedTyping = mappingAllowed && EverydaySettingsForInput.MixMappingAndTyping &&
+        var mixedTyping = mappingAllowed && (EverydaySettingsForInput.MixMappingAndTyping || _typeOnly) &&
             _keyboardRouter.Mode == KeyboardInputMode.Mapping;
         KeyboardPressRoute Resolve(MappedKey physical, bool chord)
         {

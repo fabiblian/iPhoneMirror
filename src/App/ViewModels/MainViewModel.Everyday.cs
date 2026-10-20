@@ -5,8 +5,9 @@ using IPhoneMirror.App.Services;
 
 namespace IPhoneMirror.App.ViewModels;
 
-// Everyday settings (see EverydaySettings) and plug-in detection for "start mirroring when an iPhone is plugged in". A
-// wired phone is announced once when it shows up ready; it is announced again
+// Everyday settings (see EverydaySettings) and plug-in detection for "start
+// mirroring when an iPhone is plugged in". A wired phone is announced once
+// when it shows up ready; it is announced again
 // only after it was gone for a few enumerations, so the short usbmux gaps of a
 // QuickTime switch or a stopped capture never restart mirroring on their own.
 internal sealed partial class MainViewModel
