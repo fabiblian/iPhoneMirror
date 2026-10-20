@@ -32,6 +32,8 @@ internal sealed class MultiDevicePreviewManager : IDisposable
     // The frame's home pill was clicked (device UDID, preview window).
     internal event Action<string, nint>? HomeRequested;
     internal event Action<string, string[]>? FilesDropped;
+    /// <summary>Behind the controls drawn over each preview window.</summary>
+    internal IPreviewOverlayActions? OverlayActions { get; set; }
     // A device preview window was created and shown (device UDID, window).
     internal event Action<string, nint>? PreviewOpened;
 
@@ -247,6 +249,7 @@ internal sealed class MultiDevicePreviewManager : IDisposable
         window.FilesDropped += files => FilesDropped?.Invoke(device.Udid, files);
         window.SnapToEdgesEnabled = () => Everyday?.SnapPreviewToEdges != false;
         window.PlacementChanged += placement => SavePlacement(device.Udid, placement);
+        if (OverlayActions is { } overlayActions) window.AttachControlsOverlay(device.Udid, overlayActions);
         KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, true);
         if (_protectionStates.TryGetValue(device.Udid, out var protection))
             window.SetProtectedContent(protection.IsProtected,

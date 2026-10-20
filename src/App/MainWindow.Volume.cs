@@ -11,11 +11,13 @@ public partial class MainWindow
 {
     private const double PlaybackVolumeStep = 10;
 
-    private void ToggleAppMute()
+    private void ToggleAppMute() => ToggleAppMute(ActiveInputDeviceUdid ?? _viewModel.SelectedDevice?.Udid);
+
+    private void ToggleAppMute(string? udid)
     {
         _viewModel.IsMuted = !_viewModel.IsMuted;
-        if (_viewModel.AudioOnIphone)
-            _ = PressIphoneConsumerButtonAsync(CoreDeviceTouchProtocol.IndigoMute, ActiveInputDeviceUdid);
+        if (_viewModel.IsAudioOnIphone(udid))
+            _ = PressIphoneConsumerButtonAsync(CoreDeviceTouchProtocol.IndigoMute, udid);
         _viewModel.AddUiLog(LocalizationService.Get(_viewModel.IsMuted ? "AudioMuted" : "AudioUnmuted"));
     }
 

@@ -12,7 +12,23 @@ internal sealed partial class NativePreviewWindow
     private const uint MonitorDefaultToNull = 0;
     private const double SnapDistanceDips = 24;
     private const double SnapMarginDips = 12;
+    private const int WmWindowPosChanged = 0x0047;
     private PreviewPlacement? _initialPlacement;
+    private PreviewControlsOverlayWindow? _controlsOverlay;
+
+    /// <summary>Shows the dots, the floating bar and the status icons over the preview.</summary>
+    internal void AttachControlsOverlay(string udid, IPreviewOverlayActions actions)
+    {
+        if (_disposed || _handle == 0 || _managedContent is not null || _controlsOverlay is not null) return;
+        _controlsOverlay = PreviewControlsOverlayWindow.ShowFor(_handle, udid, actions,
+            () => _frameInsets, () => _isTopMost, ToggleTopMost);
+    }
+
+    private void CloseControlsOverlay()
+    {
+        _controlsOverlay?.Close();
+        _controlsOverlay = null;
+    }
     private WindowRect _sizeMoveStart;
     private bool _sizeMoveActive;
 
@@ -39,6 +55,11 @@ internal sealed partial class NativePreviewWindow
 
     private void ObservePlacementMessage(int message)
     {
+        if (message == WmWindowPosChanged)
+        {
+            _controlsOverlay?.SyncToOwner();
+            return;
+        }
         if (message == WmEnterSizeMove)
         {
             _sizeMoveActive = GetWindowRect(_handle, out _sizeMoveStart);

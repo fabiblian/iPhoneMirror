@@ -794,7 +794,7 @@ internal sealed partial class NativePreviewWindow : IDisposable
     private nint WindowProcedure(nint hwnd, int message, nint wParam, nint lParam,
         ref bool handled)
     {
-        if (message is WmEnterSizeMove or WmExitSizeMove) ObservePlacementMessage(message);
+        if (message is WmEnterSizeMove or WmExitSizeMove or WmWindowPosChanged) ObservePlacementMessage(message);
         if (message == WmDropFiles)
         {
             var files = ReadDroppedFiles(wParam);
@@ -1570,6 +1570,7 @@ internal sealed partial class NativePreviewWindow : IDisposable
         PreviewFrameService.Changed -= OnPreviewFrameChanged;
         _styleWindow?.Close();
         _styleWindow = null;
+        CloseControlsOverlay();
         _protectedOverlay?.Close();
         _protectedOverlay = null;
         _contextMenu.IsOpen = false;

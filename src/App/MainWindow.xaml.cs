@@ -385,6 +385,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         _secondaryMirrors.HomeRequested += OnIndependentHomeRequested;
         _secondaryMirrors.PreviewOpened += OnIndependentPreviewOpened;
         InitializePreviewDrop();
+        InitializePreviewOverlay();
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         InitializeAutoMirror();

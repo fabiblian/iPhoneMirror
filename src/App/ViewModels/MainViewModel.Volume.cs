@@ -25,6 +25,35 @@ internal sealed partial class MainViewModel
     /// <summary>Changes the app's PC volume by <paramref name="delta"/> percent; this also unmutes.</summary>
     internal void StepPlaybackVolume(double delta) => PlaybackVolume = PlaybackVolume + delta;
 
+    /// <summary>The device's wired audio stays on the iPhone (USB audio off).</summary>
+    internal bool IsAudioOnIphone(string? udid)
+    {
+        if (DeviceViewModel.UdidEquals(udid, SelectedDevice?.Udid)) return AudioOnIphone;
+        return udid is not null && !DeviceViewModel.IsWirelessUdid(udid) &&
+            _sessions.TryGet(udid, out var state) && state.UsbVideoOnly;
+    }
+
+    /// <summary>The device's own app volume in percent.</summary>
+    internal double GetDeviceVolume(string? udid) =>
+        DeviceViewModel.UdidEquals(udid, SelectedDevice?.Udid) ? PlaybackVolume
+        : udid is not null && _sessions.TryGet(udid, out var state) ? state.Volume : 100;
+
+    /// <summary>Sets the device's app volume; this also unmutes.</summary>
+    internal void SetDeviceVolume(string? udid, double percent)
+    {
+        if (!double.IsFinite(percent) || udid is null) return;
+        if (DeviceViewModel.UdidEquals(udid, SelectedDevice?.Udid))
+        {
+            PlaybackVolume = percent;
+            return;
+        }
+        if (!_sessions.TryGet(udid, out var state) || state.Handle is not { IsInvalid: false } handle) return;
+        if (IsMuted) IsMuted = false;
+        var clamped = Math.Clamp(percent, 0, 100);
+        var result = InvokeDeviceSetting(() => _core.SetDeviceAudioVolume(handle, clamped / 100.0));
+        if (result.Success) state.Volume = clamped;
+    }
+
     private double MutedVolume(double volume) => IsMuted ? 0 : volume;
 
     private void ApplyMuteToSessions()

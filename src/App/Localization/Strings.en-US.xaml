@@ -1698,4 +1698,15 @@ Pair, select and save.</system:String>
     <system:String x:Key="IphoneVolumeNeedsControl">The sound plays on the iPhone. Turn on wired, wireless or Bluetooth control to change its volume from here.</system:String>
     <system:String x:Key="SharpenSmallPreview">Sharpen text in a small preview</system:String>
     <system:String x:Key="SharpenSmallPreviewHelp">Only when the preview is clearly smaller than the iPhone image. Recording, streaming and screenshots stay unchanged.</system:String>
+    <system:String x:Key="PreviewMoveDot">Drag to move the window</system:String>
+    <system:String x:Key="PreviewResizeDot">Drag to make the window larger or smaller</system:String>
+    <system:String x:Key="PreviewIphoneVolumeDown">iPhone quieter</system:String>
+    <system:String x:Key="PreviewIphoneVolumeUp">iPhone louder</system:String>
+    <system:String x:Key="PreviewPinButton">Always on top</system:String>
+    <system:String x:Key="PreviewMute">Mute (Ctrl+Alt+M)</system:String>
+    <system:String x:Key="PreviewUnmute">Sound on (Ctrl+Alt+M)</system:String>
+    <system:String x:Key="PreviewKeyboardActive">Keyboard reaches the iPhone</system:String>
+    <system:String x:Key="PreviewKeyboardInactive">Keyboard does not reach the iPhone</system:String>
+    <system:String x:Key="PreviewControlActive">Control is on</system:String>
+    <system:String x:Key="PreviewControlInactive">Control is off</system:String>
 </ResourceDictionary>
