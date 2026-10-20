@@ -31,6 +31,9 @@ internal sealed class MultiDevicePreviewManager : IDisposable
     internal event Action<string, nint, bool>? KeyboardFocusChanged;
     // The frame's home pill was clicked (device UDID, preview window).
     internal event Action<string, nint>? HomeRequested;
+    internal event Action<string, string[]>? FilesDropped;
+    /// <summary>Behind the controls drawn over each preview window.</summary>
+    internal IPreviewOverlayActions? OverlayActions { get; set; }
     // A device preview window was created and shown (device UDID, window).
     internal event Action<string, nint>? PreviewOpened;
 
@@ -56,6 +59,23 @@ internal sealed class MultiDevicePreviewManager : IDisposable
             ? window.Handle : 0;
 
     internal bool ContainsWindow(nint handle) => handle != 0 && _windows.Values.Any(w => w.Handle == handle);
+
+    /// <summary>Moves the preview window <paramref name="handle"/> into a screen corner.</summary>
+    internal bool MoveWindowToCorner(nint handle, int horizontal, int vertical)
+    {
+        var window = handle == 0 ? null : _windows.Values.FirstOrDefault(w => w.Handle == handle);
+        window?.MoveToCorner(horizontal, vertical);
+        return window is not null;
+    }
+
+    private static EverydaySettings? Everyday => (System.Windows.Application.Current as App)?.UpdateSettings.Everyday;
+
+    private static void SavePlacement(string udid, PreviewPlacement placement)
+    {
+        if (System.Windows.Application.Current is not App app || !placement.IsUsable) return;
+        app.UpdateSettings.Everyday.PreviewPlacements[udid] = placement;
+        app.SaveUpdateSettings();
+    }
     internal (string Udid, ulong Handle)? GetSessionForWindow(nint handle)
     {
         if (handle == 0) return null;
@@ -214,7 +234,8 @@ internal sealed class MultiDevicePreviewManager : IDisposable
                  hwnd => ReverseControlRequested?.Invoke(device.Udid, hwnd),
                  () => viewModel.IsUsbControlTarget(device.Udid),
                  hwnd => UsbControlRequested?.Invoke(device.Udid, hwnd),
-                 hwnd => WirelessControlRequested?.Invoke(device.Udid, hwnd)) || window is null)
+                 hwnd => WirelessControlRequested?.Invoke(device.Udid, hwnd),
+                 Everyday?.PreviewPlacements.GetValueOrDefault(device.Udid)?.Clone()) || window is null)
         {
             if (started.Created)
                 await viewModel.StopDeviceSessionAsync(
@@ -225,6 +246,10 @@ internal sealed class MultiDevicePreviewManager : IDisposable
         window.ActivationChanged += active =>
             KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, active);
         window.HomeRequested += () => HomeRequested?.Invoke(device.Udid, window.Handle);
+        window.FilesDropped += files => FilesDropped?.Invoke(device.Udid, files);
+        window.SnapToEdgesEnabled = () => Everyday?.SnapPreviewToEdges != false;
+        window.PlacementChanged += placement => SavePlacement(device.Udid, placement);
+        if (OverlayActions is { } overlayActions) window.AttachControlsOverlay(device.Udid, overlayActions);
         KeyboardFocusChanged?.Invoke(device.Udid, window.Handle, true);
         if (_protectionStates.TryGetValue(device.Udid, out var protection))
             window.SetProtectedContent(protection.IsProtected,

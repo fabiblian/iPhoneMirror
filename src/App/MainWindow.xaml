@@ -1095,7 +1095,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel x:Name="WorkspaceHeading" ToolTip="{DynamicResource AppSubtitleConnectivity}">
-                <TextBlock TextWrapping="Wrap" Text="iPhoneMirror" FontSize="{DynamicResource FontSize24}" FontWeight="SemiBold"/>
+                <TextBlock TextWrapping="Wrap" FontSize="{DynamicResource FontSize24}" FontWeight="SemiBold"><Run Text="iPhoneMirror"/><Run x:Name="WorkspaceBuildLabel" FontSize="{DynamicResource SecondaryFontSize}" FontWeight="Normal" Foreground="{DynamicResource MutedTextBrush}"/></TextBlock>
                 <TextBlock x:Name="WorkspaceSubtitle" TextWrapping="Wrap" Text="{DynamicResource AppSubtitleConnectivity}" Foreground="{DynamicResource MutedTextBrush}"
                            FontSize="{DynamicResource SecondaryFontSize}" Margin="0,4,0,0"/>
             </StackPanel>
@@ -1152,6 +1152,24 @@
                             <TextBlock Text="{Binding ActiveControlLabel}" Style="{StaticResource StatusPillText}"/>
                         </StackPanel>
                     </Border>
+                    <Border ToolTip="{DynamicResource PreviewUnmute}" AutomationProperties.AutomationId="MutedStatusPill">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="SpeakerMute20" FontSize="14" Margin="0,0,6,0"
+                                           Foreground="{DynamicResource ErrorBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource StatusPillMuted}" Style="{StaticResource StatusPillText}"/>
+                        </StackPanel>
+                    </Border>
                     <Border Style="{StaticResource StatusPill}" ToolTip="{Binding WirelessStatus}"
                             AutomationProperties.AutomationId="AirPlayStatusPill">
                         <StackPanel Orientation="Horizontal">
@@ -1164,6 +1182,98 @@
             <StackPanel x:Name="HeaderCaptureActions" Grid.Column="3"
                         Orientation="Horizontal" VerticalAlignment="Center"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <!-- App volume: a slider for sound on the PC, steps for sound on the iPhone. -->
+                <Border x:Name="HeaderVolume" CornerRadius="8" Padding="3" Margin="0,0,8,0" VerticalAlignment="Center"
+                        Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                        BorderThickness="1" AutomationProperties.AutomationId="HeaderVolume"
+                        AutomationProperties.Name="{DynamicResource PlaybackVolume}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource ToolButton}" MinWidth="34" MinHeight="32" Padding="6,4"
+                                Click="OnHeaderMuteClick" AutomationProperties.AutomationId="HeaderMuteButton">
+                            <Button.ToolTip>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="{DynamicResource PreviewMute}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                    <Setter Property="Text" Value="{DynamicResource PreviewUnmute}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button.ToolTip>
+                            <ui:SymbolIcon FontSize="17">
+                                <ui:SymbolIcon.Style>
+                                    <Style TargetType="ui:SymbolIcon">
+                                        <Setter Property="Symbol" Value="Speaker220"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                <Setter Property="Symbol" Value="SpeakerMute20"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:SymbolIcon.Style>
+                            </ui:SymbolIcon>
+                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AudioOnIphone}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Slider Width="104" Minimum="0" Maximum="100" Margin="6,0,6,0" VerticalAlignment="Center"
+                                    IsMoveToPointEnabled="True"
+                                    Value="{Binding PlaybackVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    AutomationProperties.Name="{DynamicResource PlaybackVolume}"
+                                    AutomationProperties.AutomationId="HeaderVolumeSlider"/>
+                            <TextBlock Text="{Binding PlaybackVolume, StringFormat={}{0:F0} %}" MinWidth="40"
+                                       TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AudioOnIphone}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Button Style="{StaticResource ToolButton}" MinWidth="32" MinHeight="32" Padding="6,4"
+                                    Click="OnHeaderIphoneVolumeDownClick" ToolTip="{DynamicResource PreviewIphoneVolumeDown}"
+                                    AutomationProperties.Name="{DynamicResource PreviewIphoneVolumeDown}">
+                                <ui:SymbolIcon Symbol="Subtract20" FontSize="16"/>
+                            </Button>
+                            <TextBlock Text="iPhone" VerticalAlignment="Center" Margin="6,0"
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                            <Button Style="{StaticResource ToolButton}" MinWidth="32" MinHeight="32" Padding="6,4"
+                                    Click="OnHeaderIphoneVolumeUpClick" ToolTip="{DynamicResource PreviewIphoneVolumeUp}"
+                                    AutomationProperties.Name="{DynamicResource PreviewIphoneVolumeUp}">
+                                <ui:SymbolIcon Symbol="Add20" FontSize="16"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
                 <Button x:Name="CaptureActionButton"
                         AutomationProperties.AutomationId="CaptureActionButton"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True"
@@ -2282,6 +2392,12 @@
                                     <TextBlock Text="{DynamicResource VideoPipelinePreferenceHelp}"
                                                Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
 
+                                    <CheckBox Content="{DynamicResource SharpenSmallPreview}" Margin="0,10,0,0"
+                                              IsChecked="{Binding SharpenSmallPreview, Mode=TwoWay}"
+                                              AutomationProperties.AutomationId="SharpenSmallPreviewCheckBox"/>
+                                    <TextBlock Text="{DynamicResource SharpenSmallPreviewHelp}"
+                                               Style="{StaticResource SettingsHelpText}" Margin="0,4,0,0"/>
+
                                     <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -2380,6 +2496,29 @@
                         </Expander>
 
                         <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource WheelScrollTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="ArrowSort20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource WheelScrollTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <CheckBox Content="{DynamicResource WiredWheelScroll}"
+                                          IsChecked="{Binding WiredWheelScroll, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="WiredWheelScrollCheckBox"/>
+                                <CheckBox Content="{DynamicResource ReverseWheelDirection}" Margin="0,8,0,0"
+                                          IsChecked="{Binding ReverseWheelDirection, Mode=TwoWay}"
+                                          IsEnabled="{Binding WiredWheelScroll}"
+                                          AutomationProperties.AutomationId="ReverseWheelDirectionCheckBox"/>
+                                <TextBlock Text="{DynamicResource WheelScrollHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Style="{StaticResource SettingsSection}"
                                   AutomationProperties.Name="{DynamicResource MappingTitle}">
                             <Expander.Header>
                                 <DockPanel>
@@ -2402,6 +2541,11 @@
                                     </StackPanel>
                                 </Button>
                                 <TextBlock Text="{Binding KeyboardMappingStatus}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
+                                <CheckBox Content="{DynamicResource MixMappingAndTyping}" Margin="0,12,0,0"
+                                          IsChecked="{Binding MixMappingAndTyping, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="MixMappingAndTypingCheckBox"/>
+                                <TextBlock Text="{DynamicResource MixMappingAndTypingHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,4,0,0"/>
+                                <TextBlock Text="{Binding KeyboardInputModeStatus}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Expander>
 
@@ -2685,6 +2829,33 @@
                                     <ComboBoxItem Tag="Minimal" Content="{DynamicResource UiStyleMinimal}"/>
                                 </ComboBox>
                                 <TextBlock Text="{DynamicResource AppearanceFrameHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource AutoConnectTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="PhoneCheckmark20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource AutoConnectTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <CheckBox Content="{DynamicResource AutoMirrorOnConnect}"
+                                          IsChecked="{Binding AutoMirrorOnConnect, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="AutoMirrorOnConnectCheckBox"/>
+                                <CheckBox Content="{DynamicResource AutoOpenPreviewOnConnect}" Margin="24,8,0,0"
+                                          IsChecked="{Binding AutoOpenPreviewOnConnect, Mode=TwoWay}"
+                                          IsEnabled="{Binding AutoMirrorOnConnect}"
+                                          AutomationProperties.AutomationId="AutoOpenPreviewOnConnectCheckBox"/>
+                                <CheckBox Content="{DynamicResource AutoStartControlOnConnect}" Margin="24,8,0,0"
+                                          IsChecked="{Binding AutoStartControlOnConnect, Mode=TwoWay}"
+                                          IsEnabled="{Binding AutoMirrorOnConnect}"
+                                          AutomationProperties.AutomationId="AutoStartControlOnConnectCheckBox"/>
+                                <TextBlock Text="{DynamicResource AutoConnectHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,8,0,0"/>
                             </StackPanel>
                         </Expander>
 

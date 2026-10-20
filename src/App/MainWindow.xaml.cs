@@ -361,6 +361,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
         InitializeSettingsTabs();
         InitializePanelWidths();
+        InitializeBuildLabel();
         _themeControlReady = true;
         _workspaceControlsReady = true;
         _viewModel = new MainViewModel();
@@ -383,8 +384,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         _secondaryMirrors.KeyboardFocusChanged += OnIndependentKeyboardFocusChanged;
         _secondaryMirrors.HomeRequested += OnIndependentHomeRequested;
         _secondaryMirrors.PreviewOpened += OnIndependentPreviewOpened;
+        InitializePreviewDrop();
+        InitializePreviewOverlay();
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        InitializeAutoMirror();
         _viewModel.Devices.CollectionChanged += OnDevicesCollectionChanged;
         _viewModel.DeviceVideoSizeChanged += OnDeviceVideoSizeChanged;
         _viewModel.DeviceSessionHandleChanged += OnDeviceSessionHandleChanged;
@@ -696,11 +700,19 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             // of a burst of separate small swipes, and releasing the wheel
             // lets the velocity decay for a natural ease-out stop. Positive
             // delta (scroll up) = downward drag (Y increases) on iOS.
-            if (state.Pressed) return;
-            state.WheelRemainder += e.Wheel;
-            var ticks = (int)Math.Truncate(state.WheelRemainder / 120.0);
-            state.WheelRemainder -= ticks * 120.0;
-            if (ticks == 0) return;
+            var everyday = EverydaySettingsForInput;
+            if (state.Pressed || !everyday.WiredWheelScroll) return;
+            state.WheelRemainder += everyday.ReverseWheelDirection ? -e.Wheel : e.Wheel;
+            // A precision touchpad reports many small deltas instead of
+            // 120-unit notches; they count as fractional notches so a
+            // two-finger scroll glides instead of stepping. Tiny jitter
+            // below a sixth of a notch waits for more travel.
+            if (Math.Abs(state.WheelRemainder) < 20) return;
+            var ticks = state.WheelRemainder / 120.0;
+            state.WheelRemainder = 0;
+            // Shared scroll speed of the mouse settings: 1000 % keeps the
+            // original wired speed, lower values slow the glide down.
+            ticks *= Math.Clamp(_viewModel.AppliedBluetoothWheelSensitivity / 1000.0, 0.05, 1.0);
             const double velocityPerTick = 0.45;
             const double maxVelocity = 2.2;
             if (!state.WheelActive)
@@ -1443,7 +1455,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void DispatchControlKeyboardInput(
         Controls.PreviewKeyboardEventArgs e, string? sourceUdid = null,
-        bool fromRawInput = false, nint? sourceWindow = null, DirectKeyboardRoute? capturedRoute = null)
+        bool fromRawInput = false, nint? sourceWindow = null, DirectKeyboardRoute? capturedRoute = null,
+        bool mixed = false)
     {
         Dispatcher.VerifyAccess();
         var routeUdid = sourceUdid ?? ActiveInputDeviceUdid;
@@ -1463,21 +1476,24 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 e.Kind == Controls.PreviewKeyboardKind.Down);
             return;
         }
+        // Mixed typing runs under the Mapping owner: it neither switches the
+        // owner to Direct nor goes through the Direct press bookkeeping.
         if (!CanForwardControlKeyboard(routeUdid, keyboardWindow) ||
-            !TryEnterDirectKeyboardInputMode()) return;
+            (mixed ? _keyboardRouter.Mode != KeyboardInputMode.Mapping : !TryEnterDirectKeyboardInputMode())) return;
         var route = capturedRoute ?? _viewModel.CaptureDirectKeyboardRoute(routeUdid);
         if (route is null) return;
         if (_directKeyboardRoute is { } previous && !previous.SameSession(route))
         {
             ResetKeyboardOwnership();
-            if (!IsDirectKeyboardInputModeActive) return;
+            if (mixed || !IsDirectKeyboardInputModeActive) return;
         }
         _directKeyboardRoute = route;
         _keyboardStateUdid = routeUdid;
         var down = e.Kind == Controls.PreviewKeyboardKind.Down;
         var key = ModifierKeyIdentity(e.VirtualKey, e.ScanCode);
-        if (!_keyboardRouter.Route(KeyboardInputMode.Direct, key, down)) return;
-        var canSend = CaptureKeyboardSendGuard(keyboardWindow);
+        if (mixed ? !RouteMixedKey(key, down) : !_keyboardRouter.Route(KeyboardInputMode.Direct, key, down)) return;
+        var canSend = mixed ? CaptureKeyboardOwnerSendGuard(keyboardWindow, KeyboardInputMode.Mapping)
+            : CaptureKeyboardSendGuard(keyboardWindow);
         await _bluetoothRouteGate.WaitAsync();
         var routeHeld = true;
         void ReleaseRoute()

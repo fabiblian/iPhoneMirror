@@ -400,6 +400,9 @@ IM_API std::int32_t IM_CALL im_force_preview_refresh();
 IM_API std::int32_t IM_CALL im_set_preview_corner_profile(
     float normalized_radius,
     float curve_exponent);
+// Lightly sharpens text when a preview shows the phone strongly downscaled
+// (nonzero = on, the default). Applies to every preview immediately.
+IM_API std::int32_t IM_CALL im_set_preview_sharpening(std::int32_t enabled);
 
 // Controls may be changed while capture is active. Audio changes take effect
 // on the next WASAPI render buffer. max_width/max_height and max_fps are local

@@ -855,6 +855,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                     _mediaCastPlayAudio, clamped / 100.0);
                 return;
             }
+            // Moving the volume unmutes, like the Windows volume flyout.
+            if (IsMuted) IsMuted = false;
             if (Math.Abs(_playbackVolume - clamped) < 0.001) return;
             var session = CurrentDeviceSession;
             (bool Success, string Message) result;
@@ -1222,6 +1224,12 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             _appliedBluetoothMouseReverseVertical = _bluetoothMouseReverseVertical;
         }
         _core = new NativeCore();
+        NativeCore.SetPreviewSharpening(Everyday.SharpenSmallPreview);
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(SelectedDevice) or nameof(CaptureUsbAudio) or nameof(UsbVideoOnly))
+                OnPropertyChanged(nameof(AudioOnIphone));
+        };
         _captureStatusReader = _core.GetDeviceSessionStatus;
         var wirelessReceiver = new WirelessReceiverService();
         _wireless = new WirelessReceiverController(_core, wirelessReceiver);
@@ -2784,9 +2792,10 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
 
     private async Task<bool> ConfirmReverseControlPrerequisitesAsync(DeviceControlSession control, bool wireless, CancellationToken cancellationToken)
     {
+        var everyday = (Application.Current as App)?.UpdateSettings.Everyday;
         var acknowledged = wireless
-            ? _wirelessControlPrerequisiteAcknowledged
-            : _wiredControlPrerequisiteAcknowledged;
+            ? _wirelessControlPrerequisiteAcknowledged || everyday?.WirelessControlNoticeAcknowledged == true
+            : _wiredControlPrerequisiteAcknowledged || everyday?.WiredControlNoticeAcknowledged == true;
         if (acknowledged) return true;
 
         var result = await control.ControlStatus.RequestPromptAsync(new(
@@ -2809,6 +2818,14 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
 
         if (wireless) _wirelessControlPrerequisiteAcknowledged = true;
         else _wiredControlPrerequisiteAcknowledged = true;
+        // Remember the confirmation so the notice does not come back on every
+        // start of control, also not after a restart.
+        if (Application.Current is App app)
+        {
+            if (wireless) app.UpdateSettings.Everyday.WirelessControlNoticeAcknowledged = true;
+            else app.UpdateSettings.Everyday.WiredControlNoticeAcknowledged = true;
+            app.SaveUpdateSettings();
+        }
         DiagnosticLogger.ReverseControl(wireless ? "wireless" : "usb",
             "prerequisites_acknowledged");
         return true;
@@ -3837,6 +3854,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             var currentSelectionUdid = SelectedDevice?.Udid;
             ReconcileDevices(devices, currentSelectionUdid, captureActive,
                 newlyConnectedWirelessUdid);
+            ObserveWiredArrivals(enumerateWired);
             await RefreshActiveSessionStatusAsync();
             await PollBackgroundSessionErrorsAsync(coreGateHeld: true);
 
@@ -6412,7 +6430,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             state.RenderHeight,
             state.FrameRate,
             state.PlayAudio,
-            state.Volume,
+            MutedVolume(state.Volume),
             IsAdvancedMode ? state.AdvancedUsbWidth : 0,
             IsAdvancedMode ? state.AdvancedUsbHeight : 0,
             state.UsbProjectionMode,

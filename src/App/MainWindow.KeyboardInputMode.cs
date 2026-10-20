@@ -33,6 +33,7 @@ public partial class MainWindow
 
     private void LeaveKeyboardMappingInputMode()
     {
+        _typeOnly = false;
         if (IsKeyboardMappingInputModeActive)
             ChangeKeyboardOwner(_mappingClosing ? KeyboardInputMode.None : KeyboardInputMode.Direct,
                 sampleHeldKeys: true);
@@ -62,6 +63,7 @@ public partial class MainWindow
         _controlKeyboardModifiers = 0;
         _pasteVPending = false;
         _arrowSwipeKeys.Clear();
+        _mixedHeldKeys.Clear();
         var oldRoute = _directKeyboardRoute;
         _directKeyboardRoute = null;
         var pending = Task.WhenAll(_keyboardSends.ToArray());
@@ -125,9 +127,40 @@ public partial class MainWindow
         finally { _keyboardSends.Remove(send); }
     }
 
+    // Mixed typing: unmapped keys type on the iPhone while the Mapping owner
+    // stays in charge. Its own press set drops auto-repeats (HID reports are
+    // stateful) and is cleared with every owner change.
+    private readonly HashSet<int> _mixedHeldKeys = [];
+    private bool _typeOnly;
+
+    private static Models.EverydaySettings EverydaySettingsForInput =>
+        (System.Windows.Application.Current as App)?.UpdateSettings.Everyday ?? new();
+
+    private bool RouteMixedKey(int key, bool down) =>
+        down ? _mixedHeldKeys.Add(key) : _mixedHeldKeys.Remove(key);
+
+    // The type-only key (Right Ctrl by default) flips key mapping off and on
+    // while mapping is the owner; it never reaches the iPhone or Windows.
+    private bool TryToggleTypeOnly(MappedKey key, bool down)
+    {
+        var toggle = EverydaySettingsForInput.TypeOnlyToggleVirtualKey;
+        if (toggle == 0 || key.VirtualKey != toggle) return false;
+        if (down && _mixedHeldKeys.Add(-toggle))
+        {
+            _typeOnly = !_typeOnly;
+            CancelMappedGesture();
+            PublishKeyboardInputMode(_keyboardRouter.Mode);
+            DiagnosticLogger.ReverseControl("keyboard_input", "type_only_toggled", ("type_only", _typeOnly));
+        }
+        else if (!down) _mixedHeldKeys.Remove(-toggle);
+        return true;
+    }
+
     private void PublishKeyboardInputMode(KeyboardInputMode mode) =>
         _viewModel.SetKeyboardInputModeStatus(mode switch
         {
+            KeyboardInputMode.Mapping when _typeOnly => "KeyboardInputModeTypeOnly",
+            KeyboardInputMode.Mapping when EverydaySettingsForInput.MixMappingAndTyping => "KeyboardInputModeMixed",
             KeyboardInputMode.Mapping => "KeyboardInputModeMapping",
             KeyboardInputMode.Direct => "KeyboardInputModeDirect",
             _ => "KeyboardInputModeNone",

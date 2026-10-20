@@ -1307,6 +1307,12 @@ std::int32_t IM_CALL im_set_preview_corner_profile(float normalized_radius,
     return static_cast<std::int32_t>(iPhoneMirror::Result::Ok);
 }
 
+std::int32_t IM_CALL im_set_preview_sharpening(std::int32_t enabled) {
+    iPhoneMirror::renderer::D3D11PreviewRenderer::set_small_preview_sharpening(enabled != 0);
+    iPhoneMirror::logging::write(std::format("preview sharpening enabled={}", enabled != 0));
+    return static_cast<std::int32_t>(iPhoneMirror::Result::Ok);
+}
+
 std::int32_t IM_CALL im_set_video_preferences(std::uint32_t max_width,
     std::uint32_t max_height, std::uint32_t max_fps) {
     if (!valid_video_preferences(max_width, max_height, max_fps)) {

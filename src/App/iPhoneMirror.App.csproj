@@ -87,6 +87,35 @@
            Text="iUsbBridge runtime manifest is missing. Run build.ps1 so the self-developed USB bridge is built first." />
   </Target>
 
+  <!-- Stamp the git branch and commit into the assembly so the window title
+       shows which build is running. A detached worktree (the version
+       launcher) reports HEAD, so the launcher passes the branch name in
+       IPHONEMIRROR_BUILD_BRANCH. Without git both stay empty. -->
+  <Target Name="StampGitBuildInfo" BeforeTargets="GetAssemblyAttributes">
+    <Exec Command="git rev-parse --abbrev-ref HEAD" WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="true" IgnoreExitCode="true" ContinueOnError="true"
+          StandardOutputImportance="low" StandardErrorImportance="low"
+          Condition="'$(IPHONEMIRROR_BUILD_BRANCH)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitBranchOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_GitBranchExit" />
+    </Exec>
+    <Exec Command="git rev-parse --short HEAD" WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="true" IgnoreExitCode="true" ContinueOnError="true"
+          StandardOutputImportance="low" StandardErrorImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitCommitOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_GitCommitExit" />
+    </Exec>
+    <PropertyGroup>
+      <_GitBuildBranch Condition="'$(IPHONEMIRROR_BUILD_BRANCH)' != ''">$(IPHONEMIRROR_BUILD_BRANCH)</_GitBuildBranch>
+      <_GitBuildBranch Condition="'$(IPHONEMIRROR_BUILD_BRANCH)' == '' and '$(_GitBranchExit)' == '0' and '$(_GitBranchOutput)' != 'HEAD'">$(_GitBranchOutput)</_GitBuildBranch>
+      <_GitBuildCommit Condition="'$(_GitCommitExit)' == '0'">$(_GitCommitOutput)</_GitBuildCommit>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="GitBranch" Value="$(_GitBuildBranch)" Condition="'$(_GitBuildBranch)' != ''" />
+      <AssemblyMetadata Include="GitCommit" Value="$(_GitBuildCommit)" Condition="'$(_GitBuildCommit)' != ''" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <Compile Include="..\Shared\Networking\SegmentedHttpDownloader.cs"
              Link="Networking\SegmentedHttpDownloader.cs" />

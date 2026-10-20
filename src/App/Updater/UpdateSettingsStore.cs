@@ -43,6 +43,7 @@ internal sealed class UpdateSettings
     public Dictionary<string, DeviceVideoPreferences> DeviceVideoPreferences { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public KeyboardMappingSettings KeyboardMapping { get; set; } = new();
     public PreviewFrameSettings PreviewFrame { get; set; } = new();
+    public EverydaySettings Everyday { get; set; } = new();
     public bool CheckOnStartup { get; set; } = true;
     public bool ArrowKeysSwipe { get; set; } = true;
     public bool AutoDownload { get; set; }
@@ -143,6 +144,7 @@ internal sealed class UpdateSettings
         DeviceVideoPreferences = new(DeviceVideoPreferences ?? [], StringComparer.OrdinalIgnoreCase),
         KeyboardMapping = KeyboardMapping.Clone(),
         PreviewFrame = (PreviewFrame ?? new()).Clone(),
+        Everyday = (Everyday ?? new()).Clone(),
         CheckOnStartup = CheckOnStartup,
         ArrowKeysSwipe = ArrowKeysSwipe,
         AutoDownload = AutoDownload,
@@ -241,6 +243,7 @@ internal sealed class UpdateSettings
 internal sealed class ForkSettings
 {
     public PreviewFrameSettings? PreviewFrame { get; set; }
+    public EverydaySettings? Everyday { get; set; }
     public Dictionary<string, DeviceVideoPreferences>? DeviceVideoPreferences { get; set; }
     public bool? ArrowKeysSwipe { get; set; }
     public AppColorTheme? ColorTheme { get; set; }
@@ -254,6 +257,7 @@ internal sealed class ForkSettings
     internal static ForkSettings From(UpdateSettings settings) => new()
     {
         PreviewFrame = (settings.PreviewFrame ?? new()).Clone(),
+        Everyday = (settings.Everyday ?? new()).Clone(),
         DeviceVideoPreferences = new(settings.DeviceVideoPreferences ?? [], StringComparer.OrdinalIgnoreCase),
         ArrowKeysSwipe = settings.ArrowKeysSwipe,
         ColorTheme = settings.ColorTheme,
@@ -268,6 +272,7 @@ internal sealed class ForkSettings
     internal void ApplyTo(UpdateSettings settings)
     {
         if (PreviewFrame is not null) settings.PreviewFrame = PreviewFrame;
+        if (Everyday is not null) settings.Everyday = Everyday;
         if (DeviceVideoPreferences is not null)
         {
             // Keep devices another build added; this fork's values win per device.

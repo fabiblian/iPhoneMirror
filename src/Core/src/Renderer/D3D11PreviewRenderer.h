@@ -92,6 +92,9 @@ public:
     // normalized to the short edge; zero disables clipping. Child/main-window
     // previews remain rectangular because their WPF panel owns that shape.
     void set_corner_profile(float normalized_radius, float curve_exponent) noexcept;
+    // Lightly sharpens text when a preview shows the phone strongly
+    // downscaled. Applies to every preview renderer; on by default.
+    static void set_small_preview_sharpening(bool enabled) noexcept;
     void set_rotation(std::int32_t quarter_turns) noexcept;
     // Applies to this composition visual only, including its black background.
     void set_opacity(float opacity) noexcept;
