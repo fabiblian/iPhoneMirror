@@ -2347,6 +2347,11 @@
                                     </StackPanel>
                                 </Button>
                                 <TextBlock Text="{Binding KeyboardMappingStatus}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
+                                <CheckBox Content="{DynamicResource MixMappingAndTyping}" Margin="0,12,0,0"
+                                          IsChecked="{Binding MixMappingAndTyping, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="MixMappingAndTypingCheckBox"/>
+                                <TextBlock Text="{DynamicResource MixMappingAndTypingHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,4,0,0"/>
+                                <TextBlock Text="{Binding KeyboardInputModeStatus}" Style="{StaticResource SettingsHelpText}" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Expander>
 

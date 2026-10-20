@@ -1679,4 +1679,8 @@
     <system:String x:Key="AutoStartControlOnConnect">啟動有線控制</system:String>
     <system:String x:Key="AutoConnectHelp">應用程式啟動時已連接的 iPhone 也適用。僅在沒有其他裝置鏡像時生效。控制提示只在第一次顯示。</system:String>
     <system:String x:Key="AutoMirrorStartedFormat">已插入 {0}：已自動開始鏡像。</system:String>
+    <system:String x:Key="KeyboardInputModeMixed">鍵盤映射已啟用：已映射的按鍵執行手勢，其他按鍵在 iPhone 上輸入。右 Ctrl 切換為僅輸入。</system:String>
+    <system:String x:Key="KeyboardInputModeTypeOnly">僅輸入：所有按鍵都在 iPhone 上輸入，映射已暫停。右 Ctrl 重新開啟映射。</system:String>
+    <system:String x:Key="MixMappingAndTyping">未映射的按鍵用於輸入</system:String>
+    <system:String x:Key="MixMappingAndTypingHelp">映射開啟時，未映射的按鍵會在 iPhone 上輸入。右 Ctrl 在手勢與僅輸入之間切換，例如輸入已映射的字母。</system:String>
 </ResourceDictionary>

@@ -187,11 +187,17 @@ public partial class MainWindow
         var generation = _keyboardRouter.Generation;
         var sourceForeground = _keyboardForegroundWindow();
         var mappingAllowed = IsKeyboardMappingInputModeActive && _mappingSettings.Enabled && MappingFocusAllows();
+        if (mappingAllowed && TryToggleTypeOnly(key, down)) return true;
+        // Mapped keys play their gesture; with mixing on, every other key
+        // types on the iPhone. Type-only skips the mappings entirely.
+        var lookupMappings = mappingAllowed && !_typeOnly;
+        var mixedTyping = mappingAllowed && EverydaySettingsForInput.MixMappingAndTyping &&
+            _keyboardRouter.Mode == KeyboardInputMode.Mapping;
         KeyboardPressRoute Resolve(MappedKey physical, bool chord)
         {
             if (_mappingClosing || generation != _keyboardRouter.Generation || sourceForeground != _keyboardForegroundWindow())
                 return new(KeyboardEventOwner.Retired, true);
-            if (mappingAllowed && !chord && _viewModel.GetMappingTargetStatus() == "MappingReady")
+            if (lookupMappings && !chord && _viewModel.GetMappingTargetStatus() == "MappingReady")
             {
                 var mapping = _mappingSettings.Mappings.FirstOrDefault(m => m.Enabled && m.Key!.SamePhysicalKey(physical));
                 if (mapping is not null)
@@ -202,15 +208,17 @@ public partial class MainWindow
                             else _mappingHolds.Process(physical, false);
                         });
             }
-            var session = _mappingWindow?.IsEditing != true && IsDirectKeyboardInputModeActive && CanForwardControlKeyboard(target, window)
+            var session = _mappingWindow?.IsEditing != true && (IsDirectKeyboardInputModeActive || mixedTyping) &&
+                CanForwardControlKeyboard(target, window)
                 ? _viewModel.CaptureDirectKeyboardRoute(target) : null;
             if (session is not null)
                 return new(KeyboardEventOwner.Direct, true, pressed => DispatchControlKeyboardInput(
                     new(pressed ? PreviewKeyboardKind.Down : PreviewKeyboardKind.Up, physical.VirtualKey,
-                        physical.ScanCode | (physical.Extended ? 0x100 : 0)), target, false, window, session));
+                        physical.ScanCode | (physical.Extended ? 0x100 : 0)), target, false, window, session,
+                    mixed: mixedTyping));
             return new(KeyboardEventOwner.Windows, false);
         }
-        var defer = mappingAllowed && (key.IsModifier || key.IsWindows) &&
+        var defer = lookupMappings && (key.IsModifier || key.IsWindows) &&
             _mappingSettings.Mappings.Any(m => m.Enabled && m.Key!.SamePhysicalKey(key));
         return _keyboardRouter.RouteEvent(key, down, Resolve, ReplayKeyboardEvent, defer,
             bufferShortcutModifiers: CanForwardControlKeyboard(target, window) && _keyboardRouter.Mode != KeyboardInputMode.None);

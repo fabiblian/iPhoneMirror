@@ -1445,7 +1445,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void DispatchControlKeyboardInput(
         Controls.PreviewKeyboardEventArgs e, string? sourceUdid = null,
-        bool fromRawInput = false, nint? sourceWindow = null, DirectKeyboardRoute? capturedRoute = null)
+        bool fromRawInput = false, nint? sourceWindow = null, DirectKeyboardRoute? capturedRoute = null,
+        bool mixed = false)
     {
         Dispatcher.VerifyAccess();
         var routeUdid = sourceUdid ?? ActiveInputDeviceUdid;
@@ -1465,21 +1466,24 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 e.Kind == Controls.PreviewKeyboardKind.Down);
             return;
         }
+        // Mixed typing runs under the Mapping owner: it neither switches the
+        // owner to Direct nor goes through the Direct press bookkeeping.
         if (!CanForwardControlKeyboard(routeUdid, keyboardWindow) ||
-            !TryEnterDirectKeyboardInputMode()) return;
+            (mixed ? _keyboardRouter.Mode != KeyboardInputMode.Mapping : !TryEnterDirectKeyboardInputMode())) return;
         var route = capturedRoute ?? _viewModel.CaptureDirectKeyboardRoute(routeUdid);
         if (route is null) return;
         if (_directKeyboardRoute is { } previous && !previous.SameSession(route))
         {
             ResetKeyboardOwnership();
-            if (!IsDirectKeyboardInputModeActive) return;
+            if (mixed || !IsDirectKeyboardInputModeActive) return;
         }
         _directKeyboardRoute = route;
         _keyboardStateUdid = routeUdid;
         var down = e.Kind == Controls.PreviewKeyboardKind.Down;
         var key = ModifierKeyIdentity(e.VirtualKey, e.ScanCode);
-        if (!_keyboardRouter.Route(KeyboardInputMode.Direct, key, down)) return;
-        var canSend = CaptureKeyboardSendGuard(keyboardWindow);
+        if (mixed ? !RouteMixedKey(key, down) : !_keyboardRouter.Route(KeyboardInputMode.Direct, key, down)) return;
+        var canSend = mixed ? CaptureKeyboardOwnerSendGuard(keyboardWindow, KeyboardInputMode.Mapping)
+            : CaptureKeyboardSendGuard(keyboardWindow);
         await _bluetoothRouteGate.WaitAsync();
         var routeHeld = true;
         void ReleaseRoute()

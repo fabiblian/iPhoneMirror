@@ -1679,4 +1679,8 @@ Pair, select and save.</system:String>
     <system:String x:Key="AutoStartControlOnConnect">Start wired control</system:String>
     <system:String x:Key="AutoConnectHelp">Also applies to an iPhone that is already plugged in when the app starts. Only while nothing else is mirrored. The control notice is shown only the first time.</system:String>
     <system:String x:Key="AutoMirrorStartedFormat">{0} plugged in: mirroring started automatically.</system:String>
+    <system:String x:Key="KeyboardInputModeMixed">Keyboard mapping is active: mapped keys play their gesture, all other keys type on the iPhone. Right Ctrl switches to typing only.</system:String>
+    <system:String x:Key="KeyboardInputModeTypeOnly">Typing only: every key types on the iPhone, mappings are paused. Right Ctrl switches mapping back on.</system:String>
+    <system:String x:Key="MixMappingAndTyping">Type with unmapped keys</system:String>
+    <system:String x:Key="MixMappingAndTypingHelp">While mapping is on, keys without a mapping type on the iPhone. Right Ctrl switches between gestures and typing only, for example to type a mapped letter.</system:String>
 </ResourceDictionary>

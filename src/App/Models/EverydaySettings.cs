@@ -24,6 +24,12 @@ internal sealed class EverydaySettings
     public bool WirelessControlNoticeAcknowledged { get; set; }
 
     /// <summary>
+    /// While key mapping is on, keys without a mapping still type on the
+    /// iPhone instead of reaching Windows.
+    /// </summary>
+    public bool MixMappingAndTyping { get; set; } = true;
+
+    /// <summary>
     /// Virtual key that switches key mapping off for typing while mapping is
     /// on (VK_RCONTROL by default, 0 = none).
     /// </summary>

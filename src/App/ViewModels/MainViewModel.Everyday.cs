@@ -4,7 +4,7 @@ using IPhoneMirror.App.Services;
 
 namespace IPhoneMirror.App.ViewModels;
 
-// Plug-in detection for "start mirroring when an iPhone is plugged in". A
+// Everyday settings (see EverydaySettings) and plug-in detection for "start mirroring when an iPhone is plugged in". A
 // wired phone is announced once when it shows up ready; it is announced again
 // only after it was gone for a few enumerations, so the short usbmux gaps of a
 // QuickTime switch or a stopped capture never restart mirroring on their own.
@@ -39,6 +39,13 @@ internal sealed partial class MainViewModel
         get => Everyday.AutoStartControlOnConnect;
         set => SetEveryday(value, s => s.AutoStartControlOnConnect, (s, v) => s.AutoStartControlOnConnect = v,
             "auto_start_control_on_connect");
+    }
+
+    public bool MixMappingAndTyping
+    {
+        get => Everyday.MixMappingAndTyping;
+        set => SetEveryday(value, s => s.MixMappingAndTyping, (s, v) => s.MixMappingAndTyping = v,
+            "mix_mapping_and_typing");
     }
 
     /// <summary>Starts mirroring the selected device and completes once the start finished.</summary>
