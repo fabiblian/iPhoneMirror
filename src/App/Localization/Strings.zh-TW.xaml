@@ -1673,4 +1673,8 @@
     <system:String x:Key="ShortcutFilterPlaceholder">搜尋快捷鍵…</system:String>
     <system:String x:Key="ShortcutFilterClear">清除搜尋</system:String>
     <system:String x:Key="ShortcutFilterEmpty">找不到快捷鍵。</system:String>
+    <system:String x:Key="ThemeModeTitle">模式</system:String>
+    <system:String x:Key="ThemeStandard">標準</system:String>
+    <system:String x:Key="ThemePresetDarkOnly">此配色只適用於深色模式，淺色模式使用標準配色。</system:String>
+    <system:String x:Key="AccentWindows">Windows 強調色（跟隨 Windows）</system:String>
 </ResourceDictionary>

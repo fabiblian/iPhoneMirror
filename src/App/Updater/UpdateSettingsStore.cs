@@ -347,7 +347,9 @@ internal sealed class UpdateSettingsStore
                 settings.SettingsTab = "Video";
                 migrationChanged = true;
             }
-            var normalizedAccent = ThemePalette.NormalizeHex(settings.AccentColor);
+            var normalizedAccent = ThemePalette.IsWindowsAccent(settings.AccentColor)
+                ? ThemePalette.WindowsAccent
+                : ThemePalette.NormalizeHex(settings.AccentColor);
             if (!string.Equals(settings.AccentColor, normalizedAccent, StringComparison.Ordinal))
             {
                 settings.AccentColor = normalizedAccent;

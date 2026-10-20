@@ -1673,4 +1673,8 @@ Pair, select and save.</system:String>
     <system:String x:Key="ShortcutFilterPlaceholder">Search shortcuts…</system:String>
     <system:String x:Key="ShortcutFilterClear">Clear search</system:String>
     <system:String x:Key="ShortcutFilterEmpty">No shortcuts found.</system:String>
+    <system:String x:Key="ThemeModeTitle">Mode</system:String>
+    <system:String x:Key="ThemeStandard">Standard</system:String>
+    <system:String x:Key="ThemePresetDarkOnly">This color scheme exists only in dark mode; light mode uses Standard.</system:String>
+    <system:String x:Key="AccentWindows">Windows accent color (follows Windows)</system:String>
 </ResourceDictionary>

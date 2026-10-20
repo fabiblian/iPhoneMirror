@@ -28,6 +28,8 @@ internal static class ThemeService
     internal static AppTheme Preference { get; private set; } = AppTheme.System;
     internal static AppColorTheme ColorTheme { get; private set; } = AppColorTheme.Default;
     internal static string AccentHex { get; private set; } = "";
+    /// <summary>The accent follows the Windows accent colour and updates with it.</summary>
+    internal static bool FollowsWindowsAccent { get; private set; }
     internal static UiStyle Style { get; private set; } = UiStyle.Modern;
     /// <summary>The accent currently shown, after contrast adjustment.</summary>
     internal static Color Accent { get; private set; } = ThemePalette.DarkAccent;
@@ -40,13 +42,17 @@ internal static class ThemeService
     internal static void Apply(AppTheme theme, AppColorTheme colorTheme, string? accentHex, UiStyle style)
     {
         ColorTheme = Enum.IsDefined(colorTheme) ? colorTheme : AppColorTheme.Default;
-        AccentHex = ThemePalette.NormalizeHex(accentHex);
+        FollowsWindowsAccent = ThemePalette.IsWindowsAccent(accentHex);
+        AccentHex = FollowsWindowsAccent ? "" : ThemePalette.NormalizeHex(accentHex);
         Style = Enum.IsDefined(style) ? style : UiStyle.Modern;
         Apply(theme);
     }
 
     internal static void Apply(AppTheme theme)
     {
+        // Re-read on every apply: Windows reports accent changes as a user
+        // preference change, which re-applies the theme.
+        if (FollowsWindowsAccent) AccentHex = ThemePalette.ToHex(ThemePalette.ReadWindowsAccent());
         Preference = theme;
         IsDark = theme switch
         {

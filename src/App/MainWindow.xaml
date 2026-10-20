@@ -280,6 +280,61 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Appearance tiles: theme and style previews, selected with an accent ring. -->
+        <Style x:Key="AppearanceTileButton" TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Root" CornerRadius="10" Padding="6" BorderThickness="1"
+                                Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="Root" Property="Padding" Value="5"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusStrokeBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SegmentButton" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Root" CornerRadius="6" Padding="12,6" Background="Transparent">
+                            <TextBlock x:Name="Label" Text="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" FontSize="{DynamicResource SecondaryFontSize}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource OnAccentBrush}"/>
+                                <Setter TargetName="Label" Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ControlSectionTitle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
@@ -2570,9 +2625,32 @@
                                 </DockPanel>
                             </Expander.Header>
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource ThemeTitle}"
+                                <TextBlock Text="{DynamicResource ThemeModeTitle}"
                                            Style="{StaticResource DetailLabel}" Margin="0,0,0,5"/>
+                                <Border CornerRadius="8" Padding="3" HorizontalAlignment="Left"
+                                        Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                                        BorderThickness="1">
+                                    <StackPanel x:Name="ThemeModeButtons" Orientation="Horizontal"
+                                                AutomationProperties.Name="{DynamicResource ThemeModeTitle}">
+                                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="ThemeMode" Tag="System"
+                                                     Content="{DynamicResource ThemeSystem}" Checked="OnThemeModeChecked"
+                                                     AutomationProperties.AutomationId="ThemeModeSystem"/>
+                                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="ThemeMode" Tag="Light"
+                                                     Content="{DynamicResource ThemeLight}" Checked="OnThemeModeChecked"
+                                                     AutomationProperties.AutomationId="ThemeModeLight"/>
+                                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="ThemeMode" Tag="Dark"
+                                                     Content="{DynamicResource ThemeDark}" Checked="OnThemeModeChecked"
+                                                     AutomationProperties.AutomationId="ThemeModeDark"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="{DynamicResource ThemeTitle}"
+                                           Style="{StaticResource DetailLabel}" Margin="0,12,0,5"/>
+                                <UniformGrid x:Name="ThemeTiles" Columns="3" AutomationProperties.Name="{DynamicResource ThemeTitle}"/>
+                                <TextBlock x:Name="ThemeDarkOnlyHint" Text="{DynamicResource ThemePresetDarkOnly}"
+                                           Style="{StaticResource SettingsHelpText}" Margin="0,0,0,4" Visibility="Collapsed"/>
+                                <!-- Kept for the shared selection handler and its tests; the tiles drive it. -->
                                 <ComboBox AutomationProperties.Name="{DynamicResource ThemeTitle}" x:Name="ThemeComboBox" MinHeight="40"
+                                          Visibility="Collapsed"
                                           AutomationProperties.AutomationId="ThemeComboBox"
                                           SelectedValuePath="Tag"
                                           SelectionChanged="OnThemeSelectionChanged">
@@ -2596,7 +2674,8 @@
                                          LostKeyboardFocus="OnAccentHexLostFocus" KeyDown="OnAccentHexKeyDown"/>
                                 <TextBlock Text="{DynamicResource UiStyleTitle}"
                                            Style="{StaticResource DetailLabel}" Margin="0,10,0,5"/>
-                                <ComboBox x:Name="UiStyleComboBox" MinHeight="40"
+                                <UniformGrid x:Name="StyleTiles" Columns="3" AutomationProperties.Name="{DynamicResource UiStyleTitle}"/>
+                                <ComboBox x:Name="UiStyleComboBox" MinHeight="40" Visibility="Collapsed"
                                           AutomationProperties.AutomationId="UiStyleComboBox"
                                           AutomationProperties.Name="{DynamicResource UiStyleTitle}"
                                           SelectedValuePath="Tag"

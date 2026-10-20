@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using IPhoneMirror.App.Updater;
@@ -45,6 +46,28 @@ internal static class ThemePalette
         ("AccentTeal", "#14B8A6"), ("AccentOrange", "#F97316"), ("AccentPink", "#EC4899"),
         ("AccentRed", "#EF4444"), ("AccentGraphite", "#8A8F98"),
     ];
+
+    /// <summary>Stored accent value meaning "follow the Windows accent colour".</summary>
+    internal const string WindowsAccent = "windows";
+
+    internal static bool IsWindowsAccent(string? value) =>
+        string.Equals(value?.Trim(), WindowsAccent, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The Windows accent colour (DWM AccentColor, stored as 0xAABBGGRR).</summary>
+    internal static Color ReadWindowsAccent()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\DWM");
+            if (key?.GetValue("AccentColor") is int abgr)
+                return Color.FromRgb((byte)abgr, (byte)(abgr >> 8), (byte)(abgr >> 16));
+        }
+        catch (Exception error) when (error is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+        {
+        }
+        var glass = SystemParameters.WindowGlassColor;
+        return Color.FromRgb(glass.R, glass.G, glass.B);
+    }
 
     /// <summary>Upper-case #RRGGBB, or empty for anything that is not a colour.</summary>
     internal static string NormalizeHex(string? value) =>
