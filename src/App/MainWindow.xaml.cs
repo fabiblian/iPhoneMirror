@@ -698,11 +698,19 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             // of a burst of separate small swipes, and releasing the wheel
             // lets the velocity decay for a natural ease-out stop. Positive
             // delta (scroll up) = downward drag (Y increases) on iOS.
-            if (state.Pressed) return;
-            state.WheelRemainder += e.Wheel;
-            var ticks = (int)Math.Truncate(state.WheelRemainder / 120.0);
-            state.WheelRemainder -= ticks * 120.0;
-            if (ticks == 0) return;
+            var everyday = EverydaySettingsForInput;
+            if (state.Pressed || !everyday.WiredWheelScroll) return;
+            state.WheelRemainder += everyday.ReverseWheelDirection ? -e.Wheel : e.Wheel;
+            // A precision touchpad reports many small deltas instead of
+            // 120-unit notches; they count as fractional notches so a
+            // two-finger scroll glides instead of stepping. Tiny jitter
+            // below a sixth of a notch waits for more travel.
+            if (Math.Abs(state.WheelRemainder) < 20) return;
+            var ticks = state.WheelRemainder / 120.0;
+            state.WheelRemainder = 0;
+            // Shared scroll speed of the mouse settings: 1000 % keeps the
+            // original wired speed, lower values slow the glide down.
+            ticks *= Math.Clamp(_viewModel.AppliedBluetoothWheelSensitivity / 1000.0, 0.05, 1.0);
             const double velocityPerTick = 0.45;
             const double maxVelocity = 2.2;
             if (!state.WheelActive)

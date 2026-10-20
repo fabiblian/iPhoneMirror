@@ -2325,6 +2325,29 @@
                         </Expander>
 
                         <Expander Style="{StaticResource SettingsSection}"
+                                  AutomationProperties.Name="{DynamicResource WheelScrollTitle}">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <Border Style="{StaticResource SettingsSectionIcon}">
+                                        <ui:SymbolIcon Symbol="ArrowSort20" FontSize="16" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{DynamicResource WheelScrollTitle}" Style="{StaticResource ControlSectionTitle}"
+                                               VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <CheckBox Content="{DynamicResource WiredWheelScroll}"
+                                          IsChecked="{Binding WiredWheelScroll, Mode=TwoWay}"
+                                          AutomationProperties.AutomationId="WiredWheelScrollCheckBox"/>
+                                <CheckBox Content="{DynamicResource ReverseWheelDirection}" Margin="0,8,0,0"
+                                          IsChecked="{Binding ReverseWheelDirection, Mode=TwoWay}"
+                                          IsEnabled="{Binding WiredWheelScroll}"
+                                          AutomationProperties.AutomationId="ReverseWheelDirectionCheckBox"/>
+                                <TextBlock Text="{DynamicResource WheelScrollHelp}" Style="{StaticResource SettingsHelpText}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Style="{StaticResource SettingsSection}"
                                   AutomationProperties.Name="{DynamicResource MappingTitle}">
                             <Expander.Header>
                                 <DockPanel>

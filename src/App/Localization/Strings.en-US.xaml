@@ -1683,4 +1683,8 @@ Pair, select and save.</system:String>
     <system:String x:Key="KeyboardInputModeTypeOnly">Typing only: every key types on the iPhone, mappings are paused. Right Ctrl switches mapping back on.</system:String>
     <system:String x:Key="MixMappingAndTyping">Type with unmapped keys</system:String>
     <system:String x:Key="MixMappingAndTypingHelp">While mapping is on, keys without a mapping type on the iPhone. Right Ctrl switches between gestures and typing only, for example to type a mapped letter.</system:String>
+    <system:String x:Key="WheelScrollTitle">Mouse wheel and touchpad</system:String>
+    <system:String x:Key="WiredWheelScroll">Scroll with the wheel during wired and wireless control</system:String>
+    <system:String x:Key="ReverseWheelDirection">Reverse scroll direction</system:String>
+    <system:String x:Key="WheelScrollHelp">Wheel down moves the content up, like a swipe up on the iPhone. Two-finger touchpad scrolling glides smoothly. The speed is the Scroll speed in the mouse settings, shared with Bluetooth.</system:String>
 </ResourceDictionary>

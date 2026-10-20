@@ -48,6 +48,20 @@ internal sealed partial class MainViewModel
             "mix_mapping_and_typing");
     }
 
+    public bool WiredWheelScroll
+    {
+        get => Everyday.WiredWheelScroll;
+        set => SetEveryday(value, s => s.WiredWheelScroll, (s, v) => s.WiredWheelScroll = v,
+            "wired_wheel_scroll");
+    }
+
+    public bool ReverseWheelDirection
+    {
+        get => Everyday.ReverseWheelDirection;
+        set => SetEveryday(value, s => s.ReverseWheelDirection, (s, v) => s.ReverseWheelDirection = v,
+            "reverse_wheel_direction");
+    }
+
     /// <summary>Starts mirroring the selected device and completes once the start finished.</summary>
     internal Task StartSelectedCaptureAsync() => StartAsync();
 

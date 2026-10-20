@@ -1683,4 +1683,8 @@
     <system:String x:Key="KeyboardInputModeTypeOnly">仅输入：所有按键都在 iPhone 上输入，映射已暂停。右 Ctrl 重新开启映射。</system:String>
     <system:String x:Key="MixMappingAndTyping">未映射的按键用于输入</system:String>
     <system:String x:Key="MixMappingAndTypingHelp">映射开启时，未映射的按键会在 iPhone 上输入。右 Ctrl 在手势和仅输入之间切换，例如输入已映射的字母。</system:String>
+    <system:String x:Key="WheelScrollTitle">鼠标滚轮和触控板</system:String>
+    <system:String x:Key="WiredWheelScroll">有线和无线控制时用滚轮滚动</system:String>
+    <system:String x:Key="ReverseWheelDirection">反转滚动方向</system:String>
+    <system:String x:Key="WheelScrollHelp">滚轮向下时内容向上移动，就像在 iPhone 上向上滑动。触控板双指滚动会平滑滑动。速度使用鼠标设置中的滚轮灵敏度，与蓝牙共用。</system:String>
 </ResourceDictionary>
