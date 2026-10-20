@@ -74,6 +74,7 @@ function Save-Config {
     Write-Json $ConfigPath ([pscustomobject]@{
         RepoPath = $State.Repo
         LastBranch = $State.Config.LastBranch
+        Pinned = @($State.Config.Pinned)
     })
 }
 
@@ -189,100 +190,341 @@ function Get-StatusText($Branch) {
     return 'Neuer Stand auf GitHub, bitte Update'
 }
 
+# ---------------------------------------------------------------- theme
+# The launcher follows the app: same light/dark choice, colour preset and
+# accent as iPhoneMirror's settings (settings.fork.json wins, like in the app).
+
+function ConvertTo-LauncherColor([string]$Hex) {
+    $value = $Hex.Trim().TrimStart('#')
+    return [System.Drawing.Color]::FromArgb([Convert]::ToInt32($value.Substring(0, 2), 16),
+        [Convert]::ToInt32($value.Substring(2, 2), 16), [Convert]::ToInt32($value.Substring(4, 2), 16))
+}
+
+function Get-EnumSetting($Value, [string[]]$Names, [string]$Default) {
+    if ($null -eq $Value) { return $Default }
+    if ($Value -is [int] -or $Value -is [long]) {
+        if ($Value -ge 0 -and $Value -lt $Names.Count) { return $Names[$Value] }
+        return $Default
+    }
+    foreach ($name in $Names) { if ([string]::Equals("$Value", $name, 'OrdinalIgnoreCase')) { return $name } }
+    return $Default
+}
+
+function Get-LauncherTheme {
+    $appData = Join-Path $env:LOCALAPPDATA 'iPhoneMirror'
+    $settings = Read-Json (Join-Path $appData 'settings.json')
+    $fork = Read-Json (Join-Path $appData 'settings.fork.json')
+    $mode = Get-EnumSetting $(if ($settings) { $settings.Theme }) @('System', 'Dark', 'Light') 'System'
+    $preset = Get-EnumSetting $(if ($fork -and $null -ne $fork.ColorTheme) { $fork.ColorTheme } elseif ($settings) { $settings.ColorTheme }) `
+        @('Default', 'Midnight', 'Nord', 'Sunset', 'Forest') 'Default'
+    $accent = if ($fork -and $null -ne $fork.AccentColor) { "$($fork.AccentColor)" } elseif ($settings) { "$($settings.AccentColor)" } else { '' }
+    $dark = $true
+    if ($mode -eq 'Light') { $dark = $false }
+    elseif ($mode -eq 'System') {
+        try {
+            $light = Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'AppsUseLightTheme'
+            $dark = $light -eq 0
+        } catch { }
+    }
+    # Same palettes as ThemePalette.cs; presets are dark-only, like in the app.
+    $palettes = @{
+        DefaultDark = @('1F1F1F', '2A2A2A', '333333', '1A1A1A', '3A3A3A', 'FFFFFF', 'A8A8A8', '69B1F8', '5FD39A', 'F2C661', 'FF8A8A')
+        DefaultLight = @('F3F3F5', 'FFFFFF', 'EDEDF1', 'EBEBEE', 'D4D4DA', '1A1A1A', '5C5C5C', '0F6CBD', '107C41', '8A5A00', 'C42B1C')
+        Midnight = @('0B1020', '121A2E', '19233C', '0D1426', '24304D', 'E8EDF9', '9AA6C4', '5B8CFF', '5FD39A', 'FFC66B', 'FF7A8A')
+        Nord = @('2E3440', '3B4252', '434C5E', '2A303B', '4C566A', 'ECEFF4', 'B0B8C7', '88C0D0', 'A3BE8C', 'EBCB8B', 'D08770')
+        Sunset = @('1D1418', '281B20', '33232A', '181014', '45313A', 'FBEEE8', 'C9AAA3', 'FF8A5C', '7FD1A1', 'FFD166', 'FF6B81')
+        Forest = @('111A15', '18241E', '1F2D26', '0E1612', '2D3D34', 'E6F2EA', '9FBAA9', '5FD3A5', '8BDC7A', 'E9C46A', 'F28482')
+    }
+    $key = if (-not $dark) { 'DefaultLight' } elseif ($preset -ne 'Default') { $preset } else { 'DefaultDark' }
+    $p = $palettes[$key]
+    $theme = @{
+        Name = $(if ($key -like 'Default*') { 'Standard' } else { $key })
+        Bg = ConvertTo-LauncherColor $p[0]; Surface = ConvertTo-LauncherColor $p[1]; Raised = ConvertTo-LauncherColor $p[2]
+        Sidebar = ConvertTo-LauncherColor $p[3]; Border = ConvertTo-LauncherColor $p[4]; Text = ConvertTo-LauncherColor $p[5]
+        Muted = ConvertTo-LauncherColor $p[6]; Accent = ConvertTo-LauncherColor $p[7]; Ok = ConvertTo-LauncherColor $p[8]
+        Warn = ConvertTo-LauncherColor $p[9]; Error = ConvertTo-LauncherColor $p[10]
+    }
+    if ($accent -match '^#?[0-9A-Fa-f]{6}$') { $theme.Accent = ConvertTo-LauncherColor $accent }
+    elseif ($accent -eq 'windows') {
+        try {
+            # A DWORD above 0x7FFFFFFF comes back negative.
+            $abgr = [int64](Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\DWM' 'AccentColor')
+            if ($abgr -lt 0) { $abgr += 4294967296 }
+            $theme.Accent = [System.Drawing.Color]::FromArgb([int]($abgr -band 0xFF), [int](($abgr -shr 8) -band 0xFF), [int](($abgr -shr 16) -band 0xFF))
+        } catch { }
+    }
+    $luminance = (0.2126 * $theme.Accent.R + 0.7152 * $theme.Accent.G + 0.0722 * $theme.Accent.B) / 255
+    $theme.OnAccent = if ($luminance -gt 0.55) { [System.Drawing.Color]::FromArgb(11, 11, 11) } else { [System.Drawing.Color]::White }
+    return $theme
+}
+
+$Theme = Get-LauncherTheme
+
+function New-RoundedPath([System.Drawing.RectangleF]$Rect, [float]$Radius) {
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $d = [Math]::Min($Radius * 2, [Math]::Min($Rect.Width, $Rect.Height))
+    $path.AddArc($Rect.X, $Rect.Y, $d, $d, 180, 90)
+    $path.AddArc($Rect.Right - $d, $Rect.Y, $d, $d, 270, 90)
+    $path.AddArc($Rect.Right - $d, $Rect.Bottom - $d, $d, $d, 0, 90)
+    $path.AddArc($Rect.X, $Rect.Bottom - $d, $d, $d, 90, 90)
+    $path.CloseFigure()
+    return $path
+}
+
+function Get-Pinned {
+    if ($State.Config -and $State.Config.Pinned) { return @($State.Config.Pinned) }
+    return @('main')
+}
+
+function Switch-Pin([string]$Branch) {
+    $pinned = @(Get-Pinned)
+    if ($pinned -contains $Branch) { $pinned = @($pinned | Where-Object { $_ -ne $Branch }) }
+    else { $pinned += $Branch }
+    $State.Config.Pinned = $pinned
+    Save-Config
+    Update-List
+}
+
+function Get-StatusKind($Branch) {
+    $current = Join-Path (Get-BranchDir $Branch.Name) 'current'
+    if ((Test-Path -LiteralPath $current) -and (Get-ProcessesUnder $current).Count -gt 0) { return 'Running' }
+    $text = Get-StatusText $Branch
+    if ($text -eq 'Aktuell') { return 'Built' }
+    if ($text -like '*fehlgeschlagen*') { return 'Failed' }
+    if ($text -like 'Noch nicht gebaut*') { return 'None' }
+    return 'Stale'
+}
+
 # ---------------------------------------------------------------- UI
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'iPhoneMirror: Version wählen'
-$form.Size = New-Object System.Drawing.Size(860, 460)
-$form.MinimumSize = New-Object System.Drawing.Size(640, 360)
+$form.Size = New-Object System.Drawing.Size(900, 640)
+$form.MinimumSize = New-Object System.Drawing.Size(680, 420)
 $form.StartPosition = 'CenterScreen'
-$form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+$form.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
+$form.BackColor = $Theme.Bg
+$form.ForeColor = $Theme.Text
 $iconFile = @((Join-Path $InstallDir 'iPhoneMirror.ico'), (Join-Path $PSScriptRoot '..\..\src\App\Assets\iPhoneMirror.ico')) |
     Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 if ($iconFile) { try { $form.Icon = New-Object System.Drawing.Icon($iconFile) } catch { } }
 
+$headerPanel = New-Object System.Windows.Forms.Panel
+$headerPanel.Dock = 'Top'
+$headerPanel.Height = 66
+$headerPanel.BackColor = $Theme.Sidebar
+$headerTitle = New-Object System.Windows.Forms.Label
+$headerTitle.Text = 'iPhoneMirror Versionen'
+$headerTitle.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 14)
+$headerTitle.ForeColor = $Theme.Text
+$headerTitle.AutoSize = $true
+$headerTitle.Location = New-Object System.Drawing.Point(20, 10)
+$headerPanel.Controls.Add($headerTitle)
 $header = New-Object System.Windows.Forms.Label
-$header.Dock = 'Top'
-$header.Height = 28
-$header.Padding = New-Object System.Windows.Forms.Padding(8, 8, 8, 0)
-$form.Controls.Add($header)
+$header.ForeColor = $Theme.Muted
+$header.AutoSize = $false
+$header.AutoEllipsis = $true
+$header.SetBounds(21, 40, 840, 20)
+$header.Anchor = 'Top, Left, Right'
+$headerPanel.Controls.Add($header)
 
-$list = New-Object System.Windows.Forms.ListView
-$list.View = 'Details'
-$list.FullRowSelect = $true
-$list.MultiSelect = $false
-$list.HideSelection = $false
+# One owner-drawn list: group headings and a card per branch.
+$list = New-Object System.Windows.Forms.ListBox
 $list.Dock = 'Fill'
-[void]$list.Columns.Add('Branch', 160)
-[void]$list.Columns.Add('Gebauter Stand', 380)
-[void]$list.Columns.Add('Status', 290)
+$list.BorderStyle = 'None'
+$list.BackColor = $Theme.Bg
+$list.ForeColor = $Theme.Text
+$list.DrawMode = 'OwnerDrawVariable'
+$list.IntegralHeight = $false
+$listHost = New-Object System.Windows.Forms.Panel
+$listHost.Dock = 'Fill'
+$listHost.Padding = New-Object System.Windows.Forms.Padding(16, 10, 16, 6)
+$listHost.BackColor = $Theme.Bg
+$listHost.Controls.Add($list)
+
+$titleFont = New-Object System.Drawing.Font('Segoe UI Semibold', 11)
+$smallFont = New-Object System.Drawing.Font('Segoe UI', 8.5)
+$headingFont = New-Object System.Drawing.Font('Segoe UI Semibold', 8.5)
+$monoFont = New-Object System.Drawing.Font('Consolas', 9)
+
+$list.Add_MeasureItem({
+    param($sender, $e)
+    if ($e.Index -lt 0 -or $e.Index -ge $list.Items.Count) { return }
+    $e.ItemHeight = if ($list.Items[$e.Index].Kind -eq 'Heading') { 30 } else { 84 }
+})
+
+$list.Add_DrawItem({
+    param($sender, $e)
+    if ($e.Index -lt 0 -or $e.Index -ge $list.Items.Count) { return }
+    $g = $e.Graphics
+    $g.SmoothingMode = 'AntiAlias'
+    $g.TextRenderingHint = 'ClearTypeGridFit'
+    $bgBrush = New-Object System.Drawing.SolidBrush($Theme.Bg)
+    $g.FillRectangle($bgBrush, $e.Bounds)
+    $item = $list.Items[$e.Index]
+    if ($item.Kind -eq 'Heading') {
+        $mutedBrush = New-Object System.Drawing.SolidBrush($Theme.Muted)
+        $g.DrawString($item.Text.ToUpperInvariant(), $headingFont, $mutedBrush, $e.Bounds.X + 2, $e.Bounds.Y + 10)
+        return
+    }
+    $branch = $item.Branch
+    $selected = ($e.State -band [System.Windows.Forms.DrawItemState]::Selected) -ne 0
+    $card = New-Object System.Drawing.RectangleF(($e.Bounds.X + 1), ($e.Bounds.Y + 3), ($e.Bounds.Width - 3), ($e.Bounds.Height - 7))
+    $path = New-RoundedPath $card 10
+    $fill = if ($selected) { $Theme.Raised } else { $Theme.Surface }
+    $g.FillPath((New-Object System.Drawing.SolidBrush($fill)), $path)
+    $pen = if ($selected) { New-Object System.Drawing.Pen($Theme.Accent, 2) } else { New-Object System.Drawing.Pen($Theme.Border, 1) }
+    $g.DrawPath($pen, $path)
+
+    # Pin star on the left; a click on it toggles the pin.
+    $starColor = if ($item.Pinned) { $Theme.Warn } else { $Theme.Muted }
+    $g.DrawString($(if ($item.Pinned) { [string][char]0x2605 } else { [string][char]0x2606 }),
+        (New-Object System.Drawing.Font('Segoe UI Symbol', 14)), (New-Object System.Drawing.SolidBrush($starColor)),
+        $card.X + 12, $card.Y + 24)
+
+    $x = $card.X + 46
+    $textBrush = New-Object System.Drawing.SolidBrush($Theme.Text)
+    $g.DrawString($branch.Name, $titleFont, $textBrush, $x, $card.Y + 9)
+    $nameWidth = $g.MeasureString($branch.Name, $titleFont).Width
+
+    $kinds = @{
+        Running = @('Läuft', $Theme.Ok); Built = @('Gebaut, aktuell', $Theme.Accent)
+        Stale = @('Veraltet', $Theme.Warn); Failed = @('Build fehlgeschlagen', $Theme.Error); None = @('Nicht gebaut', $Theme.Muted)
+    }
+    $badge = $kinds[$item.StatusKind]
+    $badgeWidth = $g.MeasureString($badge[0], $smallFont).Width + 24
+    $badgeRect = New-Object System.Drawing.RectangleF(($x + $nameWidth + 8), ($card.Y + 11), $badgeWidth, 20)
+    $badgeFill = [System.Drawing.Color]::FromArgb(40, $badge[1].R, $badge[1].G, $badge[1].B)
+    $g.FillPath((New-Object System.Drawing.SolidBrush($badgeFill)), (New-RoundedPath $badgeRect 10))
+    $g.FillEllipse((New-Object System.Drawing.SolidBrush($badge[1])), $badgeRect.X + 9, $badgeRect.Y + 7, 6, 6)
+    $g.DrawString($badge[0], $smallFont, (New-Object System.Drawing.SolidBrush($badge[1])), $badgeRect.X + 17, $badgeRect.Y + 3)
+
+    $info = $item.Info
+    $hash = $branch.Sha.Substring(0, 7)
+    $g.DrawString($hash, $monoFont, (New-Object System.Drawing.SolidBrush($Theme.Accent)), $x, $card.Y + 36)
+    $subjectX = $x + $g.MeasureString($hash, $monoFont).Width + 6
+    $subjectRect = New-Object System.Drawing.RectangleF($subjectX, ($card.Y + 35), ($card.Right - $subjectX - 12), 20)
+    $format = New-Object System.Drawing.StringFormat
+    $format.Trimming = 'EllipsisCharacter'
+    $format.FormatFlags = 'NoWrap'
+    $g.DrawString($branch.Subject, $form.Font, $textBrush, $subjectRect, $format)
+
+    $meta = "Stand GitHub: $($branch.Date)"
+    if ($info -and $info.Sha) {
+        $meta += "   ·   gebaut: $($info.Sha.Substring(0, 7))"
+        if ($info.PSObject.Properties.Name -contains 'BuiltAt' -and $info.BuiltAt) {
+            try { $meta += ' am ' + ([datetime]$info.BuiltAt).ToString('dd.MM.yyyy HH:mm') } catch { }
+        }
+    }
+    $g.DrawString($meta, $smallFont, (New-Object System.Drawing.SolidBrush($Theme.Muted)), $x, $card.Y + 58)
+})
 
 $bottom = New-Object System.Windows.Forms.Panel
 $bottom.Dock = 'Bottom'
+$bottom.BackColor = $Theme.Sidebar
 # Final width before children are placed, so right anchors keep their margin.
-$bottom.Size = New-Object System.Drawing.Size($form.ClientSize.Width, 92)
+$bottom.Size = New-Object System.Drawing.Size($form.ClientSize.Width, 96)
 
 $status = New-Object System.Windows.Forms.Label
-$status.SetBounds(10, 6, $bottom.Width - 20, 20)
+$status.SetBounds(16, 8, $bottom.Width - 32, 20)
 $status.Anchor = 'Top, Left, Right'
 $status.AutoEllipsis = $true
+$status.ForeColor = $Theme.Muted
 $bottom.Controls.Add($status)
 
 $progress = New-Object System.Windows.Forms.ProgressBar
-$progress.SetBounds(10, 28, $bottom.Width - 20, 8)
+$progress.SetBounds(16, 30, $bottom.Width - 32, 6)
 $progress.Anchor = 'Top, Left, Right'
 $progress.Style = 'Marquee'
 $progress.Visible = $false
 $bottom.Controls.Add($progress)
 
-function New-Button([string]$Text, [int]$X, [string]$Anchor = 'Bottom, Left') {
+function New-Button([string]$Text, [int]$X, [string]$Anchor = 'Bottom, Left', [bool]$Primary = $false) {
     $button = New-Object System.Windows.Forms.Button
     $button.Text = $Text
-    $button.SetBounds($X, 46, 120, 32)
+    $button.SetBounds($X, 48, 124, 34)
     $button.Anchor = $Anchor
+    $button.FlatStyle = 'Flat'
+    $button.Cursor = [System.Windows.Forms.Cursors]::Hand
+    if ($Primary) {
+        $button.BackColor = $Theme.Accent
+        $button.ForeColor = $Theme.OnAccent
+        $button.FlatAppearance.BorderSize = 0
+        $button.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 9.5)
+    }
+    else {
+        $button.BackColor = $Theme.Surface
+        $button.ForeColor = $Theme.Text
+        $button.FlatAppearance.BorderColor = $Theme.Border
+    }
     $bottom.Controls.Add($button)
     return $button
 }
-$startButton = New-Button 'Starten' 10
-$updateButton = New-Button 'Update' 140
-$rebuildButton = New-Button 'Neu bauen' 270
-$logButton = New-Button 'Log öffnen' 400
-$closeButton = New-Button 'Schliessen' ($bottom.Width - 130) 'Bottom, Right'
+$startButton = New-Button 'Starten' 16 'Bottom, Left' $true
+$updateButton = New-Button 'Update' 148
+$rebuildButton = New-Button 'Neu bauen' 280
+$logButton = New-Button 'Log öffnen' 412
+$closeButton = New-Button 'Schliessen' ($bottom.Width - 140) 'Bottom, Right'
 $form.AcceptButton = $startButton
 $form.CancelButton = $closeButton
 
-$form.Controls.Add($list)
+$form.Controls.Add($listHost)
 $form.Controls.Add($bottom)
-$list.BringToFront()
+$form.Controls.Add($headerPanel)
+$listHost.BringToFront()
 
 function Get-SelectedBranch {
-    if ($list.SelectedItems.Count -eq 0) { return $null }
-    return $list.SelectedItems[0].Tag
+    $item = $list.SelectedItem
+    if (-not $item -or $item.Kind -ne 'Branch') { return $null }
+    return $item.Branch
 }
 
 function Update-List {
     $selected = Get-SelectedBranch
     $keep = if ($selected) { $selected.Name } else { $State.Config.LastBranch }
     $State.Branches = Get-RemoteBranches
+    $pinned = @(Get-Pinned)
+    $cards = foreach ($branch in $State.Branches) {
+        [pscustomobject]@{
+            Kind = 'Branch'; Branch = $branch; Pinned = ($pinned -contains $branch.Name)
+            Info = (Get-BuildInfo $branch.Name); StatusKind = (Get-StatusKind $branch); Text = $branch.Name
+        }
+    }
     $list.BeginUpdate()
     $list.Items.Clear()
-    foreach ($branch in $State.Branches) {
-        $info = Get-BuildInfo $branch.Name
-        $builtText = if ((Test-Path -LiteralPath (Get-CurrentExe $branch.Name)) -and $info) {
-            "$($info.Sha.Substring(0, 7))  $($info.Date)  $($info.Subject)"
-        } else { '(noch nichts gebaut)' }
-        $item = New-Object System.Windows.Forms.ListViewItem($branch.Name)
-        [void]$item.SubItems.Add($builtText)
-        [void]$item.SubItems.Add((Get-StatusText $branch))
-        $item.Tag = $branch
-        [void]$list.Items.Add($item)
-        if ($branch.Name -eq $keep) { $item.Selected = $true }
+    foreach ($group in @(@('Angeheftet', $true), @('Weitere Branches', $false))) {
+        $members = @($cards | Where-Object { $_.Pinned -eq $group[1] })
+        if ($members.Count -eq 0) { continue }
+        [void]$list.Items.Add([pscustomobject]@{ Kind = 'Heading'; Text = $group[0] })
+        foreach ($card in $members) { [void]$list.Items.Add($card) }
     }
-    if ($list.SelectedItems.Count -eq 0 -and $list.Items.Count -gt 0) { $list.Items[0].Selected = $true }
+    $list.SelectedIndex = -1
+    for ($i = 0; $i -lt $list.Items.Count; $i++) {
+        if ($list.Items[$i].Kind -eq 'Branch' -and $list.Items[$i].Branch.Name -eq $keep) { $list.SelectedIndex = $i; break }
+    }
+    if ($list.SelectedIndex -lt 0) {
+        for ($i = 0; $i -lt $list.Items.Count; $i++) { if ($list.Items[$i].Kind -eq 'Branch') { $list.SelectedIndex = $i; break } }
+    }
     $list.EndUpdate()
     $devBranch = (Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD')).Text
-    $header.Text = "Dev-Repo: $($State.Repo)  (ausgecheckt: $devBranch)"
+    $header.Text = "Dev-Repo: $($State.Repo)   ·   ausgecheckt: $devBranch   ·   Theme wie die App ($($Theme.Name))"
 }
+
+$list.Add_Resize({ $list.Invalidate() })
+
+# Headings are not selectable; the star toggles the pin.
+$list.Add_SelectedIndexChanged({
+    $item = $list.SelectedItem
+    if ($item -and $item.Kind -eq 'Heading' -and $list.SelectedIndex + 1 -lt $list.Items.Count) { $list.SelectedIndex++ }
+    $list.Invalidate()
+})
+$list.Add_MouseDown({
+    param($sender, $e)
+    $index = $list.IndexFromPoint($e.Location)
+    if ($index -lt 0) { return }
+    $item = $list.Items[$index]
+    if ($item.Kind -eq 'Branch' -and $e.X -lt 46) { Switch-Pin $item.Branch.Name }
+})
 
 function Set-Busy([bool]$Busy) {
     $State.Busy = $Busy
@@ -579,7 +821,10 @@ if (-not $State.Repo) {
     return
 }
 $saved = Read-Json $ConfigPath
-$State.Config = [pscustomobject]@{ LastBranch = $(if ($saved) { $saved.LastBranch } else { $null }) }
+$State.Config = [pscustomobject]@{
+    LastBranch = $(if ($saved) { $saved.LastBranch } else { $null })
+    Pinned = $(if ($saved -and $saved.Pinned) { @($saved.Pinned) } else { @('main') })
+}
 New-Item -ItemType Directory -Force -Path $StateRoot | Out-Null
 Install-Launcher
 Save-Config
