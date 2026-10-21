@@ -6,6 +6,8 @@
     Lists every branch on GitHub (origin), starts the build of the chosen one
     and updates them: "Update" fetches origin, fast-forwards the dev checkout
     when it is clean, and rebuilds every branch whose GitHub state changed.
+    "Sync" (also run when the window opens) only fetches origin and marks the
+    branches whose built version is behind GitHub, without building.
 
     Each branch is built in its own detached git worktree under
     %LOCALAPPDATA%\iPMV, so the dev checkout is never touched. Builds, logs
@@ -55,6 +57,8 @@ $State = @{
     DevBranch = $null
     SelectedIndex = -1
     ListWidth = 0
+    # Branch name -> commits on GitHub that its built version lacks (-1: unknown).
+    NewCommits = @{}
 }
 
 function Show-Message([string]$Text, [string]$Icon = 'Information', [string]$Buttons = 'OK') {
@@ -295,6 +299,23 @@ function Switch-Pin([string]$Branch) {
     Update-List -Cached
 }
 
+# The built version is behind GitHub. A newer state that already failed to
+# build or that waits to be swapped in is not offered again.
+function Test-HasUpdate($Branch) {
+    $info = Get-BuildInfo $Branch.Name
+    if (-not $info -or -not $info.Sha -or $info.Sha -eq $Branch.Sha) { return $false }
+    if ($info.FailedSha -eq $Branch.Sha) { return $false }
+    $pending = Read-Json (Join-Path (Get-BranchDir $Branch.Name) 'staging.json')
+    return -not ($pending -and $pending.Sha -eq $Branch.Sha)
+}
+
+function Get-NewCommitCount($Branch) {
+    $info = Get-BuildInfo $Branch.Name
+    $count = Invoke-Git @('rev-list', '--count', "$($info.Sha)..$($Branch.Sha)")
+    if ($count.Code -eq 0 -and $count.Text -match '^\d+$') { return [int]$count.Text }
+    return -1
+}
+
 function Get-StatusKind($Branch, $AppProcesses) {
     $current = Join-Path (Get-BranchDir $Branch.Name) 'current'
     if ((Get-ProcessesUnder $current $AppProcesses).Count -gt 0) { return 'Running' }
@@ -310,7 +331,7 @@ function Get-StatusKind($Branch, $AppProcesses) {
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'iPhoneMirror: Version wählen'
 $form.Size = New-Object System.Drawing.Size(900, 640)
-$form.MinimumSize = New-Object System.Drawing.Size(680, 420)
+$form.MinimumSize = New-Object System.Drawing.Size(840, 420)
 $form.StartPosition = 'CenterScreen'
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
 $form.BackColor = $Theme.Bg
@@ -415,7 +436,7 @@ $Paint.Ellipsis.FormatFlags = 'NoWrap'
 $Paint.Buffers = [System.Drawing.BufferedGraphicsManager]::Current
 $Paint.Kinds = @{
     Running = @('Läuft', $Theme.Ok); Built = @('Gebaut, aktuell', $Theme.Accent)
-    Stale = @('Veraltet', $Theme.Warn); Failed = @('Build fehlgeschlagen', $Theme.Error); None = @('Nicht gebaut', $Theme.Muted)
+    Stale = @('Update verfügbar', $Theme.Warn); Failed = @('Build fehlgeschlagen', $Theme.Error); None = @('Nicht gebaut', $Theme.Muted)
 }
 
 $list.Add_MeasureItem({
@@ -464,15 +485,9 @@ function Write-ListItem([System.Drawing.Graphics]$g, $e) {
     $g.DrawString($branch.Name, $titleFont, $textBrush, $x, $card.Y + 9)
     $nameWidth = $g.MeasureString($branch.Name, $titleFont).Width
 
-    $badge = $Paint.Kinds[$item.StatusKind]
-    $badgeWidth = $g.MeasureString($badge[0], $smallFont).Width + 24
-    $badgeRect = New-Object System.Drawing.RectangleF(($x + $nameWidth + 8), ($card.Y + 11), $badgeWidth, 20)
-    $badgeFill = [System.Drawing.Color]::FromArgb(40, $badge[1].R, $badge[1].G, $badge[1].B)
-    $badgePath = New-RoundedPath $badgeRect 10
-    $g.FillPath((Get-Brush $badgeFill), $badgePath)
-    $badgePath.Dispose()
-    $g.FillEllipse((Get-Brush $badge[1]), $badgeRect.X + 9, $badgeRect.Y + 7, 6, 6)
-    $g.DrawString($badge[0], $smallFont, (Get-Brush $badge[1]), $badgeRect.X + 17, $badgeRect.Y + 3)
+    $badgeX = Write-Badge $g $Paint.Kinds[$item.StatusKind] ($x + $nameWidth + 8) ($card.Y + 11)
+    # A running version can be behind GitHub as well; say so next to "Läuft".
+    if ($item.HasUpdate -and $item.StatusKind -ne 'Stale') { [void](Write-Badge $g $Paint.Kinds.Stale $badgeX ($card.Y + 11)) }
 
     $info = $item.Info
     $hash = $branch.Sha.Substring(0, 7)
@@ -488,7 +503,23 @@ function Write-ListItem([System.Drawing.Graphics]$g, $e) {
             try { $meta += ' am ' + ([datetime]$info.BuiltAt).ToString('dd.MM.yyyy HH:mm') } catch { }
         }
     }
+    if ($item.HasUpdate -and $item.NewCommits -gt 0) {
+        $meta += "   ·   $($item.NewCommits) neue$(if ($item.NewCommits -eq 1) { 'r Commit' } else { ' Commits' })"
+    }
     $g.DrawString($meta, $smallFont, (Get-Brush $Theme.Muted), $x, $card.Y + 58)
+}
+
+# Draws a status pill at ($X, $Y) and returns the X where a next one may start.
+function Write-Badge([System.Drawing.Graphics]$g, $Badge, [float]$X, [float]$Y) {
+    $badgeWidth = $g.MeasureString($Badge[0], $smallFont).Width + 24
+    $badgeRect = New-Object System.Drawing.RectangleF($X, $Y, $badgeWidth, 20)
+    $badgeFill = [System.Drawing.Color]::FromArgb(40, $Badge[1].R, $Badge[1].G, $Badge[1].B)
+    $badgePath = New-RoundedPath $badgeRect 10
+    $g.FillPath((Get-Brush $badgeFill), $badgePath)
+    $badgePath.Dispose()
+    $g.FillEllipse((Get-Brush $Badge[1]), $badgeRect.X + 9, $badgeRect.Y + 7, 6, 6)
+    $g.DrawString($Badge[0], $smallFont, (Get-Brush $Badge[1]), $badgeRect.X + 17, $badgeRect.Y + 3)
+    return $badgeRect.Right + 6
 }
 
 $bottom = New-Object System.Windows.Forms.Panel
@@ -533,9 +564,13 @@ function New-Button([string]$Text, [int]$X, [string]$Anchor = 'Bottom, Left', [b
     return $button
 }
 $startButton = New-Button 'Starten' 16 'Bottom, Left' $true
-$updateButton = New-Button 'Update' 148
-$rebuildButton = New-Button 'Neu bauen' 280
-$logButton = New-Button 'Log öffnen' 412
+$syncButton = New-Button 'Sync' 148
+$updateButton = New-Button 'Update' 280
+$rebuildButton = New-Button 'Neu bauen' 412
+$logButton = New-Button 'Log öffnen' 544
+$tips = New-Object System.Windows.Forms.ToolTip
+$tips.SetToolTip($syncButton, 'Holt die Stände von GitHub und zeigt, welche Branches ein Update haben. Baut nichts.')
+$tips.SetToolTip($updateButton, 'Holt die Stände von GitHub und baut jeden Branch mit Update neu.')
 $closeButton = New-Button 'Schliessen' ($bottom.Width - 140) 'Bottom, Right'
 $form.AcceptButton = $startButton
 $form.CancelButton = $closeButton
@@ -555,13 +590,20 @@ function Get-SelectedBranch {
 function Update-List([switch]$Cached) {
     $selected = Get-SelectedBranch
     $keep = if ($selected) { $selected.Name } else { $State.Config.LastBranch }
-    if (-not $Cached) { $State.Branches = Get-RemoteBranches }
+    if (-not $Cached) {
+        $State.Branches = Get-RemoteBranches
+        $State.NewCommits = @{}
+        foreach ($branch in $State.Branches) {
+            if (Test-HasUpdate $branch) { $State.NewCommits[$branch.Name] = Get-NewCommitCount $branch }
+        }
+    }
     $pinned = @(Get-Pinned)
     $appProcesses = Get-AppProcessPaths
     $cards = foreach ($branch in $State.Branches) {
         [pscustomobject]@{
             Kind = 'Branch'; Branch = $branch; Pinned = ($pinned -contains $branch.Name)
             Info = (Get-BuildInfo $branch.Name); StatusKind = (Get-StatusKind $branch $appProcesses); Text = $branch.Name
+            HasUpdate = $State.NewCommits.ContainsKey($branch.Name); NewCommits = $State.NewCommits[$branch.Name]
         }
     }
     $list.BeginUpdate()
@@ -614,7 +656,7 @@ $list.Add_MouseDown({
 function Set-Busy([bool]$Busy) {
     $State.Busy = $Busy
     $progress.Visible = $Busy
-    foreach ($button in @($updateButton, $rebuildButton)) { $button.Enabled = -not $Busy }
+    foreach ($button in @($syncButton, $updateButton, $rebuildButton)) { $button.Enabled = -not $Busy }
 }
 
 # ---------------------------------------------------------------- step queue
@@ -694,12 +736,20 @@ $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 500
 $timer.Add_Tick({ Invoke-Tick })
 
-function Add-FetchStep {
+# -Quiet: a plain sync may be cut off without asking when the window closes.
+function Add-FetchStep([switch]$Quiet) {
     Add-Step @{
         Title = 'Hole neue Stände von GitHub (git fetch) ...'
         Log = Join-Path $LogRoot 'git.log'
-        Run = { param($s) Start-LoggedProcess 'git fetch origin --prune' $State.Repo $s.Log }
-        Done = { param($s, $code) if ($code -ne 0) { $State.Summary.Add('git fetch fehlgeschlagen (offline?), siehe logs\git.log') } }
+        Quiet = [bool]$Quiet
+        Run = { param($s) $State.FetchFailed = $false; Start-LoggedProcess 'git fetch origin --prune' $State.Repo $s.Log }
+        Done = {
+            param($s, $code)
+            if ($code -ne 0) {
+                $State.FetchFailed = $true
+                $State.Summary.Add('git fetch fehlgeschlagen (offline?), siehe logs\git.log')
+            }
+        }
     }
 }
 
@@ -838,6 +888,30 @@ function Start-Update([bool]$Force) {
     Invoke-NextStep
 }
 
+# Fetch only: the cards then show which branches have an update; nothing is built.
+function Start-Sync {
+    if ($State.Current -or $State.Queue.Count -gt 0) { return }
+    Add-FetchStep -Quiet
+    Add-Step @{
+        Title = 'Vergleiche mit den gebauten Versionen ...'
+        Run = {
+            param($s)
+            if ($State.FetchFailed) { return $null }
+            $State.Branches = Get-RemoteBranches
+            $behind = @($State.Branches | Where-Object { Test-HasUpdate $_ } | ForEach-Object { $_.Name })
+            $built = @($State.Branches | Where-Object { Test-Path -LiteralPath (Get-CurrentExe $_.Name) -PathType Leaf })
+            $time = (Get-Date).ToString('HH:mm')
+            if ($built.Count -eq 0) { $State.Summary.Add("GitHub geprüft ($time): noch keine Version gebaut, Update baut alle Branches") }
+            elseif ($behind.Count -eq 0) { $State.Summary.Add("GitHub geprüft ($time): alle gebauten Versionen sind aktuell") }
+            else {
+                $State.Summary.Add("GitHub geprüft ($time): Update für $($behind -join ', ') verfügbar, Update baut $(if ($behind.Count -eq 1) { 'ihn' } else { 'sie' })")
+            }
+            return $null
+        }
+    }
+    Invoke-NextStep
+}
+
 function Start-SelectedVersion {
     $branch = Get-SelectedBranch
     if (-not $branch) { return }
@@ -884,6 +958,7 @@ function Open-SelectedLog {
 
 $startButton.Add_Click({ Start-SelectedVersion })
 $list.Add_DoubleClick({ Start-SelectedVersion })
+$syncButton.Add_Click({ Start-Sync })
 $updateButton.Add_Click({ Start-Update $false })
 $rebuildButton.Add_Click({ Start-Update $true })
 $logButton.Add_Click({ Open-SelectedLog })
@@ -891,8 +966,10 @@ $closeButton.Add_Click({ $form.Close() })
 $form.Add_FormClosing({
     param($formSender, $closing)
     if (-not $State.Current) { return }
-    $answer = Show-Message 'Es läuft gerade ein Update/Build. Abbrechen und schliessen?' 'Question' 'YesNo'
-    if ($answer -ne 'Yes') { $closing.Cancel = $true; return }
+    if (-not $State.Current.Quiet) {
+        $answer = Show-Message 'Es läuft gerade ein Update/Build. Abbrechen und schliessen?' 'Question' 'YesNo'
+        if ($answer -ne 'Yes') { $closing.Cancel = $true; return }
+    }
     & taskkill.exe /T /F /PID $State.Current.Process.Id | Out-Null
 })
 
@@ -940,7 +1017,8 @@ elseif (@($State.Branches | Where-Object { Test-Path -LiteralPath (Get-CurrentEx
 else { $status.Text = 'Version wählen und Starten. Update holt neue Stände von GitHub und baut sie.' }
 
 # Started from a hidden PowerShell, the window would otherwise open behind others.
-$form.Add_Shown({ $form.TopMost = $true; $form.Activate(); $form.TopMost = $false })
+# Opening also syncs, so the cards show right away which branch has an update.
+$form.Add_Shown({ $form.TopMost = $true; $form.Activate(); $form.TopMost = $false; Start-Sync })
 $timer.Start()
 [void]$form.ShowDialog()
 $timer.Stop()
