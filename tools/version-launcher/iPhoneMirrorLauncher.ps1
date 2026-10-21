@@ -35,6 +35,7 @@ $ConfigPath = Join-Path $StateRoot 'launcher.json'
 $WorktreeRoot = Join-Path $env:LOCALAPPDATA 'iPMV'
 $BuildRoot = Join-Path $StateRoot 'builds'
 $LogRoot = Join-Path $StateRoot 'logs'
+$TrashRoot = Join-Path $StateRoot 'trash'
 $ShortcutName = 'iPhoneMirror (Version wählen).lnk'
 
 # Same flags as the usual local builds: UxPlay is loaded at runtime (its local
@@ -59,6 +60,12 @@ $State = @{
     ListWidth = 0
     # Branch name -> commits on GitHub that its built version lacks (-1: unknown).
     NewCommits = @{}
+    # The last step that ran re-read the branches, so the list is current.
+    Refreshed = $false
+    # A start that waits for the running instance to exit (see Invoke-LaunchTick).
+    Launch = $null
+    # Runs the slow part of a step off the UI thread (see Start-Work).
+    Background = $null
 }
 
 function Show-Message([string]$Text, [string]$Icon = 'Information', [string]$Buttons = 'OK') {
@@ -172,8 +179,28 @@ function Get-ProcessesUnder([string]$Directory, $AppProcesses = (Get-AppProcessP
         ForEach-Object { $_.Process })
 }
 
+# Deleting a build copy (~850 files) takes seconds and froze the window; moving
+# it into the trash is a rename. A hidden cmd.exe deletes it from there and
+# keeps going after the launcher closed.
+function Remove-Later([string]$Path) {
+    New-Item -ItemType Directory -Force -Path $TrashRoot | Out-Null
+    $target = Join-Path $TrashRoot ([guid]::NewGuid().ToString('N'))
+    Move-Item -LiteralPath $Path -Destination $target -ErrorAction Stop
+    Start-Deletion $target
+}
+
+function Start-Deletion([string]$Path) {
+    $info = New-Object System.Diagnostics.ProcessStartInfo((Join-Path $env:SystemRoot 'System32\cmd.exe'), "/d /c rmdir /s /q `"$Path`"")
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    [void][System.Diagnostics.Process]::Start($info)
+}
+
 function Complete-Staging([string]$Branch) {
     # Swap a finished build in. Returns $false while the old copy is running.
+    # Only the UI thread renames these folders, so a swap never races a copy.
+    # A virus scan can still hold a freshly copied file: the rename then throws
+    # and the old copy is put back, so a startable version always remains.
     $dir = Get-BranchDir $Branch
     $staging = Join-Path $dir 'staging'
     $stagingInfo = Join-Path $dir 'staging.json'
@@ -181,10 +208,18 @@ function Complete-Staging([string]$Branch) {
     $current = Join-Path $dir 'current'
     if ((Get-ProcessesUnder $current).Count -gt 0) { return $false }
     $previous = Join-Path $dir 'previous'
-    if (Test-Path -LiteralPath $previous) { Remove-Item -LiteralPath $previous -Recurse -Force }
-    if (Test-Path -LiteralPath $current) { Rename-Item -LiteralPath $current -NewName 'previous' }
-    Rename-Item -LiteralPath $staging -NewName 'current'
-    Move-Item -LiteralPath $stagingInfo -Destination (Join-Path $dir 'build.json') -Force
+    if (Test-Path -LiteralPath $current) {
+        if (Test-Path -LiteralPath $previous) { Remove-Later $previous }
+        Rename-Item -LiteralPath $current -NewName 'previous' -ErrorAction Stop
+    }
+    try { Rename-Item -LiteralPath $staging -NewName 'current' -ErrorAction Stop }
+    catch {
+        if (-not (Test-Path -LiteralPath $current) -and (Test-Path -LiteralPath $previous)) {
+            Rename-Item -LiteralPath $previous -NewName 'current' -ErrorAction SilentlyContinue
+        }
+        throw
+    }
+    Move-Item -LiteralPath $stagingInfo -Destination (Join-Path $dir 'build.json') -Force -ErrorAction Stop
     return $true
 }
 
@@ -296,7 +331,7 @@ function Switch-Pin([string]$Branch) {
     else { $pinned += $Branch }
     $State.Config.Pinned = $pinned
     Save-Config
-    Update-List -Cached
+    Update-List
 }
 
 # The built version is behind GitHub. A newer state that already failed to
@@ -586,17 +621,11 @@ function Get-SelectedBranch {
     return $item.Branch
 }
 
-# -Cached reuses the branches already read, so a pin click needs no git.
-function Update-List([switch]$Cached) {
+# Paints what the last refresh read in the background (Add-RefreshStep). It
+# runs no git, so a pin click or a finished step repaints at once.
+function Update-List {
     $selected = Get-SelectedBranch
     $keep = if ($selected) { $selected.Name } else { $State.Config.LastBranch }
-    if (-not $Cached) {
-        $State.Branches = Get-RemoteBranches
-        $State.NewCommits = @{}
-        foreach ($branch in $State.Branches) {
-            if (Test-HasUpdate $branch) { $State.NewCommits[$branch.Name] = Get-NewCommitCount $branch }
-        }
-    }
     $pinned = @(Get-Pinned)
     $appProcesses = Get-AppProcessPaths
     $cards = foreach ($branch in $State.Branches) {
@@ -623,8 +652,7 @@ function Update-List([switch]$Cached) {
     }
     $list.EndUpdate()
     $State.SelectedIndex = $list.SelectedIndex
-    if ($Cached -and $State.DevBranch) { return }
-    $State.DevBranch = $devBranch = (Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD')).Text
+    $devBranch = if ($State.DevBranch) { $State.DevBranch } else { '...' }
     $header.Text = "Dev-Repo: $($State.Repo)   ·   ausgecheckt: $devBranch   ·   Theme wie die App ($($Theme.Name))"
 }
 
@@ -660,8 +688,45 @@ function Set-Busy([bool]$Busy) {
 }
 
 # ---------------------------------------------------------------- step queue
-# A step is a hashtable: Title, Run (returns a Process or $null), Done (gets
-# the step and exit code). Steps run one after another on the UI thread timer.
+# A step is a hashtable: Title, then either Run (UI thread, returns a Process
+# or $null) or Work (background, see Start-Work; its last output lands in
+# Result), and Done (UI thread, gets the step and exit code). Steps run one
+# after another; the UI thread timer polls the running one.
+
+# Work blocks run as text in a second runspace, so git queries, copying and
+# deleting never freeze the window. They see only their $Data argument, these
+# functions, $BuildRoot, $SeedPaths and a $State table of their own holding the repo.
+$BackgroundFunctions = @('Read-Json', 'Write-Json', 'Invoke-Git', 'Get-SafeName', 'Get-BranchDir', 'Get-BuildInfo',
+    'Get-CurrentExe', 'Get-RemoteBranches', 'Test-HasUpdate', 'Get-NewCommitCount', 'Copy-BuildPrerequisites')
+
+function Open-Background {
+    $session = [initialsessionstate]::CreateDefault2()
+    foreach ($name in $BackgroundFunctions) {
+        $session.Commands.Add((New-Object System.Management.Automation.Runspaces.SessionStateFunctionEntry($name,
+            (Get-Command $name -CommandType Function).Definition)))
+    }
+    $variables = @{ BuildRoot = $BuildRoot; SeedPaths = $SeedPaths; State = @{ Repo = $State.Repo } }
+    foreach ($name in $variables.Keys) {
+        $session.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry($name, $variables[$name], $null)))
+    }
+    $State.Background = [runspacefactory]::CreateRunspace($session)
+    $State.Background.Open()
+}
+
+function Start-Work([scriptblock]$Work, $Data) {
+    $shell = [powershell]::Create()
+    $shell.Runspace = $State.Background
+    [void]$shell.AddScript($Work.ToString()).AddArgument($Data)
+    return [pscustomobject]@{ Shell = $shell; Handle = $shell.BeginInvoke() }
+}
+
+# Returns the Work's last output, or throws its error as if it had failed here.
+function Receive-Work($Job) {
+    try { $output = $Job.Shell.EndInvoke($Job.Handle) }
+    catch { throw $(if ($_.Exception.InnerException) { $_.Exception.InnerException } else { $_.Exception }) }
+    finally { $Job.Shell.Dispose() }
+    if ($output.Count -gt 0) { return $output[$output.Count - 1] }
+}
 
 function Start-LoggedProcess([string]$CommandLine, [string]$Directory, [string]$Log, [hashtable]$Environment = @{}) {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Log) | Out-Null
@@ -690,24 +755,35 @@ function Start-LoggedProcess([string]$CommandLine, [string]$Directory, [string]$
 
 function Add-Step([hashtable]$Step) { $State.Queue.Enqueue($Step) }
 
+# Queues steps to run next, ahead of the steps already waiting.
+function Add-StepsFirst([hashtable[]]$Steps) {
+    $rest = $State.Queue.ToArray()
+    $State.Queue.Clear()
+    foreach ($step in @($Steps) + $rest) { $State.Queue.Enqueue($step) }
+}
+
 function Invoke-NextStep {
     while (-not $State.Current -and $State.Queue.Count -gt 0) {
         $step = $State.Queue.Dequeue()
         $status.Text = $step.Title
         Set-Busy $true
+        $State.Refreshed = [bool]$step.Refresh
         try {
-            $process = & $step.Run $step
-            if ($process) {
-                $step.Process = $process
-                $State.Current = $step
-            }
+            if ($step.Work) { $step.Job = Start-Work $step.Work $step.Data }
+            else { $step.Process = & $step.Run $step }
+            if ($step.Job -or $step.Process) { $State.Current = $step }
             elseif ($step.Done) { & $step.Done $step 0 }
         }
         catch { $State.Summary.Add("$($step.Title): $($_.Exception.Message)") }
     }
     if (-not $State.Current -and $State.Queue.Count -eq 0 -and $State.Busy) {
+        # Every run ends with the branches read again, unless its last step did.
+        if (-not $State.Refreshed) {
+            Add-RefreshStep
+            Invoke-NextStep
+            return
+        }
         Set-Busy $false
-        Update-List
         $status.Text = if ($State.Summary.Count -gt 0) { $State.Summary -join '  |  ' } else { 'Fertig.' }
         $State.Summary.Clear()
     }
@@ -736,17 +812,62 @@ function Invoke-Tick {
         $tail = Get-LogTail $step.Log
         if ($tail) { $status.Text = "$($step.Title)  ·  $tail" }
     }
-    if (-not $step.Process.HasExited) { return }
-    $code = $step.Process.ExitCode
+    $finished = if ($step.Job) { $step.Job.Handle.IsCompleted } else { $step.Process.HasExited }
+    if (-not $finished) { return }
     $State.Current = $null
-    try { if ($step.Done) { & $step.Done $step $code } }
+    try {
+        $code = 0
+        if ($step.Job) { $step.Result = Receive-Work $step.Job }
+        else { $code = $step.Process.ExitCode }
+        if ($step.Done) { & $step.Done $step $code }
+    }
     catch { $State.Summary.Add("$($step.Title): $($_.Exception.Message)") }
     Invoke-NextStep
 }
 
+# Short enough that a finished background read shows without a noticeable wait.
 $timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = 500
-$timer.Add_Tick({ Invoke-Tick })
+$timer.Interval = 250
+$timer.Add_Tick({ Invoke-Tick; Invoke-LaunchTick })
+
+# Reads the branches, how many commits each built version lacks and the dev
+# checkout's branch. -Report then sums up the Sync.
+function Add-RefreshStep([switch]$Report) {
+    Add-Step @{
+        Title = $(if ($Report) { 'Vergleiche mit den gebauten Versionen ...' } else { 'Lese die Branches ...' })
+        Refresh = $true
+        Quiet = $true
+        Report = [bool]$Report
+        Work = {
+            $branches = @(Get-RemoteBranches)
+            $newCommits = @{}
+            foreach ($branch in $branches) {
+                if (Test-HasUpdate $branch) { $newCommits[$branch.Name] = Get-NewCommitCount $branch }
+            }
+            [pscustomobject]@{
+                Branches = $branches
+                NewCommits = $newCommits
+                DevBranch = (Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD')).Text
+            }
+        }
+        Done = {
+            param($s)
+            $State.Branches = @($s.Result.Branches)
+            $State.NewCommits = $s.Result.NewCommits
+            $State.DevBranch = $s.Result.DevBranch
+            Update-List
+            if (-not $s.Report -or $State.FetchFailed) { return }
+            $behind = @($State.Branches | Where-Object { $State.NewCommits.ContainsKey($_.Name) } | ForEach-Object { $_.Name })
+            $built = @($State.Branches | Where-Object { Test-Path -LiteralPath (Get-CurrentExe $_.Name) -PathType Leaf })
+            $time = (Get-Date).ToString('HH:mm')
+            if ($built.Count -eq 0) { $State.Summary.Add("GitHub geprüft ($time): noch keine Version gebaut, Update baut alle Branches") }
+            elseif ($behind.Count -eq 0) { $State.Summary.Add("GitHub geprüft ($time): alle gebauten Versionen sind aktuell") }
+            else {
+                $State.Summary.Add("GitHub geprüft ($time): Update für $($behind -join ', ') verfügbar, Update baut $(if ($behind.Count -eq 1) { 'ihn' } else { 'sie' })")
+            }
+        }
+    }
+}
 
 # -Quiet: a plain sync may be cut off without asking when the window closes.
 function Add-FetchStep([switch]$Quiet) {
@@ -768,17 +889,16 @@ function Add-FetchStep([switch]$Quiet) {
 function Add-DevPullStep {
     Add-Step @{
         Title = 'Aktualisiere Dev-Checkout (git pull) ...'
-        Run = {
-            param($s)
+        Work = {
             $dirty = (Invoke-Git @('status', '--porcelain')).Text
             $upstream = Invoke-Git @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
-            if ($dirty) { $State.Summary.Add('Dev-Checkout nicht gepullt: lokale Änderungen'); return $null }
-            if ($upstream.Code -ne 0) { $State.Summary.Add('Dev-Checkout nicht gepullt: Branch ohne Upstream'); return $null }
+            if ($dirty) { return 'Dev-Checkout nicht gepullt: lokale Änderungen' }
+            if ($upstream.Code -ne 0) { return 'Dev-Checkout nicht gepullt: Branch ohne Upstream' }
             $merge = Invoke-Git @('merge', '--ff-only', '@{u}')
-            if ($merge.Code -ne 0) { $State.Summary.Add('Dev-Checkout nicht gepullt: kein Fast-Forward möglich') }
-            elseif ($merge.Text -notmatch 'Already up to date|Bereits aktuell') { $State.Summary.Add('Dev-Checkout gepullt') }
-            return $null
+            if ($merge.Code -ne 0) { return 'Dev-Checkout nicht gepullt: kein Fast-Forward möglich' }
+            if ($merge.Text -notmatch 'Already up to date|Bereits aktuell') { return 'Dev-Checkout gepullt' }
         }
+        Done = { param($s) if ($s.Result) { $State.Summary.Add($s.Result) } }
     }
 }
 
@@ -810,15 +930,23 @@ function Add-BuildSteps($Branch) {
                 $command = "git checkout --force --detach $($s.Branch.Sha)"
                 return Start-LoggedProcess $command $s.Worktree $s.Log
             }
-            [void](Invoke-Git @('worktree', 'prune'))
             New-Item -ItemType Directory -Force -Path $WorktreeRoot | Out-Null
-            return Start-LoggedProcess "git worktree add --detach `"$($s.Worktree)`" $($s.Branch.Sha)" $State.Repo $s.Log
+            # One process: the prune drops a stale registration of a deleted folder first.
+            $command = "(git worktree prune & git worktree add --detach `"$($s.Worktree)`" $($s.Branch.Sha))"
+            return Start-LoggedProcess $command $State.Repo $s.Log
         }
         Done = {
             param($s, $code)
             if ($code -ne 0) { throw "git checkout fehlgeschlagen ($code)" }
-            Copy-BuildPrerequisites $s.Worktree
-            $build = @{
+            $steps = @()
+            if ($SeedPaths.Count -gt 0) {
+                $steps += @{
+                    Title = "[$($s.Branch.Name)] Kopiere Build-Voraussetzungen ..."
+                    Data = $s.Worktree
+                    Work = { param($Worktree) Copy-BuildPrerequisites $Worktree }
+                }
+            }
+            $steps += @{
                 Title = "[$($s.Branch.Name)] Baue ... (kann einige Minuten dauern)"
                 Log = $s.Log
                 Branch = $s.Branch
@@ -832,10 +960,7 @@ function Add-BuildSteps($Branch) {
                 Done = { param($b, $buildCode) Complete-Build $b $buildCode }
             }
             # Run the build next, ahead of other branches already queued.
-            $rest = $State.Queue.ToArray()
-            $State.Queue.Clear()
-            $State.Queue.Enqueue($build)
-            foreach ($item in $rest) { $State.Queue.Enqueue($item) }
+            Add-StepsFirst $steps
         }
     }
 }
@@ -860,16 +985,55 @@ function Complete-Build($Step, [int]$Code) {
         $State.Summary.Add("$($branch.Name): $failure (Log öffnen)")
         return
     }
-    $staging = Join-Path $dir 'staging'
-    if (Test-Path -LiteralPath $staging) { Remove-Item -LiteralPath $staging -Recurse -Force }
-    robocopy $output $staging /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "Kopieren der Build-Ausgabe fehlgeschlagen ($LASTEXITCODE)" }
-    Write-Json (Join-Path $dir 'staging.json') ([pscustomobject]@{
-        Branch = $branch.Name; Sha = $branch.Sha; Date = $branch.Date; Subject = $branch.Subject
-        BuiltAt = (Get-Date).ToString('s'); Log = $Step.Log
-        FailedSha = $null; FailedAt = $null; FailedLog = $null
+    # The ~300 MB copy runs in the background into a folder nothing else uses;
+    # Complete-Copy then turns it into the staging copy on the UI thread.
+    $incoming = Join-Path $dir 'incoming'
+    Add-StepsFirst @(@{
+        Title = "[$($branch.Name)] Übernehme den Build ..."
+        Log = $Step.Log
+        Branch = $branch
+        Incoming = $incoming
+        Data = @{ Output = $output; Incoming = $incoming }
+        Work = {
+            param($Data)
+            if (Test-Path -LiteralPath $Data.Incoming) { Remove-Item -LiteralPath $Data.Incoming -Recurse -Force }
+            robocopy $Data.Output $Data.Incoming /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
+            if ($LASTEXITCODE -ge 8) { throw "Kopieren der Build-Ausgabe fehlgeschlagen ($LASTEXITCODE)" }
+        }
+        Done = { param($c) Complete-Copy $c }
     })
-    if (Complete-Staging $branch.Name) { $State.Summary.Add("$($branch.Name): neu gebaut") }
+}
+
+function Complete-Copy($Step) {
+    $branch = $Step.Branch
+    $dir = Get-BranchDir $branch.Name
+    try {
+        if (Test-Path -LiteralPath $Step.Incoming) {
+            # This copy replaces an older one that still waits to be swapped in.
+            $staging = Join-Path $dir 'staging'
+            Remove-Item -LiteralPath (Join-Path $dir 'staging.json') -Force -ErrorAction SilentlyContinue
+            if (Test-Path -LiteralPath $staging) { Remove-Later $staging }
+            Rename-Item -LiteralPath $Step.Incoming -NewName 'staging' -ErrorAction Stop
+            Write-Json (Join-Path $dir 'staging.json') ([pscustomobject]@{
+                Branch = $branch.Name; Sha = $branch.Sha; Date = $branch.Date; Subject = $branch.Subject
+                BuiltAt = (Get-Date).ToString('s'); Log = $Step.Log
+                FailedSha = $null; FailedAt = $null; FailedLog = $null
+            })
+        }
+        $swapped = Complete-Staging $branch.Name
+    }
+    catch {
+        # Usually a virus scan of the fresh files: try again every half second
+        # for about ten seconds, without holding up the window meanwhile.
+        $Step.Attempt = [int]$Step.Attempt + 1
+        if ($Step.Attempt -le 20) {
+            $Step.Work = { Start-Sleep -Milliseconds 500 }
+            Add-StepsFirst @($Step)
+            return
+        }
+        throw "Build nicht übernommen, Dateien gesperrt ($($_.Exception.Message))"
+    }
+    if ($swapped) { $State.Summary.Add("$($branch.Name): neu gebaut") }
     else { $State.Summary.Add("$($branch.Name): neu gebaut, wird nach dem Beenden der laufenden App übernommen") }
 }
 
@@ -880,14 +1044,13 @@ function Start-Update([bool]$Force) {
     if (-not $Force) { Add-DevPullStep }
     Add-Step @{
         Title = 'Prüfe, welche Versionen neu gebaut werden müssen ...'
-        Force = $Force
-        Selected = if ($selected) { $selected.Name } else { $null }
-        Run = {
-            param($s)
-            $State.Branches = Get-RemoteBranches
+        Data = @{ Force = $Force; Selected = $(if ($selected) { $selected.Name } else { $null }) }
+        Work = {
+            param($Data)
+            $branches = @(Get-RemoteBranches)
             $todo = @()
-            foreach ($branch in $State.Branches) {
-                if ($s.Force) { if ($branch.Name -eq $s.Selected) { $todo += $branch }; continue }
+            foreach ($branch in $branches) {
+                if ($Data.Force) { if ($branch.Name -eq $Data.Selected) { $todo += $branch }; continue }
                 $info = Get-BuildInfo $branch.Name
                 $built = (Test-Path -LiteralPath (Get-CurrentExe $branch.Name)) -and $info -and $info.Sha -eq $branch.Sha
                 $knownBroken = $info -and $info.FailedSha -eq $branch.Sha
@@ -895,9 +1058,13 @@ function Start-Update([bool]$Force) {
                 $waiting = $pending -and $pending.Sha -eq $branch.Sha
                 if (-not $built -and -not $knownBroken -and -not $waiting) { $todo += $branch }
             }
-            if ($todo.Count -eq 0) { $State.Summary.Add('Alle Versionen sind aktuell') }
-            foreach ($branch in $todo) { Add-BuildSteps $branch }
-            return $null
+            [pscustomobject]@{ Branches = $branches; Todo = $todo }
+        }
+        Done = {
+            param($s)
+            $State.Branches = @($s.Result.Branches)
+            if ($s.Result.Todo.Count -eq 0) { $State.Summary.Add('Alle Versionen sind aktuell') }
+            foreach ($branch in $s.Result.Todo) { Add-BuildSteps $branch }
         }
     }
     Invoke-NextStep
@@ -906,31 +1073,19 @@ function Start-Update([bool]$Force) {
 # Fetch only: the cards then show which branches have an update; nothing is built.
 function Start-Sync {
     if ($State.Current -or $State.Queue.Count -gt 0) { return }
+    # On opening, the local state shows before the fetch, which can take a while.
+    if ($State.Branches.Count -eq 0) { Add-RefreshStep }
     Add-FetchStep -Quiet
-    Add-Step @{
-        Title = 'Vergleiche mit den gebauten Versionen ...'
-        Run = {
-            param($s)
-            if ($State.FetchFailed) { return $null }
-            $State.Branches = Get-RemoteBranches
-            $behind = @($State.Branches | Where-Object { Test-HasUpdate $_ } | ForEach-Object { $_.Name })
-            $built = @($State.Branches | Where-Object { Test-Path -LiteralPath (Get-CurrentExe $_.Name) -PathType Leaf })
-            $time = (Get-Date).ToString('HH:mm')
-            if ($built.Count -eq 0) { $State.Summary.Add("GitHub geprüft ($time): noch keine Version gebaut, Update baut alle Branches") }
-            elseif ($behind.Count -eq 0) { $State.Summary.Add("GitHub geprüft ($time): alle gebauten Versionen sind aktuell") }
-            else {
-                $State.Summary.Add("GitHub geprüft ($time): Update für $($behind -join ', ') verfügbar, Update baut $(if ($behind.Count -eq 1) { 'ihn' } else { 'sie' })")
-            }
-            return $null
-        }
-    }
+    Add-RefreshStep -Report
     Invoke-NextStep
 }
 
 function Start-SelectedVersion {
+    if ($State.Launch) { return }
     $branch = Get-SelectedBranch
     if (-not $branch) { return }
-    [void](Complete-Staging $branch.Name)
+    # A swap blocked by a locked file keeps the old copy; the next start retries.
+    try { [void](Complete-Staging $branch.Name) } catch { }
     $exe = Get-CurrentExe $branch.Name
     if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) {
         [void](Show-Message "Für '$($branch.Name)' gibt es noch keine gebaute Version. Bitte zuerst Update ausführen." 'Warning')
@@ -942,18 +1097,45 @@ function Start-SelectedVersion {
         $answer = Show-Message "iPhoneMirror läuft bereits (nur eine Instanz möglich):`n$where`n`nLaufende Instanz beenden und '$($branch.Name)' starten?" 'Question' 'YesNo'
         if ($answer -ne 'Yes') { return }
         foreach ($process in $running) { [void]$process.CloseMainWindow() }
-        foreach ($process in $running) { [void]$process.WaitForExit(10000) }
-        $still = @($running | Where-Object { -not $_.HasExited })
-        if ($still.Count -gt 0) {
-            $answer = Show-Message 'Die laufende Instanz hat sich nicht beendet (evtl. ausgeblendet oder im Tray). Hart beenden?' 'Warning' 'YesNo'
-            if ($answer -ne 'Yes') { return }
-            $still | Stop-Process -Force
-            Start-Sleep -Milliseconds 800
-        }
-        [void](Complete-Staging $branch.Name)
+        # Waiting for the exit here froze the window for up to 10 s per
+        # instance; the timer checks on every tick instead.
+        $State.Launch = @{ Branch = $branch; Processes = $running; Until = (Get-Date).AddSeconds(10); Killed = $false }
+        $startButton.Enabled = $false
+        $status.Text = 'Warte, bis sich die laufende Instanz beendet ...'
+        return
     }
+    Start-Version $branch
+}
+
+function Invoke-LaunchTick {
+    $launch = $State.Launch
+    if (-not $launch) { return }
+    $still = @($launch.Processes | Where-Object { -not $_.HasExited })
+    # After a hard kill, give Windows a moment to release the instance's files.
+    if (($launch.Killed -or $still.Count -gt 0) -and (Get-Date) -lt $launch.Until) { return }
+    # Cleared before asking: the timer keeps ticking behind the message box.
+    $State.Launch = $null
+    if ($still.Count -gt 0 -and -not $launch.Killed) {
+        $answer = Show-Message 'Die laufende Instanz hat sich nicht beendet (evtl. ausgeblendet oder im Tray). Hart beenden?' 'Warning' 'YesNo'
+        if ($answer -ne 'Yes') {
+            $startButton.Enabled = $true
+            $status.Text = 'Nicht gestartet: die laufende Instanz läuft weiter.'
+            return
+        }
+        $still | Stop-Process -Force
+        $launch.Killed = $true
+        $launch.Until = (Get-Date).AddMilliseconds(800)
+        $State.Launch = $launch
+        return
+    }
+    Start-Version $launch.Branch
+}
+
+function Start-Version($Branch) {
+    try { [void](Complete-Staging $Branch.Name) } catch { }
+    $exe = Get-CurrentExe $Branch.Name
     Start-Process -FilePath $exe -WorkingDirectory (Split-Path -Parent $exe)
-    $State.Config.LastBranch = $branch.Name
+    $State.Config.LastBranch = $Branch.Name
     Save-Config
     $form.Close()
 }
@@ -985,7 +1167,8 @@ $form.Add_FormClosing({
         $answer = Show-Message 'Es läuft gerade ein Update/Build. Abbrechen und schliessen?' 'Question' 'YesNo'
         if ($answer -ne 'Yes') { $closing.Cancel = $true; return }
     }
-    & taskkill.exe /T /F /PID $State.Current.Process.Id | Out-Null
+    if ($State.Current.Job) { [void]$State.Current.Job.Shell.BeginStop($null, $null) }
+    else { & taskkill.exe /T /F /PID $State.Current.Process.Id | Out-Null }
 })
 
 # ---------------------------------------------------------------- start
@@ -1007,9 +1190,11 @@ $State.Config = [pscustomobject]@{
 New-Item -ItemType Directory -Force -Path $StateRoot | Out-Null
 Install-Launcher
 Save-Config
+Open-Background
+# Leftovers of a deletion that a shutdown cut off.
+Get-ChildItem -LiteralPath $TrashRoot -Directory -ErrorAction SilentlyContinue | ForEach-Object { Start-Deletion $_.FullName }
 
 if ($Update) {
-    Update-List
     Start-Update $false
     $lastTitle = $null
     while ($State.Current -or $State.Queue.Count -gt 0) {
@@ -1024,12 +1209,10 @@ if ($Update) {
     return
 }
 
+# The window opens at once; the cards come from the background read that
+# Start-Sync queues first.
 Update-List
-if ($State.Branches.Count -eq 0) { $status.Text = 'Keine Branches auf origin gefunden: Update holt sie von GitHub.' }
-elseif (@($State.Branches | Where-Object { Test-Path -LiteralPath (Get-CurrentExe $_.Name) }).Count -eq 0) {
-    $status.Text = 'Noch keine Version gebaut: Update baut alle Branches (dauert beim ersten Mal länger).'
-}
-else { $status.Text = 'Version wählen und Starten. Update holt neue Stände von GitHub und baut sie.' }
+$status.Text = 'Lese die Branches ...'
 
 # Started from a hidden PowerShell, the window would otherwise open behind others.
 # Opening also syncs, so the cards show right away which branch has an update.
