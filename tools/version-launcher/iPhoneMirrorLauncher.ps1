@@ -671,7 +671,19 @@ function Start-LoggedProcess([string]$CommandLine, [string]$Directory, [string]$
     $info.WorkingDirectory = $Directory
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true
+    # Windows PowerShell must discover its own modules, rather than inherit
+    # PowerShell 7's module paths through cmd.exe / Process.Start.
+    $info.EnvironmentVariables.Remove('PSModulePath')
     $info.EnvironmentVariables['GIT_TERMINAL_PROMPT'] = '0'
+    # The repo's Git metadata can live on exFAT even when the worktree is on C:.
+    # Trust this step's directory for its process tree without changing global Git settings.
+    $gitConfigIndex = 0
+    if ($info.EnvironmentVariables['GIT_CONFIG_COUNT']) {
+        $gitConfigIndex = [int]$info.EnvironmentVariables['GIT_CONFIG_COUNT']
+    }
+    $info.EnvironmentVariables["GIT_CONFIG_KEY_$gitConfigIndex"] = 'safe.directory'
+    $info.EnvironmentVariables["GIT_CONFIG_VALUE_$gitConfigIndex"] = [IO.Path]::GetFullPath($Directory).Replace('\', '/')
+    $info.EnvironmentVariables['GIT_CONFIG_COUNT'] = [string]($gitConfigIndex + 1)
     foreach ($name in $Environment.Keys) { $info.EnvironmentVariables[$name] = [string]$Environment[$name] }
     return [System.Diagnostics.Process]::Start($info)
 }
@@ -842,7 +854,10 @@ function Complete-Build($Step, [int]$Code) {
         $failed.FailedAt = (Get-Date).ToString('s')
         $failed.FailedLog = $Step.Log
         Write-Json (Join-Path $dir 'build.json') $failed
-        $State.Summary.Add("$($branch.Name): Build fehlgeschlagen, alte Version bleibt (Log öffnen)")
+        $failure = if (Test-Path -LiteralPath (Get-CurrentExe $branch.Name) -PathType Leaf) {
+            'Build fehlgeschlagen, alte Version bleibt'
+        } else { 'Build fehlgeschlagen, noch keine startbare Version' }
+        $State.Summary.Add("$($branch.Name): $failure (Log öffnen)")
         return
     }
     $staging = Join-Path $dir 'staging'
