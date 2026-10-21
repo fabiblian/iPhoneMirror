@@ -13,32 +13,47 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}"/>
+        <!-- Draw focus inside the rounded template: an external adorner is clipped by toolbars. -->
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Root" Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="{DynamicResource ButtonCornerRadius}" Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True">
-                        <ContentPresenter x:Name="ButtonContent" RecognizesAccessKey="True"
-                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                          TextElement.Foreground="{TemplateBinding Foreground}"
-                                          TextElement.FontFamily="{TemplateBinding FontFamily}"
-                                          TextElement.FontSize="{TemplateBinding FontSize}"
-                                          TextElement.FontWeight="{TemplateBinding FontWeight}"
-                                          TextElement.FontStyle="{TemplateBinding FontStyle}"
-                                          TextElement.FontStretch="{TemplateBinding FontStretch}">
-                            <ContentPresenter.Resources>
-                                <DataTemplate DataType="{x:Type sys:String}">
-                                    <AccessText Text="{Binding}" TextWrapping="Wrap" Style="{StaticResource ControlAccessText}"/>
-                                </DataTemplate>
-                            </ContentPresenter.Resources>
-                        </ContentPresenter>
-                    </Border>
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{DynamicResource ButtonCornerRadius}" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="ButtonContent" RecognizesAccessKey="True"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              TextElement.FontFamily="{TemplateBinding FontFamily}"
+                                              TextElement.FontSize="{TemplateBinding FontSize}"
+                                              TextElement.FontWeight="{TemplateBinding FontWeight}"
+                                              TextElement.FontStyle="{TemplateBinding FontStyle}"
+                                              TextElement.FontStretch="{TemplateBinding FontStretch}">
+                                <ContentPresenter.Resources>
+                                    <DataTemplate DataType="{x:Type sys:String}">
+                                        <AccessText Text="{Binding}" TextWrapping="Wrap" Style="{StaticResource ControlAccessText}"/>
+                                    </DataTemplate>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                        </Border>
+                        <Border x:Name="FocusRing" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="2" CornerRadius="{DynamicResource ButtonCornerRadius}"
+                                Visibility="Collapsed" IsHitTestVisible="False" SnapsToDevicePixels="True"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="IsEnabled" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

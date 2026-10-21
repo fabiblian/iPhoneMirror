@@ -179,6 +179,8 @@ internal static partial class Program
                 return RunAdaptiveToolbarTests(toolbarOutput);
             if (args is ["--tray-startup-theme", var trayThemeOutput])
                 return RunTrayStartupThemeTests(trayThemeOutput);
+            if (args is ["--button-borders", var borderOutput])
+                return RunButtonBorderTests(borderOutput);
             if (args is ["--theme-content", var themeContentOutput])
                 return RunThemeContentAudit(themeContentOutput);
             if (args is ["--tray-mode", var trayOutput])
@@ -1847,7 +1849,7 @@ internal static partial class Program
         var themeService = assembly.GetType(
             "IPhoneMirror.App.Services.ThemeService", throwOnError: true)!;
         var apply = themeService.GetMethod("Apply",
-            BindingFlags.Static | BindingFlags.NonPublic) ??
+            BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(AppTheme)], null) ??
             throw new MissingMethodException(themeService.FullName, "Apply");
         apply.Invoke(null, [theme]);
     }
