@@ -33,27 +33,6 @@ internal sealed partial class MainViewModel
             _sessions.TryGet(udid, out var state) && state.UsbVideoOnly;
     }
 
-    /// <summary>The device's own app volume in percent.</summary>
-    internal double GetDeviceVolume(string? udid) =>
-        DeviceViewModel.UdidEquals(udid, SelectedDevice?.Udid) ? PlaybackVolume
-        : udid is not null && _sessions.TryGet(udid, out var state) ? state.Volume : 100;
-
-    /// <summary>Sets the device's app volume; this also unmutes.</summary>
-    internal void SetDeviceVolume(string? udid, double percent)
-    {
-        if (!double.IsFinite(percent) || udid is null) return;
-        if (DeviceViewModel.UdidEquals(udid, SelectedDevice?.Udid))
-        {
-            PlaybackVolume = percent;
-            return;
-        }
-        if (!_sessions.TryGet(udid, out var state) || state.Handle is not { IsInvalid: false } handle) return;
-        if (IsMuted) IsMuted = false;
-        var clamped = Math.Clamp(percent, 0, 100);
-        var result = InvokeDeviceSetting(() => _core.SetDeviceAudioVolume(handle, clamped / 100.0));
-        if (result.Success) state.Volume = clamped;
-    }
-
     private double MutedVolume(double volume) => IsMuted ? 0 : volume;
 
     private void ApplyMuteToSessions()

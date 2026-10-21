@@ -542,21 +542,24 @@
     <system:String x:Key="AdvancedModeEnabled">Advanced mode enabled</system:String>
     <system:String x:Key="AdvancedModeDisabled">Advanced mode disabled; normal presets restored</system:String>
     <system:String x:Key="UsbProjectionModeTitle">USB mode</system:String>
-    <system:String x:Key="UsbModeDemoLabel">A Demo (recommended)</system:String>
-    <system:String x:Key="UsbModeAirPlayLabel">B AirPlay (real time; videos play audio only)</system:String>
-    <system:String x:Key="UsbModeAisiLabel">C Aisi mode</system:String>
-    <system:String x:Key="UsbProjectionPerDeviceHint">Applies only to the currently selected USB device.</system:String>
-    <system:String x:Key="UsbModeDetailsToolTip">View this mode's advantages and disadvantages</system:String>
+    <system:String x:Key="UsbModeDemoLabel">Full mirror (recommended)</system:String>
+    <system:String x:Key="UsbModeAirPlayLabel">Real clock and battery</system:String>
+    <system:String x:Key="UsbModeAisiLabel">Compatibility</system:String>
+    <system:String x:Key="UsbModeDemoSummary">Shows everything, including videos in apps such as TikTok. The status bar shows 9:41 and a full battery instead of the real values.</system:String>
+    <system:String x:Key="UsbModeAirPlaySummary">The status bar shows the real time and battery. Video apps treat the cable as a second screen, so the mirror often shows a black video area with sound only. Uses the cable, not wireless AirPlay.</system:String>
+    <system:String x:Key="UsbModeAisiSummary">Fixed square picture size for iPhones where the other modes fail. Less sharp; landscape content can get black bars.</system:String>
+    <system:String x:Key="UsbProjectionPerDeviceHint">All three modes use the USB cable; wireless AirPlay is a separate source. Applies only to the currently selected USB device.</system:String>
+    <system:String x:Key="UsbModeDetailsToolTip">What this mode does</system:String>
     <system:String x:Key="UsbModeDetailsTitle">USB mirroring mode details</system:String>
     <system:String x:Key="UsbModeAdvantageTitle">Advantages</system:String>
     <system:String x:Key="UsbModeDisadvantageTitle">Disadvantages</system:String>
-    <system:String x:Key="UsbModeDemoAdvantage">Sends Valeria=true with the device's native DisplaySize, letting iOS provide a complete phone mirror while remaining in demonstration state. It offers the best compatibility and framing and is recommended for everyday use.</system:String>
-    <system:String x:Key="UsbModeDemoDisadvantage">iOS enters Apple's demonstration state. The status-bar date, time, and battery are locked to demonstration values instead of the phone's current state.</system:String>
-    <system:String x:Key="UsbModeDemoNotice">This mode does not enable AirPlay or external playback from video apps.</system:String>
-    <system:String x:Key="UsbModeAirPlayAdvantage">Shows the phone's real time, date, and battery in the status bar. Sends Valeria=false, uses the device's native size, and retains first-frame probing, orientation detection, and adaptive reconfiguration. Video apps can switch to AirPlay or external playback.</system:String>
-    <system:String x:Key="UsbModeAirPlayDisadvantage">Mainly affects video apps: external-content resolution cannot be guaranteed to adapt perfectly to both the phone and the window. Content may be cropped, use the wrong aspect ratio, or be partly off-screen.</system:String>
+    <system:String x:Key="UsbModeDemoAdvantage">Shows the complete iPhone screen as you see it, including videos in apps such as TikTok or YouTube. The most reliable picture. Technical: sends Valeria=true with the native display size.</system:String>
+    <system:String x:Key="UsbModeDemoDisadvantage">While mirroring, iOS switches to Apple's demo state: the status bar shows 9:41 and a full battery instead of the real time and battery.</system:String>
+    <system:String x:Key="UsbModeDemoNotice">Video apps cannot switch to second-screen playback in this mode, which is why their videos stay visible.</system:String>
+    <system:String x:Key="UsbModeAirPlayAdvantage">The status bar shows the real time, date and battery. The picture adapts when you rotate the iPhone. Technical: sends Valeria=false with the native display size.</system:String>
+    <system:String x:Key="UsbModeAirPlayDisadvantage">iOS treats the cable like an external screen. Video apps (TikTok, YouTube and others) then send their video to that screen as a separate stream that the mirror does not show: the video area stays black and only the sound plays. Despite the old name &quot;AirPlay&quot;, this mode always uses the cable.</system:String>
     <system:String x:Key="UsbModeAirPlayNotice">For custom sizing, click the version in the lower-right corner five times to enable Advanced mode. Custom HPD1 dimensions are risky and can cause a black screen, cropping, or failed USB reconnection.</system:String>
-    <system:String x:Key="UsbModeAisiAdvantage">Uses an Aisi-style configuration with Valeria=false and a fixed 1565×1565 request, reducing display-negotiation differences between devices.</system:String>
+    <system:String x:Key="UsbModeAisiAdvantage">Requests a fixed square picture (1565×1565), the same approach as 3uTools (Aisi). Helps with iPhones where the other modes show no picture or a wrong size.</system:String>
     <system:String x:Key="UsbModeAisiDisadvantage">The square target limits source clarity and is unsuitable when image quality is the priority. Landscape content may also be scaled, letterboxed, or shown at an imperfect ratio.</system:String>
     <system:String x:Key="UsbModeAisiNotice">This mode does not use this application's native-resolution probing or adaptive orientation reconfiguration.</system:String>
     <system:String x:Key="UsbProjectionModeSelectedFormat">Selected: {0}</system:String>
@@ -1709,10 +1712,6 @@ Pair, select and save.</system:String>
     <system:String x:Key="PreviewPinButton">Always on top</system:String>
     <system:String x:Key="PreviewMute">Mute (Ctrl+Alt+M)</system:String>
     <system:String x:Key="PreviewUnmute">Sound on (Ctrl+Alt+M)</system:String>
-    <system:String x:Key="PreviewKeyboardActive">Keyboard reaches the iPhone</system:String>
-    <system:String x:Key="PreviewKeyboardInactive">Keyboard does not reach the iPhone</system:String>
-    <system:String x:Key="PreviewControlActive">Control is on</system:String>
-    <system:String x:Key="PreviewControlInactive">Control is off</system:String>
     <system:String x:Key="StatusPillMuted">Muted</system:String>
     <system:String x:Key="PreviewLookTitle">Look</system:String>
     <system:String x:Key="PreviewLookBorderless">Borderless</system:String>
@@ -1724,7 +1723,6 @@ Pair, select and save.</system:String>
     <system:String x:Key="PreviewCaseTitanium">Titanium</system:String>
     <system:String x:Key="PreviewCaseBlue">Blue</system:String>
     <system:String x:Key="PreviewControlsTitle">Controls on the preview</system:String>
-    <system:String x:Key="PreviewStatusIcons">Status icons top left (keyboard, control, mute, pin)</system:String>
     <system:String x:Key="PreviewControlsOnHover">Show the dots and the bar only while the pointer is over the preview</system:String>
     <system:String x:Key="PreviewSnapToEdges">Snap to screen edges and corners</system:String>
     <system:String x:Key="PreviewControlsHelp">Top dot: drag to move. Bottom right dot: drag to resize. Ctrl+Alt+arrow moves the preview into a corner.</system:String>

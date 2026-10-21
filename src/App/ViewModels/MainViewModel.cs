@@ -29,17 +29,19 @@ internal sealed class ResolutionPreset(string resourceKey, uint width, uint heig
 internal sealed record ClipboardHistoryEntry(string Text, DateTime TimestampUtc);
 
 internal sealed class UsbProjectionModeOption(UsbProjectionMode mode, string labelResourceKey,
-    string advantageResourceKey, string disadvantageResourceKey,
+    string summaryResourceKey, string advantageResourceKey, string disadvantageResourceKey,
     string noticeResourceKey) : INotifyPropertyChanged
 {
     public UsbProjectionMode Mode { get; } = mode;
     public string Label => LocalizationService.Get(labelResourceKey);
+    public string Summary => LocalizationService.Get(summaryResourceKey);
     public string Advantage => LocalizationService.Get(advantageResourceKey);
     public string Disadvantage => LocalizationService.Get(disadvantageResourceKey);
     public string Notice => LocalizationService.Get(noticeResourceKey);
     internal void NotifyLanguageChanged()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Label)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Summary)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Advantage)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Disadvantage)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Notice)));
@@ -301,12 +303,12 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         WirelessReceiverConfiguration.BackendOptions;
     public IReadOnlyList<UsbProjectionModeOption> UsbProjectionModes { get; } =
     [
-        new(UsbProjectionMode.Demo, "UsbModeDemoLabel", "UsbModeDemoAdvantage",
-            "UsbModeDemoDisadvantage", "UsbModeDemoNotice"),
-        new(UsbProjectionMode.AirPlay, "UsbModeAirPlayLabel", "UsbModeAirPlayAdvantage",
-            "UsbModeAirPlayDisadvantage", "UsbModeAirPlayNotice"),
-        new(UsbProjectionMode.Aisi, "UsbModeAisiLabel", "UsbModeAisiAdvantage",
-            "UsbModeAisiDisadvantage", "UsbModeAisiNotice"),
+        new(UsbProjectionMode.Demo, "UsbModeDemoLabel", "UsbModeDemoSummary",
+            "UsbModeDemoAdvantage", "UsbModeDemoDisadvantage", "UsbModeDemoNotice"),
+        new(UsbProjectionMode.AirPlay, "UsbModeAirPlayLabel", "UsbModeAirPlaySummary",
+            "UsbModeAirPlayAdvantage", "UsbModeAirPlayDisadvantage", "UsbModeAirPlayNotice"),
+        new(UsbProjectionMode.Aisi, "UsbModeAisiLabel", "UsbModeAisiSummary",
+            "UsbModeAisiAdvantage", "UsbModeAisiDisadvantage", "UsbModeAisiNotice"),
     ];
     public IReadOnlyList<DecoderPreferenceOption> DecoderPreferences { get; } =
     [

@@ -12,6 +12,7 @@ public partial class UsbProjectionModeInfoWindow : IPhoneMirror.UI.Controls.Roun
         void Refresh()
         {
             ModeTitle.Text = option.Label;
+            SummaryText.Text = option.Summary;
             AdvantageText.Text = option.Advantage;
             DisadvantageText.Text = option.Disadvantage;
             NoticeText.Text = option.Notice;

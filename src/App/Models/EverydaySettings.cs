@@ -48,9 +48,6 @@ internal sealed class EverydaySettings
     /// <summary>The app's own PC audio is muted.</summary>
     public bool Muted { get; set; }
 
-    /// <summary>Keyboard, control, mute and pin icons in the preview's top left corner.</summary>
-    public bool PreviewStatusIcons { get; set; } = true;
-
     /// <summary>The preview's dots and floating bar appear only while the pointer is over it.</summary>
     public bool PreviewControlsOnHoverOnly { get; set; } = true;
 

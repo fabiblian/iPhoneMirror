@@ -81,10 +81,7 @@
                     <!-- Controls drawn over the preview -->
                     <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
                     <TextBlock Text="{DynamicResource PreviewControlsTitle}" FontWeight="SemiBold"/>
-                    <CheckBox x:Name="StatusIconsCheckBox" Margin="0,10,0,0" Content="{DynamicResource PreviewStatusIcons}"
-                              Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
-                              AutomationProperties.AutomationId="PreviewStatusIconsCheckBox"/>
-                    <CheckBox x:Name="HoverOnlyCheckBox" Margin="0,8,0,0" Content="{DynamicResource PreviewControlsOnHover}"
+                    <CheckBox x:Name="HoverOnlyCheckBox" Margin="0,10,0,0" Content="{DynamicResource PreviewControlsOnHover}"
                               Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
                               AutomationProperties.AutomationId="PreviewControlsOnHoverCheckBox"/>
                     <CheckBox x:Name="SnapCheckBox" Margin="0,8,0,0" Content="{DynamicResource PreviewSnapToEdges}"

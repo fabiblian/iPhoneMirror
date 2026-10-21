@@ -906,9 +906,10 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="9">
-                            <TextBlock Text="!" Foreground="{TemplateBinding Foreground}"
+                            <TextBlock Text="i" Foreground="{TemplateBinding Foreground}"
                                        FontSize="{TemplateBinding FontSize}"
                                        FontWeight="{TemplateBinding FontWeight}"
+                                       FontFamily="Georgia"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -2294,6 +2295,10 @@
                                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
                                                     <Button Style="{StaticResource UsbModeInfoButton}"
                                                             HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                            ToolTip="{Binding Summary}"
+                                                            ToolTipService.InitialShowDelay="150"
+                                                            ToolTipService.ShowDuration="20000"
+                                                            AutomationProperties.Name="{DynamicResource UsbModeDetailsToolTip}"
                                                             Click="OnUsbProjectionModeInfoClick"/>
                                                 </Grid>
                                             </DataTemplate>

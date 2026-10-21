@@ -15,24 +15,21 @@ using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 namespace IPhoneMirror.App.Windows;
 
 /// <summary>What the preview controls show for one device.</summary>
-internal sealed record PreviewOverlayState(bool KeyboardActive, bool ControlActive, bool Muted,
-    bool AudioOnIphone, double Volume, bool StatusIcons, bool ControlsOnHoverOnly);
+internal sealed record PreviewOverlayState(bool Muted, bool ControlsOnHoverOnly);
 
 /// <summary>Actions behind the preview controls; the main window implements them.</summary>
 internal interface IPreviewOverlayActions
 {
     PreviewOverlayState GetOverlayState(string udid, nint window);
     void ToggleMute(string udid);
-    void SetVolume(string udid, double percent);
-    void StepIphoneVolume(string udid, bool up);
     void OpenPreviewSettings();
 }
 
 /// <summary>
-/// Transparent window over a native preview: status icons top left, a dot to
-/// move the window (top centre), a dot to resize it (bottom right) and a
-/// floating bar with sound, pin and settings. Everything but those controls
-/// lets clicks through to the preview, so touch control keeps working.
+/// Transparent window over a native preview: a dot to move the window (top
+/// centre), a dot to resize it (bottom right) and a floating bar with mute,
+/// pin and settings. Everything but those controls lets clicks through to the
+/// preview, so touch control keeps working.
 /// </summary>
 internal sealed class PreviewControlsOverlayWindow : Window
 {
@@ -46,12 +43,9 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private const long WsExNoActivate = 0x08000000L;
     private const long WsExToolWindow = 0x00000080L;
     private static readonly TimeSpan HoverLinger = TimeSpan.FromMilliseconds(900);
-    private static readonly Brush ActiveBrush = Frozen(Color.FromRgb(0x5F, 0xD3, 0x9A));
-    private static readonly Brush InactiveBrush = Frozen(Color.FromRgb(0x8E, 0x8E, 0x96));
     private static readonly Brush MutedBrush = Frozen(Color.FromRgb(0xFF, 0x8A, 0x8A));
     private static readonly Brush PinBrush = Frozen(Color.FromRgb(0x69, 0xB1, 0xF8));
     private static readonly Brush PillBrush = Frozen(Color.FromArgb(0xD6, 0x12, 0x12, 0x16));
-    private static readonly Brush StatusBrush = Frozen(Color.FromArgb(0xB8, 0x12, 0x12, 0x16));
     private static readonly ControlTemplate RoundButtonTemplate = (ControlTemplate)XamlReader.Parse("""
         <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="Button">
@@ -79,22 +73,12 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private readonly List<FrameworkElement> _interactive = [];
     private HwndSource? _source;
     private DateTime _lastInside = DateTime.MinValue;
-    private bool _updatingSlider;
 
-    private Border _status = null!;
-    private SymbolIcon _keyboardIcon = null!;
-    private SymbolIcon _controlIcon = null!;
-    private SymbolIcon _mutedIcon = null!;
-    private SymbolIcon _pinnedIcon = null!;
     private FrameworkElement _moveDot = null!;
     private FrameworkElement _resizeDot = null!;
     private Border _bar = null!;
     private Button _muteButton = null!;
     private SymbolIcon _muteSymbol = null!;
-    private StackPanel _pcVolume = null!;
-    private Slider _volumeSlider = null!;
-    private TextBlock _volumeText = null!;
-    private StackPanel _iphoneVolume = null!;
     private Button _pinButton = null!;
     private SymbolIcon _pinSymbol = null!;
 
@@ -146,23 +130,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
     {
         var root = new Grid();
 
-        _keyboardIcon = StatusIcon(SymbolRegular.Keyboard20);
-        _controlIcon = StatusIcon(SymbolRegular.CursorClick20);
-        _mutedIcon = StatusIcon(SymbolRegular.SpeakerMute20);
-        _mutedIcon.Foreground = MutedBrush;
-        _pinnedIcon = StatusIcon(SymbolRegular.Pin20);
-        _pinnedIcon.Foreground = PinBrush;
-        var statusIcons = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var icon in new[] { _keyboardIcon, _controlIcon, _mutedIcon, _pinnedIcon })
-            statusIcons.Children.Add(icon);
-        _status = new Border
-        {
-            Background = StatusBrush, CornerRadius = new CornerRadius(12), Padding = new Thickness(6, 3, 6, 3),
-            HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(10), Child = statusIcons, IsHitTestVisible = false,
-        };
-        root.Children.Add(_status);
-
         _moveDot = Dot(HorizontalAlignment.Center, VerticalAlignment.Top, Cursors.SizeAll, HtCaption,
             "PreviewMoveDot", new Thickness(0, 2, 0, 0));
         _resizeDot = Dot(HorizontalAlignment.Right, VerticalAlignment.Bottom, Cursors.SizeNWSE, HtBottomRight,
@@ -174,37 +141,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
         _muteSymbol = BarIcon(SymbolRegular.Speaker220);
         _muteButton = BarButton(_muteSymbol, () => _actions.ToggleMute(_udid));
         bar.Children.Add(_muteButton);
-
-        _volumeSlider = new Slider
-        {
-            Minimum = 0, Maximum = 100, Width = 96, VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(4, 0, 6, 0), Focusable = false, IsMoveToPointEnabled = true,
-        };
-        _volumeSlider.ValueChanged += (_, e) =>
-        {
-            if (!_updatingSlider) _actions.SetVolume(_udid, e.NewValue);
-        };
-        _volumeText = new TextBlock
-        {
-            Width = 38, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center,
-            Foreground = Brushes.WhiteSmoke, FontSize = 12, Margin = new Thickness(0, 0, 6, 0),
-        };
-        _pcVolume = new StackPanel { Orientation = Orientation.Horizontal };
-        _pcVolume.Children.Add(_volumeSlider);
-        _pcVolume.Children.Add(_volumeText);
-        bar.Children.Add(_pcVolume);
-
-        _iphoneVolume = new StackPanel { Orientation = Orientation.Horizontal };
-        _iphoneVolume.Children.Add(BarButton(BarIcon(SymbolRegular.Subtract20),
-            () => _actions.StepIphoneVolume(_udid, false), "PreviewIphoneVolumeDown"));
-        _iphoneVolume.Children.Add(new TextBlock
-        {
-            Text = "iPhone", Foreground = Brushes.Gainsboro, FontSize = 12, Width = 48,
-            TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-        });
-        _iphoneVolume.Children.Add(BarButton(BarIcon(SymbolRegular.Add20),
-            () => _actions.StepIphoneVolume(_udid, true), "PreviewIphoneVolumeUp"));
-        bar.Children.Add(_iphoneVolume);
 
         bar.Children.Add(new Rectangle
         {
@@ -228,11 +164,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
         ApplyTexts();
         return root;
     }
-
-    private static SymbolIcon StatusIcon(SymbolRegular symbol) => new()
-    {
-        Symbol = symbol, FontSize = 15, Margin = new Thickness(3, 0, 3, 0), Foreground = InactiveBrush,
-    };
 
     private static SymbolIcon BarIcon(SymbolRegular symbol) => new()
     {
@@ -322,7 +253,7 @@ internal sealed class PreviewControlsOverlayWindow : Window
         if (GetCursorPos(out var cursor) && cursor.X >= rect.Left && cursor.X < rect.Right &&
             cursor.Y >= rect.Top && cursor.Y < rect.Bottom)
             _lastInside = DateTime.UtcNow;
-        var hovered = DateTime.UtcNow - _lastInside < HoverLinger || _volumeSlider.IsMouseCaptureWithin;
+        var hovered = DateTime.UtcNow - _lastInside < HoverLinger;
         var controlsVisible = hovered || !state.ControlsOnHoverOnly;
         var controlsOpacity = hovered ? 1.0 : 0.55;
         foreach (var element in new[] { _moveDot, _resizeDot, _bar })
@@ -331,29 +262,12 @@ internal sealed class PreviewControlsOverlayWindow : Window
             element.Opacity = controlsOpacity;
         }
         // A very small preview keeps only the dots; the bar would cover the phone.
-        if (Width < 230 || Height < 220) _bar.Visibility = Visibility.Collapsed;
+        if (Width < 160 || Height < 220) _bar.Visibility = Visibility.Collapsed;
 
         var topMost = _isTopMost();
-        _status.Visibility = state.StatusIcons ? Visibility.Visible : Visibility.Collapsed;
-        _keyboardIcon.Foreground = state.KeyboardActive ? ActiveBrush : InactiveBrush;
-        _keyboardIcon.ToolTip = LocalizationService.Get(state.KeyboardActive ? "PreviewKeyboardActive" : "PreviewKeyboardInactive");
-        _controlIcon.Foreground = state.ControlActive ? ActiveBrush : InactiveBrush;
-        _controlIcon.ToolTip = LocalizationService.Get(state.ControlActive ? "PreviewControlActive" : "PreviewControlInactive");
-        _mutedIcon.Visibility = state.Muted ? Visibility.Visible : Visibility.Collapsed;
-        _pinnedIcon.Visibility = topMost ? Visibility.Visible : Visibility.Collapsed;
-
         _muteSymbol.Symbol = state.Muted ? SymbolRegular.SpeakerMute20 : SymbolRegular.Speaker220;
         _muteSymbol.Foreground = state.Muted ? MutedBrush : Brushes.White;
         _muteButton.ToolTip = LocalizationService.Get(state.Muted ? "PreviewUnmute" : "PreviewMute");
-        _pcVolume.Visibility = state.AudioOnIphone ? Visibility.Collapsed : Visibility.Visible;
-        _iphoneVolume.Visibility = state.AudioOnIphone ? Visibility.Visible : Visibility.Collapsed;
-        if (!_volumeSlider.IsMouseCaptureWithin)
-        {
-            _updatingSlider = true;
-            _volumeSlider.Value = state.Volume;
-            _updatingSlider = false;
-        }
-        _volumeText.Text = state.Muted ? "0 %" : $"{state.Volume:F0} %";
         _pinSymbol.Foreground = topMost ? PinBrush : Brushes.White;
     }
 

@@ -171,14 +171,15 @@ AirPlay implementation may require updates for future iOS releases.
 Resolution and FPS options cap local presentation only; they do not reduce the
 original USB stream quality.
 
-USB devices default to **A Demo (recommended)**, which advertises
-`Valeria=true` with the native `DisplaySize` and preserves complete phone framing, but locks status-bar date,
-time, and battery to Apple's demo values. **B AirPlay (experimental)** uses
-native dimensions and adaptive orientation so video apps can use external
-playback, with possible cropping or incomplete framing. **C Aisi mode** fixes
+All three USB modes use the cable; wireless AirPlay is a separate source.
+USB devices default to **Full mirror (recommended)**, which advertises
+`Valeria=true` with the native `DisplaySize` and preserves complete phone framing, including videos in apps,
+but locks status-bar date, time, and battery to Apple's demo values. **Real clock and battery** uses
+native dimensions and adaptive orientation; iOS then treats the cable as an external screen, so video apps
+often hand their video to it and the mirror keeps only the sound. **Compatibility** fixes
 the target at 1565×1565 for predictable negotiation at the cost of source
-clarity. The exclamation button beside each mode shows its full tradeoffs, and
-the selection applies only to the current USB device.
+clarity. Hovering the info button beside each mode shows a short summary, clicking it shows the full
+tradeoffs, and the selection applies only to the current USB device.
 
 ## Quick start
 

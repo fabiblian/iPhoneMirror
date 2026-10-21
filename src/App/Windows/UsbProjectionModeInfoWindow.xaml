@@ -33,6 +33,8 @@
                       HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
             <Border Style="{StaticResource SettingsSection}">
                 <StackPanel>
+                    <TextBlock x:Name="SummaryText" TextWrapping="Wrap" FontWeight="SemiBold"
+                               Margin="0,0,0,16"/>
                     <TextBlock Text="{DynamicResource UsbModeAdvantageTitle}"
                                Style="{StaticResource SubWindowSectionTitle}"/>
                     <TextBlock x:Name="AdvantageText"

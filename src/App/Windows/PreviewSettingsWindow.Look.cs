@@ -55,7 +55,6 @@ public partial class PreviewSettingsWindow
             swatch.SetResourceReference(BorderBrushProperty, selected ? "AccentBrush" : "BorderSoftBrush");
         }
         var everyday = (Application.Current as App)?.UpdateSettings.Everyday ?? new();
-        StatusIconsCheckBox.IsChecked = everyday.PreviewStatusIcons;
         HoverOnlyCheckBox.IsChecked = everyday.PreviewControlsOnHoverOnly;
         SnapCheckBox.IsChecked = everyday.SnapPreviewToEdges;
     }
@@ -88,7 +87,6 @@ public partial class PreviewSettingsWindow
     {
         if (_syncing || !IsInitialized || Application.Current is not App app) return;
         var everyday = app.UpdateSettings.Everyday;
-        everyday.PreviewStatusIcons = StatusIconsCheckBox.IsChecked == true;
         everyday.PreviewControlsOnHoverOnly = HoverOnlyCheckBox.IsChecked == true;
         everyday.SnapPreviewToEdges = SnapCheckBox.IsChecked == true;
         app.SaveUpdateSettings();
