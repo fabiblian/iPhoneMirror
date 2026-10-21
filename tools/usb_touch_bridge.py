@@ -99,6 +99,9 @@ try:
     from pymobiledevice3.remote.core_device.pasteboard_service import POLICY_PROMISE_SECONDARY
 except ImportError:  # pragma: no cover - older packaged pymobiledevice3
     POLICY_PROMISE_SECONDARY = {'promiseSecondary': {}}
+# Metadata only: no representation is loaded, so polling for a change does not
+# make iOS read (and announce) the copied content.
+POLICY_ALL_PROMISED = {'allPromised': {}}
 from pymobiledevice3.remote.core_device.hid_service import (
     UniversalHIDServiceService,
     IndigoHIDService,
@@ -596,6 +599,15 @@ def _pasteboard_snapshot_text(snapshot: dict) -> tuple[Optional[str], bool]:
             except UnicodeDecodeError:
                 continue
     return None, unresolved
+
+
+def _pasteboard_change_id(snapshot: dict) -> Optional[tuple]:
+    """(nonce, changeCount) naming one state of the device pasteboard, or None."""
+    board = snapshot.get('pasteboard', snapshot)
+    metadata = board.get('metadata') if isinstance(board, dict) else None
+    if not isinstance(metadata, dict) or metadata.get('changeCount') is None:
+        return None
+    return metadata.get('nonce'), metadata.get('changeCount')
 
 
 def _pasteboard_snapshot_image(snapshot: dict) -> tuple[Optional[tuple[str, bytes]], Optional[tuple]]:
@@ -2245,6 +2257,8 @@ class TouchSession:
         self._pasteboard_last_image_promise: Optional[tuple] = None
         self._pasteboard_unconfirmed_images: set[str] = set()
         self._pasteboard_read_image = None
+        # Pasteboard state (see _pasteboard_change_id) the last poll published.
+        self._pasteboard_last_change: Optional[tuple] = None
         self._pasteboard_write_generation = 0
         self._pasteboard_writers_waiting = 0
         self._pasteboard_writes_idle = asyncio.Event()
@@ -4230,6 +4244,21 @@ class TouchSession:
         if service is not None:
             await self._close_remote_service(service, 'pasteboard')
 
+    async def _device_pasteboard_change(self) -> Optional[tuple]:
+        # Asks for metadata only. Reading the content on every poll makes iOS
+        # show its paste indicator again and again while nothing changed.
+        await self._pasteboard_writes_idle.wait()
+        async with self._pasteboard_lock:
+            async def probe():
+                pasteboard = await self._get_device_pasteboard()
+                if not hasattr(pasteboard, 'get'):
+                    return None
+                return _pasteboard_change_id(await pasteboard.get(data_policy=POLICY_ALL_PROMISED))
+            try:
+                return await asyncio.wait_for(probe(), PASTEBOARD_OPERATION_TIMEOUT_SECONDS)
+            finally:
+                await self._close_device_pasteboard()
+
     async def _read_device_pasteboard(self):
         # Foreground pastes own the next available turn. Every read uses a
         # fresh connection because dtpasteboardd rejects a second reply on one
@@ -4421,7 +4450,15 @@ class TouchSession:
                 try:
                     if self._recovering:
                         await self._session_ready.wait()
-                    await self._publish_device_pasteboard()
+                    # Without change metadata (older iOS) every poll reads.
+                    change = await self._device_pasteboard_change()
+                    if change is None or change != self._pasteboard_last_change:
+                        generations = (self._generation, self._pasteboard_write_generation)
+                        await self._publish_device_pasteboard()
+                        # A paste or recovery meanwhile may have dropped the read.
+                        if generations == (self._generation, self._pasteboard_write_generation) \
+                                and not self._recovering:
+                            self._pasteboard_last_change = change
                     if failures:
                         await self.ipc.emit({'event': 'status', 'code': 'clipboard_poll_recovered'})
                     failures = 0

@@ -45,6 +45,11 @@ class ClipboardTests(unittest.IsolatedAsyncioTestCase):
         session.rsd = object()
         return session
 
+    @staticmethod
+    async def no_change_id():
+        # Devices without pasteboard change metadata: every poll reads.
+        return None
+
     def test_paste_queue_budget_covers_an_inflight_poll(self):
         # A SET is queued behind an active PULL on the same RemoteXPC service.
         # Its queue budget must include the entire PULL operation and bounded
@@ -594,7 +599,8 @@ class ClipboardTests(unittest.IsolatedAsyncioTestCase):
         async def stop(_delay):
             raise asyncio.CancelledError
 
-        with patch.object(bridge, 'PasteboardService', side_effect=[FailedConnect(session.rsd), ready]):
+        # The poll's change probe and its read each open one connection.
+        with patch.object(bridge, 'PasteboardService', side_effect=[FailedConnect(session.rsd), ready, ready]):
             with self.assertRaises(ConnectionError):
                 await session._write_device_pasteboard('A')
             self.assertTrue(session._pasteboard_writes_idle.is_set())
@@ -702,6 +708,7 @@ class ClipboardTests(unittest.IsolatedAsyncioTestCase):
                     pass
 
                 session._read_device_pasteboard = read
+                session._device_pasteboard_change = self.no_change_id
                 with patch.object(bridge.asyncio, 'sleep', new=sleep):
                     with self.assertRaises(asyncio.CancelledError):
                         await session._poll_device_pasteboard()
@@ -788,6 +795,7 @@ class ClipboardTests(unittest.IsolatedAsyncioTestCase):
             delays.append(delay)
 
         session._read_device_pasteboard = read
+        session._device_pasteboard_change = self.no_change_id
         with patch.object(bridge.asyncio, 'sleep', new=sleep):
             with self.assertRaises(asyncio.CancelledError):
                 await session._poll_device_pasteboard()
@@ -796,6 +804,66 @@ class ClipboardTests(unittest.IsolatedAsyncioTestCase):
                                        if event['event'] == 'clipboard_text'])
         self.assertEqual(['clipboard_poll_failed', 'clipboard_poll_recovered'],
                          [event['code'] for event in session.ipc.events if 'code' in event])
+
+    async def test_poll_reads_content_only_after_the_pasteboard_changed(self):
+        session = self.session()
+        device = {'text': 'A', 'count': 1}
+        policies = []
+
+        class MetadataPasteboard(Pasteboard):
+            async def get(self, pasteboard_name='general', data_policy=None):
+                policies.append(next(iter(data_policy)))
+                board = {'metadata': {'nonce': 'n', 'changeCount': device['count']}, 'items': []}
+                if data_policy != {'allPromised': {}}:
+                    board['items'] = [{'types': ['public.utf8-plain-text'], 'data': {
+                        'public.utf8-plain-text': {'data': device['text'].encode()}}}]
+                return {'pasteboard': board}
+
+        ticks = 0
+
+        async def sleep(_delay):
+            nonlocal ticks
+            ticks += 1
+            if ticks == 3:
+                device.update(text='B', count=2)
+            elif ticks == 5:
+                raise asyncio.CancelledError
+
+        with patch.object(bridge, 'PasteboardService', side_effect=MetadataPasteboard), \
+                patch.object(bridge.asyncio, 'sleep', new=sleep):
+            with self.assertRaises(asyncio.CancelledError):
+                await session._poll_device_pasteboard()
+        # Five polls, two changes: the content is pulled twice, never in between.
+        self.assertEqual(['allPromised', 'promiseSecondary', 'allPromised', 'allPromised',
+                          'allPromised', 'promiseSecondary', 'allPromised'], policies)
+        self.assertEqual(['A', 'B'], [event['text'] for event in session.ipc.events
+                                      if event['event'] == 'clipboard_text'])
+
+    async def test_poll_rereads_a_change_whose_read_a_paste_superseded(self):
+        session = self.session()
+        reads = []
+
+        async def change_id():
+            return ('n', 7)
+
+        async def read():
+            reads.append(len(reads))
+            if len(reads) == 1:
+                session._pasteboard_write_generation += 1
+            return 'device text'
+
+        async def sleep(_delay):
+            if len(reads) == 2:
+                raise asyncio.CancelledError
+
+        session._device_pasteboard_change = change_id
+        session._read_device_pasteboard = read
+        with patch.object(bridge.asyncio, 'sleep', new=sleep):
+            with self.assertRaises(asyncio.CancelledError):
+                await session._poll_device_pasteboard()
+        self.assertEqual([0, 1], reads)
+        self.assertEqual(['device text'], [event['text'] for event in session.ipc.events
+                                           if event['event'] == 'clipboard_text'])
 
     async def test_poll_waits_for_hid_recovery(self):
         session = self.session()
@@ -808,6 +876,7 @@ class ClipboardTests(unittest.IsolatedAsyncioTestCase):
             raise asyncio.CancelledError
 
         session._read_device_pasteboard = read
+        session._device_pasteboard_change = self.no_change_id
         poll = asyncio.create_task(session._poll_device_pasteboard())
         try:
             await asyncio.sleep(0)
