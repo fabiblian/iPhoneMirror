@@ -3,33 +3,27 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Models;
-using SymbolIcon = Wpf.Ui.Controls.SymbolIcon;
-using SymbolRegular = Wpf.Ui.Controls.SymbolRegular;
 
 namespace IPhoneMirror.App.Windows;
 
 /// <summary>What the preview controls show for one device.</summary>
-internal sealed record PreviewOverlayState(bool Muted, bool ControlsOnHoverOnly);
+internal sealed record PreviewOverlayState(bool ControlsOnHoverOnly);
 
-/// <summary>Actions behind the preview controls; the main window implements them.</summary>
+/// <summary>Settings for the preview controls, supplied by the main window.</summary>
 internal interface IPreviewOverlayActions
 {
     PreviewOverlayState GetOverlayState(string udid, nint window);
-    void ToggleMute(string udid);
-    void OpenPreviewSettings();
 }
 
 /// <summary>
 /// Transparent window over a native preview: a dot to move the window (top
-/// centre), a dot to resize it (bottom right) and a floating bar with mute
-/// and settings. Everything but those controls lets clicks through to the
-/// preview, so touch control keeps working.
+/// centre) and a dot to resize it (bottom right). Everything but those
+/// controls lets clicks through to the preview, so touch control keeps working.
 /// </summary>
 internal sealed class PreviewControlsOverlayWindow : Window
 {
@@ -43,25 +37,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private const long WsExNoActivate = 0x08000000L;
     private const long WsExToolWindow = 0x00000080L;
     private static readonly TimeSpan HoverLinger = TimeSpan.FromMilliseconds(900);
-    private static readonly Brush MutedBrush = Frozen(Color.FromRgb(0xFF, 0x8A, 0x8A));
-    private static readonly Brush PillBrush = Frozen(Color.FromArgb(0xD6, 0x12, 0x12, 0x16));
-    private static readonly ControlTemplate RoundButtonTemplate = (ControlTemplate)XamlReader.Parse("""
-        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="Button">
-            <Border x:Name="Root" Width="36" Height="36" CornerRadius="18" Background="{TemplateBinding Background}">
-                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="Root" Property="Background" Value="#33FFFFFF"/>
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter TargetName="Root" Property="Background" Value="#55FFFFFF"/>
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-        """);
-
     private readonly nint _owner;
     private readonly string _udid;
     private readonly IPreviewOverlayActions _actions;
@@ -73,9 +48,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
 
     private FrameworkElement _moveDot = null!;
     private FrameworkElement _resizeDot = null!;
-    private Border _bar = null!;
-    private Button _muteButton = null!;
-    private SymbolIcon _muteSymbol = null!;
 
     private PreviewControlsOverlayWindow(nint owner, string udid, IPreviewOverlayActions actions,
         Func<PreviewFrameInsets> contentInset)
@@ -129,46 +101,8 @@ internal sealed class PreviewControlsOverlayWindow : Window
         root.Children.Add(_moveDot);
         root.Children.Add(_resizeDot);
 
-        var bar = new StackPanel { Orientation = Orientation.Horizontal };
-        _muteSymbol = BarIcon(SymbolRegular.Speaker220);
-        _muteButton = BarButton(_muteSymbol, () => _actions.ToggleMute(_udid));
-        bar.Children.Add(_muteButton);
-
-        bar.Children.Add(new Rectangle
-        {
-            Width = 1, Height = 20, Fill = Frozen(Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF)),
-            Margin = new Thickness(4, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center,
-        });
-        bar.Children.Add(BarButton(BarIcon(SymbolRegular.Settings20), _actions.OpenPreviewSettings,
-            "PreviewSettingsTitle"));
-
-        _bar = new Border
-        {
-            Background = PillBrush, CornerRadius = new CornerRadius(22), Padding = new Thickness(4),
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 0, 46), Child = bar,
-        };
-        _interactive.Add(_bar);
-        root.Children.Add(_bar);
         ApplyTexts();
         return root;
-    }
-
-    private static SymbolIcon BarIcon(SymbolRegular symbol) => new()
-    {
-        Symbol = symbol, FontSize = 18, Foreground = Brushes.White,
-    };
-
-    private Button BarButton(SymbolIcon icon, Action click, string? toolTipKey = null)
-    {
-        var button = new Button
-        {
-            Template = RoundButtonTemplate, Content = icon, Focusable = false,
-            Background = Brushes.Transparent, Cursor = Cursors.Hand, Margin = new Thickness(1, 0, 1, 0),
-        };
-        if (toolTipKey is not null) button.Tag = toolTipKey;
-        button.Click += (_, _) => click();
-        return button;
     }
 
     private FrameworkElement Dot(HorizontalAlignment horizontal, VerticalAlignment vertical, Cursor cursor,
@@ -199,17 +133,8 @@ internal sealed class PreviewControlsOverlayWindow : Window
 
     private void ApplyTexts()
     {
-        foreach (var element in _interactive.Concat(LogicalChildrenOf(_bar)))
+        foreach (var element in _interactive)
             if (element.Tag is string key) element.ToolTip = LocalizationService.Get(key);
-    }
-
-    private static IEnumerable<FrameworkElement> LogicalChildrenOf(DependencyObject parent)
-    {
-        foreach (var child in LogicalTreeHelper.GetChildren(parent).OfType<FrameworkElement>())
-        {
-            yield return child;
-            foreach (var nested in LogicalChildrenOf(child)) yield return nested;
-        }
     }
 
     /// <summary>Follows the preview window right away (called on its moves).</summary>
@@ -245,17 +170,11 @@ internal sealed class PreviewControlsOverlayWindow : Window
         var hovered = DateTime.UtcNow - _lastInside < HoverLinger;
         var controlsVisible = hovered || !state.ControlsOnHoverOnly;
         var controlsOpacity = hovered ? 1.0 : 0.55;
-        foreach (var element in new[] { _moveDot, _resizeDot, _bar })
+        foreach (var element in new[] { _moveDot, _resizeDot })
         {
             element.Visibility = controlsVisible ? Visibility.Visible : Visibility.Collapsed;
             element.Opacity = controlsOpacity;
         }
-        // A very small preview keeps only the dots; the bar would cover the phone.
-        if (Width < 160 || Height < 220) _bar.Visibility = Visibility.Collapsed;
-
-        _muteSymbol.Symbol = state.Muted ? SymbolRegular.SpeakerMute20 : SymbolRegular.Speaker220;
-        _muteSymbol.Foreground = state.Muted ? MutedBrush : Brushes.White;
-        _muteButton.ToolTip = LocalizationService.Get(state.Muted ? "PreviewUnmute" : "PreviewMute");
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -277,7 +196,7 @@ internal sealed class PreviewControlsOverlayWindow : Window
 
     private void OnLanguageChanged(object? sender, EventArgs e) => ApplyTexts();
 
-    // Only the dots and the bar take the mouse; everything else passes to the
+    // Only the dots take the mouse; everything else passes to the
     // preview window below (same thread, so HTTRANSPARENT reaches it).
     private nint WindowMessageHook(nint hwnd, int message, nint wParam, nint lParam, ref bool handled)
     {
