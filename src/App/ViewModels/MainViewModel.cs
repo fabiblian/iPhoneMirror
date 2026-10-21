@@ -860,7 +860,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             // Moving the volume unmutes, like the Windows volume flyout.
             if (IsMuted) IsMuted = false;
             if (Math.Abs(_playbackVolume - clamped) < 0.001) return;
-            var session = CurrentDeviceSession;
+            var session = CurrentDeviceSession ??
+                (SelectedDevice is { } device ? GetOrCreateDeviceState(device) : null);
             (bool Success, string Message) result;
             if (session is { IsStarting: true } or { IsStopping: true })
             {
@@ -888,7 +889,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                 return;
             }
             _playbackVolume = clamped;
-            if (session is not null) session.Volume = clamped;
+            if (session is not null)
+            {
+                session.Volume = clamped;
+                PersistDeviceVideoPreferences(session);
+            }
             OnPropertyChanged();
             AddDiagnosticLog(AppLog.Event("audio_volume_changed",
                 ("source", AppLog.Device(SelectedDevice?.Udid)),
@@ -916,7 +921,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                 return;
             }
             if (_playAudio == value) return;
-            var session = CurrentDeviceSession;
+            var session = CurrentDeviceSession ??
+                (SelectedDevice is { } device ? GetOrCreateDeviceState(device) : null);
             (bool Success, string Message) result;
             if (session is { IsStarting: true } or { IsStopping: true })
             {
@@ -944,12 +950,17 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                 return;
             }
             _playAudio = value;
-            if (session is not null) session.PlayAudio = value;
+            var saved = true;
+            if (session is not null)
+            {
+                session.PlayAudio = value;
+                saved = PersistDeviceVideoPreferences(session);
+            }
             OnPropertyChanged();
             AddDiagnosticLog(AppLog.Event("audio_enabled_changed",
                 ("source", AppLog.Device(SelectedDevice?.Udid)),
                 ("enabled", value), ("volume_percent", _playbackVolume)));
-            SetSettingsStatus(value ? "AudioPlaybackEnabled" : "AudioPlaybackMuted");
+            if (saved) SetSettingsStatus(value ? "AudioPlaybackEnabled" : "AudioPlaybackMuted");
         }
     }
 
@@ -961,17 +972,17 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
 
     public bool UsbVideoOnly
     {
-        get => CurrentDeviceSession?.UsbVideoOnly ?? false;
+        get => CurrentDeviceSession?.UsbVideoOnly ?? SavedDevicePreferences(SelectedDevice?.Udid)?.UsbVideoOnly ?? false;
         set
         {
             if (!CanChangeUsbAudioCapture || SelectedDevice is null) return;
             var state = GetOrCreateDeviceState(SelectedDevice);
             if (state.UsbVideoOnly == value) return;
             state.UsbVideoOnly = value;
-            PersistDeviceVideoPreferences(state);
+            var saved = PersistDeviceVideoPreferences(state);
             OnPropertyChanged();
             OnPropertyChanged(nameof(CaptureUsbAudio));
-            SetSettingsStatus(value ? "UsbVideoOnlySelected" : "UsbAudioCaptureSelected");
+            if (saved) SetSettingsStatus(value ? "UsbVideoOnlySelected" : "UsbAudioCaptureSelected");
             AddDiagnosticLog(AppLog.Event("usb_audio_capture_selected",
                 ("device", AppLog.Device(state.Udid)), ("video_only", value)));
         }
@@ -4080,6 +4091,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                 PlayAudio = playAudio,
                 Volume = PlaybackVolume,
             };
+            if (existing is null) SavedDevicePreferences(device.Udid)?.Apply(state);
             _sessions.Set(state);
             AddDiagnosticLog(AppLog.Event("wireless_session_create_begin",
                 ("device", AppLog.Device(device.Udid)),
@@ -4439,8 +4451,14 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         // Selection restores controls only. These values already belong to
         // this session; invoking their public setters would resend native
         // audio commands while another core operation may be in progress.
-        _playbackVolume = session?.Volume ?? 100;
-        _playAudio = session?.PlayAudio ?? true;
+        var audioPreferences = session;
+        if (audioPreferences is null && value is not null && SavedDevicePreferences(value.Udid) is { } savedPreferences)
+        {
+            audioPreferences = new DeviceCaptureState { Udid = value.Udid };
+            savedPreferences.Apply(audioPreferences);
+        }
+        _playbackVolume = audioPreferences?.Volume ?? 100;
+        _playAudio = audioPreferences?.PlayAudio ?? true;
         if (value is { IsWireless: false, IsMediaCast: false })
             RestoreSelectedSettingsStatus(session);
         CaptureStatus = presentableSession
@@ -5643,11 +5661,12 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         if (!result.Success) return result;
 
         state.PlayAudio = enabled;
+        var saved = PersistDeviceVideoPreferences(state);
         if (DeviceViewModel.UdidEquals(SelectedDevice?.Udid, udid))
         {
             Set(ref _playAudio, enabled, nameof(PlayAudio));
         }
-        SetSettingsStatus(enabled ? "AudioPlaybackEnabled" : "AudioPlaybackMuted");
+        if (saved) SetSettingsStatus(enabled ? "AudioPlaybackEnabled" : "AudioPlaybackMuted");
         return (true, LocalizationService.Get(
             enabled ? "AudioPlaybackEnabled" : "AudioPlaybackMuted"));
     }
