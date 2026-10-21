@@ -175,6 +175,8 @@ internal static partial class Program
             }
             if (args is ["--ui-audit-fixes", var fixesOutput])
                 return RunUiAuditFixTests(fixesOutput);
+            if (args is ["--volume-controls", var volumeOutput])
+                return RunKeyboardFocusTests(volumeOutput: volumeOutput);
             if (args is ["--adaptive-toolbar", var toolbarOutput])
                 return RunAdaptiveToolbarTests(toolbarOutput);
             if (args is ["--tray-startup-theme", var trayThemeOutput])

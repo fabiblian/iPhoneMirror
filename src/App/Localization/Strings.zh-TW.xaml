@@ -1702,7 +1702,7 @@
     <system:String x:Key="PreviewDropUnsupported">只能將圖片和文字檔拖到預覽上。</system:String>
     <system:String x:Key="AudioMuted">iPhoneMirror 已靜音（Ctrl+Alt+M）。</system:String>
     <system:String x:Key="AudioUnmuted">iPhoneMirror 聲音已恢復。</system:String>
-    <system:String x:Key="IphoneVolumeNeedsControl">聲音在 iPhone 上播放。請開啟有線、無線或藍牙控制，才能從這裡調整音量。</system:String>
+    <system:String x:Key="IphoneVolumeNeedsControl">請開啟有線、無線或藍牙控制，才能從這裡調整 iPhone 音量。</system:String>
     <system:String x:Key="SharpenSmallPreview">小預覽視窗中銳化文字</system:String>
     <system:String x:Key="SharpenSmallPreviewHelp">僅在預覽明顯小於 iPhone 畫面時生效。錄影、直播和截圖不受影響。</system:String>
     <system:String x:Key="PreviewMoveDot">拖曳以移動視窗</system:String>

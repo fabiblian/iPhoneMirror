@@ -969,18 +969,10 @@
             </Setter>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource CaptureStopBrush}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource CaptureStopBorderBrush}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource CaptureActionTextBrush}"/>
-                    <Setter Property="Content" Value="{DynamicResource StopMirroring}"/>
-                    <Setter Property="Command" Value="{Binding StopCommand}"/>
+                    <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsMediaCasting}" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource CaptureStopBrush}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource CaptureStopBorderBrush}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource CaptureActionTextBrush}"/>
-                    <Setter Property="Content" Value="{DynamicResource StopMirroring}"/>
-                    <Setter Property="Command" Value="{Binding MediaCastStopCommand}"/>
+                    <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -1183,98 +1175,6 @@
             <StackPanel x:Name="HeaderCaptureActions" Grid.Column="3"
                         Orientation="Horizontal" VerticalAlignment="Center"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                <!-- App volume: a slider for sound on the PC, steps for sound on the iPhone. -->
-                <Border x:Name="HeaderVolume" CornerRadius="8" Padding="3" Margin="0,0,8,0" VerticalAlignment="Center"
-                        Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
-                        BorderThickness="1" AutomationProperties.AutomationId="HeaderVolume"
-                        AutomationProperties.Name="{DynamicResource PlaybackVolume}">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Style="{StaticResource ToolButton}" MinWidth="34" MinHeight="32" Padding="6,4"
-                                Click="OnHeaderMuteClick" AutomationProperties.AutomationId="HeaderMuteButton">
-                            <Button.ToolTip>
-                                <TextBlock>
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="{DynamicResource PreviewMute}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMuted}" Value="True">
-                                                    <Setter Property="Text" Value="{DynamicResource PreviewUnmute}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Button.ToolTip>
-                            <ui:SymbolIcon FontSize="17">
-                                <ui:SymbolIcon.Style>
-                                    <Style TargetType="ui:SymbolIcon">
-                                        <Setter Property="Symbol" Value="Speaker220"/>
-                                        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsMuted}" Value="True">
-                                                <Setter Property="Symbol" Value="SpeakerMute20"/>
-                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ui:SymbolIcon.Style>
-                            </ui:SymbolIcon>
-                        </Button>
-                        <StackPanel Orientation="Horizontal">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding AudioOnIphone}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <Slider Width="104" Minimum="0" Maximum="100" Margin="6,0,6,0" VerticalAlignment="Center"
-                                    IsMoveToPointEnabled="True"
-                                    Value="{Binding PlaybackVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    AutomationProperties.Name="{DynamicResource PlaybackVolume}"
-                                    AutomationProperties.AutomationId="HeaderVolumeSlider"/>
-                            <TextBlock Text="{Binding PlaybackVolume, StringFormat={}{0:F0} %}" MinWidth="40"
-                                       TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
-                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding AudioOnIphone}" Value="True">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <Button Style="{StaticResource ToolButton}" MinWidth="32" MinHeight="32" Padding="6,4"
-                                    Click="OnHeaderIphoneVolumeDownClick" ToolTip="{DynamicResource PreviewIphoneVolumeDown}"
-                                    AutomationProperties.Name="{DynamicResource PreviewIphoneVolumeDown}">
-                                <ui:SymbolIcon Symbol="Subtract20" FontSize="16"/>
-                            </Button>
-                            <TextBlock Text="iPhone" VerticalAlignment="Center" Margin="6,0"
-                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                            <Button Style="{StaticResource ToolButton}" MinWidth="32" MinHeight="32" Padding="6,4"
-                                    Click="OnHeaderIphoneVolumeUpClick" ToolTip="{DynamicResource PreviewIphoneVolumeUp}"
-                                    AutomationProperties.Name="{DynamicResource PreviewIphoneVolumeUp}">
-                                <ui:SymbolIcon Symbol="Add20" FontSize="16"/>
-                            </Button>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
                 <Button x:Name="CaptureActionButton"
                         AutomationProperties.AutomationId="CaptureActionButton"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True"
@@ -1566,24 +1466,27 @@
                         <StackPanel x:Name="PreviewQuickActions"
                                     Orientation="Horizontal" VerticalAlignment="Center"
                                     Visibility="{Binding PreviewAndObsVisibility}">
-                            <Button Command="{Binding StopCommand}"
-                                    ToolTip="{DynamicResource StopMirroring}"
+                            <Button ToolTip="{DynamicResource StopMirroring}"
                                     AutomationProperties.Name="{DynamicResource StopMirroring}"
                                     AutomationProperties.AutomationId="ToolbarStopButton">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource PreviewToolButton}">
                                         <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Setter Property="Command" Value="{Binding StopCommand}"/>
                                         <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsMediaCasting}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Setter Property="Command" Value="{Binding MediaCastStopCommand}"/>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
                                 <StackPanel Orientation="Horizontal">
-                                    <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Stop20" FontSize="15"
-                                                               Foreground="{DynamicResource ErrorBrush}"/>
+                                    <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Stop20" FontSize="15"/>
                                     <TextBlock Text="{DynamicResource StopMirroring}" Margin="6,0,0,0"/>
                                 </StackPanel>
                             </Button>
@@ -1633,43 +1536,107 @@
                                     <TextBlock Text="{DynamicResource MediaOutputButton}" Margin="6,0,0,0"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding MoreImageSettingsCommand}"
-                                    Style="{StaticResource PreviewToolButton}"
-                                    ToolTip="{DynamicResource IndependentWindowImageSettings}"
-                                    AutomationProperties.Name="{DynamicResource IndependentWindowImageSettings}"
-                                    AutomationProperties.AutomationId="QuickImageSettingsButton">
+                            <Border x:Name="PreviewVolume" CornerRadius="8" Padding="3" Margin="4,0,0,0"
+                                    VerticalAlignment="Center" Background="{DynamicResource ControlFillBrush}"
+                                    BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1"
+                                    AutomationProperties.AutomationId="PreviewVolume">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasCaptureSession}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsMediaCasting}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <StackPanel Orientation="Horizontal">
-                                     <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="ImageEdit20" FontSize="16"/>
-                                    <TextBlock Text="{DynamicResource IndependentWindowImageSettings}" Margin="6,0,0,0"/>
+                                    <StackPanel x:Name="PcVolumeControls" Orientation="Horizontal">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding AudioOnIphone}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <Button MinWidth="34" MinHeight="32" Padding="6,4"
+                                                Click="OnToolbarMuteClick" AutomationProperties.AutomationId="PlaybackMuteButton">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource ToolButton}">
+                                                    <Setter Property="ToolTip" Value="{DynamicResource PreviewMute}"/>
+                                                    <Setter Property="AutomationProperties.Name" Value="{DynamicResource PreviewMute}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                            <Setter Property="ToolTip" Value="{DynamicResource PreviewUnmute}"/>
+                                                            <Setter Property="AutomationProperties.Name" Value="{DynamicResource PreviewUnmute}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                            <controls:ThemedSymbolIcon FontSize="17">
+                                                <controls:ThemedSymbolIcon.Style>
+                                                    <Style TargetType="controls:ThemedSymbolIcon" BasedOn="{StaticResource ButtonSymbolIcon}">
+                                                        <Setter Property="Symbol" Value="Speaker220"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                                                                <Setter Property="Symbol" Value="SpeakerMute20"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </controls:ThemedSymbolIcon.Style>
+                                            </controls:ThemedSymbolIcon>
+                                        </Button>
+                                        <TextBlock Text="PC" VerticalAlignment="Center" Margin="4,0,0,0"
+                                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                                        <Slider x:Name="PreviewVolumeSlider" Width="88" Minimum="0" Maximum="100"
+                                                Margin="6,0" VerticalAlignment="Center" IsMoveToPointEnabled="True"
+                                                Value="{Binding PlaybackVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                AutomationProperties.Name="{DynamicResource PlaybackVolume}"
+                                                AutomationProperties.AutomationId="PreviewVolumeSlider"/>
+                                        <TextBlock Text="{Binding PlaybackVolume, StringFormat={}{0:F0} %}" MinWidth="38"
+                                                   TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="IphoneVolumeControls" Orientation="Horizontal"
+                                                ToolTipService.ShowOnDisabled="True">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasIphoneVolumeTarget}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding CanControlIphoneVolume}" Value="False">
+                                                        <Setter Property="ToolTip" Value="{DynamicResource IphoneVolumeNeedsControl}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBlock Text="iPhone" VerticalAlignment="Center" Margin="6,0"
+                                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                                        <Button Style="{StaticResource ToolButton}" MinWidth="32" MinHeight="32" Padding="6,4"
+                                                Click="OnIphoneVolumeDownClick" IsEnabled="{Binding CanControlIphoneVolume}"
+                                                ToolTip="{DynamicResource PreviewIphoneVolumeDown}"
+                                                AutomationProperties.Name="{DynamicResource PreviewIphoneVolumeDown}"
+                                                AutomationProperties.AutomationId="IphoneVolumeDownButton">
+                                            <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Subtract20" FontSize="16"/>
+                                        </Button>
+                                        <Button Style="{StaticResource ToolButton}" MinWidth="32" MinHeight="32" Padding="6,4"
+                                                Click="OnIphoneVolumeUpClick" IsEnabled="{Binding CanControlIphoneVolume}"
+                                                ToolTip="{DynamicResource PreviewIphoneVolumeUp}"
+                                                AutomationProperties.Name="{DynamicResource PreviewIphoneVolumeUp}"
+                                                AutomationProperties.AutomationId="IphoneVolumeUpButton">
+                                            <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Add20" FontSize="16"/>
+                                        </Button>
+                                    </StackPanel>
                                 </StackPanel>
-                            </Button>
-                            <Button x:Name="QuickPreviewWindowButton" Click="OnPreviewWindowClick"
-                                    Style="{StaticResource PreviewToolButton}"
-                                    IsEnabled="{Binding CanUseVisualPreviewTools}"
-                                    ToolTip="{DynamicResource SeparateWindow}"
-                                    AutomationProperties.Name="{DynamicResource SeparateWindow}"
-                                    AutomationProperties.AutomationId="QuickPreviewWindowButton">
-                                <StackPanel Orientation="Horizontal">
-                                    <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="WindowNew20" FontSize="14"/>
-                                    <TextBlock Text="{DynamicResource SeparateWindow}" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </Button>
-                            <Button x:Name="QuickScreenshotButton" Click="OnScreenshotClick"
-                                    Style="{StaticResource PreviewToolButton}"
-                                    IsEnabled="{Binding CanUseVisualPreviewTools}"
-                                    ToolTip="{DynamicResource Screenshot}"
-                                    AutomationProperties.Name="{DynamicResource Screenshot}"
-                                    AutomationProperties.AutomationId="QuickScreenshotButton">
-                                <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Screenshot20" FontSize="15"/>
-                            </Button>
-                            <Button x:Name="QuickFullScreenButton" Click="OnFullScreenClick"
-                                    Style="{StaticResource PreviewToolButton}"
-                                    IsEnabled="{Binding CanUseVisualPreviewTools}"
-                                    ToolTip="{DynamicResource FullScreenPreview}"
-                                    AutomationProperties.Name="{DynamicResource FullScreenPreview}"
-                                    AutomationProperties.AutomationId="QuickFullScreenButton">
-                                <controls:ThemedSymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="FullScreenMaximize20" FontSize="15"/>
-                            </Button>
+                            </Border>
                         </StackPanel>
                         </controls:AdaptiveToolbar>
                     </Grid>

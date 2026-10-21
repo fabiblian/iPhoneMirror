@@ -26,11 +26,12 @@ public sealed class AdaptiveToolbar : ScrollViewer
         var naturalSize = new Size(double.PositiveInfinity, double.PositiveInfinity);
         var buttons = actions.Children.OfType<Button>().ToArray();
         var width = 0.0;
-        foreach (var button in buttons)
+        foreach (var child in actions.Children.OfType<FrameworkElement>())
         {
-            if (GetLabel(button) is { } label) SetLabelVisibility(button, label, Visibility.Visible);
-            button.Measure(naturalSize);
-            width += button.DesiredSize.Width;
+            if (child is Button button && GetLabel(button) is { } label)
+                SetLabelVisibility(button, label, Visibility.Visible);
+            child.Measure(naturalSize);
+            width += child.DesiredSize.Width;
         }
 
         // This is the current layout constraint, not the window width or the

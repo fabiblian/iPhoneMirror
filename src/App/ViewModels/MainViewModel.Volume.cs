@@ -22,6 +22,12 @@ internal sealed partial class MainViewModel
     public bool AudioOnIphone =>
         SelectedDevice is { IsWireless: false, IsMediaCast: false } && !CaptureUsbAudio;
 
+    public bool HasIphoneVolumeTarget => SelectedDevice is { IsMediaCast: false };
+
+    public bool CanControlIphoneVolume => HasIphoneVolumeTarget &&
+        (IsUsbControlTarget(SelectedDevice!.Udid) ||
+         (BluetoothControlIsInputEnabled && IsBluetoothControlTarget(SelectedDevice!.Udid)));
+
     /// <summary>Changes the app's PC volume by <paramref name="delta"/> percent; this also unmutes.</summary>
     internal void StepPlaybackVolume(double delta) => PlaybackVolume = PlaybackVolume + delta;
 

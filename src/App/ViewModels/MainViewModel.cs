@@ -1231,6 +1231,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         {
             if (e.PropertyName is nameof(SelectedDevice) or nameof(CaptureUsbAudio) or nameof(UsbVideoOnly))
                 OnPropertyChanged(nameof(AudioOnIphone));
+            if (e.PropertyName == nameof(SelectedDevice))
+                OnPropertyChanged(nameof(HasIphoneVolumeTarget));
+            if (e.PropertyName is nameof(SelectedDevice) or nameof(UsbControlIsInputEnabled) or
+                nameof(BluetoothControlIsInputEnabled) or nameof(BluetoothControlTargetUdid))
+                OnPropertyChanged(nameof(CanControlIphoneVolume));
         };
         _captureStatusReader = _core.GetDeviceSessionStatus;
         var wirelessReceiver = new WirelessReceiverService();

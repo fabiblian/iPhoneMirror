@@ -44,6 +44,9 @@ internal static partial class Program
             // Keep this visual fixture visible when reparenting below causes
             // its inherited DataContext (and production visibility binding) to refresh.
             actions.Visibility = Visibility.Visible;
+            // Include the fixed-width audio group in the real overflow geometry.
+            foreach (var child in actions.Children.OfType<FrameworkElement>()) child.Visibility = Visibility.Visible;
+            ((FrameworkElement)owner.FindName("IphoneVolumeControls")).Visibility = Visibility.Visible;
             // Exercise the real containing grid and window before isolating the
             // same controls for exact width boundaries and simulated monitor DPI.
             owner.MinWidth = 0;
@@ -131,8 +134,9 @@ internal static partial class Program
                 ToolbarAssert(toolbar.ComputedHorizontalScrollBarVisibility == Visibility.Visible,
                     "If all icons cannot fit, scrolling must remain available.");
                 toolbar.ScrollToRightEnd(); host.UpdateLayout(); DrainDispatcher(); host.UpdateLayout();
-                var last = buttons[^1].TransformToAncestor(toolbar).TransformBounds(new Rect(buttons[^1].RenderSize));
-                ToolbarAssert(last.Left >= 0 && last.Right <= toolbar.ViewportWidth + 1, "The final icon must remain reachable.");
+                var lastAction = actions.Children.OfType<FrameworkElement>().Last();
+                var last = lastAction.TransformToAncestor(toolbar).TransformBounds(new Rect(lastAction.RenderSize));
+                ToolbarAssert(last.Left >= 0 && last.Right <= toolbar.ViewportWidth + 1, "The final audio controls must remain reachable.");
                 toolbar.ScrollToLeftEnd();
                 for (var index = boundaries.Count - 1; index >= 0; --index)
                 {
@@ -156,10 +160,10 @@ internal static partial class Program
                 }
                 // A resource change on a hidden label must restore it without a resize.
                 Resize(boundaries[1]);
-                host.Resources["SeparateWindow"] = "";
+                host.Resources["MediaOutputButton"] = "";
                 host.UpdateLayout(); DrainDispatcher(); host.UpdateLayout();
                 ToolbarAssert(labels[^1].Visibility == Visibility.Visible, "Hidden label resource updates must trigger measurement.");
-                host.Resources.Remove("SeparateWindow");
+                host.Resources.Remove("MediaOutputButton");
                 host.UpdateLayout(); DrainDispatcher(); host.UpdateLayout();
                 ToolbarAssert(labels[^1].Visibility == Visibility.Collapsed, "Restoring a longer resource must compact again.");
                 for (var i = 0; i < buttons.Length; i++)
@@ -174,10 +178,10 @@ internal static partial class Program
                         "Every button must retain its tooltip and accessible name.");
                     foreach (var icon in Visuals(buttons[i]).OfType<Wpf.Ui.Controls.SymbolIcon>())
                         ToolbarAssert(icon.IsVisible && SameThemeColor(icon.Foreground, buttons[i].Foreground),
-                            "Icons must remain visible and follow the button theme.");
+                            $"Icons must remain visible and follow the button theme: {AutomationProperties.GetAutomationId(buttons[i])}, icon={icon.Symbol}, iconVisible={icon.IsVisible}, iconColor={icon.Foreground}, buttonColor={buttons[i].Foreground}.");
                 }
                 Resize(fullWidth);
-                results.Add($"PASS {culture}/{theme}/{dpi:P0}: full labels, 6 right-to-left steps, exact-width/one-pixel boundaries, forced remeasure, restore, fractional/live resize, resource change, scrolling, bindings and accessibility.");
+                results.Add($"PASS {culture}/{theme}/{dpi:P0}: full labels, {labels.Length} right-to-left steps, exact-width/one-pixel boundaries, forced remeasure, restore, fractional/live resize, resource change, scrolling, bindings and accessibility.");
             }
             ToolbarAssert(trace.Messages.Count == 0, string.Join(Environment.NewLine, trace.Messages));
             File.WriteAllLines(Path.Combine(output, "results.txt"), results);
@@ -204,6 +208,16 @@ internal static partial class Program
             else ToolbarAssert(!hidden, "Collapsed labels must form a suffix from the right.");
         }
         var previousRight = double.NegativeInfinity;
+        foreach (var child in ((StackPanel)toolbar.Content).Children.OfType<FrameworkElement>().Where(c => c.IsVisible))
+        {
+            var bounds = child.TransformToAncestor(toolbar).TransformBounds(new Rect(child.RenderSize));
+            ToolbarAssert(bounds.Left >= previousRight - 0.01, "Toolbar controls must not overlap.");
+            previousRight = bounds.Right;
+            if (toolbar.ComputedHorizontalScrollBarVisibility != Visibility.Visible)
+                ToolbarAssert(bounds.Left >= -1 && bounds.Right <= toolbar.ViewportWidth + 1,
+                    $"A toolbar control is clipped: {AutomationProperties.GetAutomationId(child)}, bounds={bounds}.");
+        }
+        previousRight = double.NegativeInfinity;
         foreach (var button in buttons)
         {
             var bounds = button.TransformToAncestor(toolbar).TransformBounds(new Rect(button.RenderSize));

@@ -45,7 +45,7 @@ internal static partial class Program
         owner.GetType().GetMethod(name, KeyboardTestMembers)!.Invoke(owner, args);
 
     private static int RunKeyboardFocusTests(bool initializeHiddenHandle = false,
-        bool shortcutReview = false, bool mouseShortcutReview = false)
+        bool shortcutReview = false, bool mouseShortcutReview = false, string? volumeOutput = null)
     {
         SynchronizationContext.SetSynchronizationContext(new System.Windows.Threading.DispatcherSynchronizationContext());
         var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
@@ -118,6 +118,11 @@ internal static partial class Program
                 if (mode != "Bluetooth")
                     ((DeviceControlSession)KeyboardCall(vm, "GetOrCreateControl", udid)!).Router.Begin(udid,
                         mode == "Usb" ? ReverseControlMode.Usb : ReverseControlMode.Wireless);
+                if (volumeOutput is not null)
+                {
+                    TestToolbarVolume(window, device, packets, mode, volumeOutput);
+                    continue;
+                }
                 ReleaseTestPhysicalKeys(window);
                 TestIsolatedKeyboardFocusRoute(window, other, udid, packets, mode != "Bluetooth");
                 if (shortcutReview)
@@ -130,6 +135,11 @@ internal static partial class Program
                     else TestMainPreviewPointerRoute(window, device, packets, mode);
                 }
                 Console.WriteLine($"{mode}: foreground routing, releases, queued input and independent-window checks passed.");
+            }
+            if (volumeOutput is not null)
+            {
+                Console.WriteLine("Volume controls: USB, wireless and Bluetooth routing, paired rapid clicks, PC isolation and toolbar states passed; no device input sent.");
+                return 0;
             }
             TestBluetoothKeyboardTransportGates();
             TestMultipleDeviceControl(window, vm, device, host, packets, bindings,
