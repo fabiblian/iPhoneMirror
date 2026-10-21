@@ -16,12 +16,12 @@ internal sealed partial class NativePreviewWindow
     private PreviewPlacement? _initialPlacement;
     private PreviewControlsOverlayWindow? _controlsOverlay;
 
-    /// <summary>Shows the dots, the floating bar and the status icons over the preview.</summary>
+    /// <summary>Shows the dots and the floating controls over the preview.</summary>
     internal void AttachControlsOverlay(string udid, IPreviewOverlayActions actions)
     {
         if (_disposed || _handle == 0 || _managedContent is not null || _controlsOverlay is not null) return;
         _controlsOverlay = PreviewControlsOverlayWindow.ShowFor(_handle, udid, actions,
-            () => _frameInsets, () => _isTopMost, ToggleTopMost);
+            () => _frameInsets);
     }
 
     private void CloseControlsOverlay()

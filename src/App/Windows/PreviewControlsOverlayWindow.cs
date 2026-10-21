@@ -27,8 +27,8 @@ internal interface IPreviewOverlayActions
 
 /// <summary>
 /// Transparent window over a native preview: a dot to move the window (top
-/// centre), a dot to resize it (bottom right) and a floating bar with mute,
-/// pin and settings. Everything but those controls lets clicks through to the
+/// centre), a dot to resize it (bottom right) and a floating bar with mute
+/// and settings. Everything but those controls lets clicks through to the
 /// preview, so touch control keeps working.
 /// </summary>
 internal sealed class PreviewControlsOverlayWindow : Window
@@ -44,7 +44,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private const long WsExToolWindow = 0x00000080L;
     private static readonly TimeSpan HoverLinger = TimeSpan.FromMilliseconds(900);
     private static readonly Brush MutedBrush = Frozen(Color.FromRgb(0xFF, 0x8A, 0x8A));
-    private static readonly Brush PinBrush = Frozen(Color.FromRgb(0x69, 0xB1, 0xF8));
     private static readonly Brush PillBrush = Frozen(Color.FromArgb(0xD6, 0x12, 0x12, 0x16));
     private static readonly ControlTemplate RoundButtonTemplate = (ControlTemplate)XamlReader.Parse("""
         <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -67,8 +66,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private readonly string _udid;
     private readonly IPreviewOverlayActions _actions;
     private readonly Func<PreviewFrameInsets> _contentInset;
-    private readonly Func<bool> _isTopMost;
-    private readonly Action _togglePin;
     private readonly DispatcherTimer _timer;
     private readonly List<FrameworkElement> _interactive = [];
     private HwndSource? _source;
@@ -79,18 +76,14 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private Border _bar = null!;
     private Button _muteButton = null!;
     private SymbolIcon _muteSymbol = null!;
-    private Button _pinButton = null!;
-    private SymbolIcon _pinSymbol = null!;
 
     private PreviewControlsOverlayWindow(nint owner, string udid, IPreviewOverlayActions actions,
-        Func<PreviewFrameInsets> contentInset, Func<bool> isTopMost, Action togglePin)
+        Func<PreviewFrameInsets> contentInset)
     {
         _owner = owner;
         _udid = udid;
         _actions = actions;
         _contentInset = contentInset;
-        _isTopMost = isTopMost;
-        _togglePin = togglePin;
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
@@ -108,10 +101,9 @@ internal sealed class PreviewControlsOverlayWindow : Window
     }
 
     internal static PreviewControlsOverlayWindow ShowFor(nint owner, string udid,
-        IPreviewOverlayActions actions, Func<PreviewFrameInsets> contentInset,
-        Func<bool> isTopMost, Action togglePin)
+        IPreviewOverlayActions actions, Func<PreviewFrameInsets> contentInset)
     {
-        var overlay = new PreviewControlsOverlayWindow(owner, udid, actions, contentInset, isTopMost, togglePin);
+        var overlay = new PreviewControlsOverlayWindow(owner, udid, actions, contentInset);
         _ = new WindowInteropHelper(overlay) { Owner = owner };
         overlay.Show();
         overlay.Refresh();
@@ -147,9 +139,6 @@ internal sealed class PreviewControlsOverlayWindow : Window
             Width = 1, Height = 20, Fill = Frozen(Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF)),
             Margin = new Thickness(4, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center,
         });
-        _pinSymbol = BarIcon(SymbolRegular.Pin20);
-        _pinButton = BarButton(_pinSymbol, () => { _togglePin(); Refresh(); }, "PreviewPinButton");
-        bar.Children.Add(_pinButton);
         bar.Children.Add(BarButton(BarIcon(SymbolRegular.Settings20), _actions.OpenPreviewSettings,
             "PreviewSettingsTitle"));
 
@@ -264,11 +253,9 @@ internal sealed class PreviewControlsOverlayWindow : Window
         // A very small preview keeps only the dots; the bar would cover the phone.
         if (Width < 160 || Height < 220) _bar.Visibility = Visibility.Collapsed;
 
-        var topMost = _isTopMost();
         _muteSymbol.Symbol = state.Muted ? SymbolRegular.SpeakerMute20 : SymbolRegular.Speaker220;
         _muteSymbol.Foreground = state.Muted ? MutedBrush : Brushes.White;
         _muteButton.ToolTip = LocalizationService.Get(state.Muted ? "PreviewUnmute" : "PreviewMute");
-        _pinSymbol.Foreground = topMost ? PinBrush : Brushes.White;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
