@@ -51,7 +51,7 @@
                                 AutomationProperties.Name="{DynamicResource PreviewLookBorderless}">
                             <DockPanel>
                                 <Border DockPanel.Dock="Left" Width="30" Height="60" CornerRadius="8" Margin="0,0,12,0"
-                                        Background="#F5F5F7"/>
+                                        Background="{DynamicResource PreviewSampleScreenBrush}"/>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{DynamicResource PreviewLookBorderless}" FontWeight="SemiBold"/>
                                     <TextBlock Text="{DynamicResource PreviewLookBorderlessHelp}" TextWrapping="Wrap"
@@ -65,8 +65,8 @@
                                 AutomationProperties.Name="{DynamicResource PreviewLookCase}">
                             <DockPanel>
                                 <Border x:Name="CaseTileSample" DockPanel.Dock="Left" Width="34" Height="64" CornerRadius="10"
-                                        Padding="3" Margin="0,0,12,0" Background="#1C1C1F">
-                                    <Border CornerRadius="7" Background="#F5F5F7"/>
+                                        Padding="3" Margin="0,0,12,0" Background="{DynamicResource PreviewSampleCaseBrush}">
+                                    <Border CornerRadius="7" Background="{DynamicResource PreviewSampleScreenBrush}"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{DynamicResource PreviewLookCase}" FontWeight="SemiBold"/>

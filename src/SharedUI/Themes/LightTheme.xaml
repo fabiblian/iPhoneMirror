@@ -101,6 +101,8 @@
     <SolidColorBrush x:Key="MediaPlayerThumbBrush" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="MediaPlayerFocusBrush" Color="#FF69B1F8"/>
     <SolidColorBrush x:Key="PreviewChromeBrush" Color="#FFF1F1F3"/>
+    <SolidColorBrush x:Key="PreviewSampleScreenBrush" Color="#FFF5F5F7"/>
+    <SolidColorBrush x:Key="PreviewSampleCaseBrush" Color="#FF1C1C1F"/>
     <SolidColorBrush x:Key="PreviewPanelAltBrush" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="PreviewBorderBrush" Color="#33000000"/>
     <SolidColorBrush x:Key="PreviewTextBrush" Color="#FF1D1D1F"/>
