@@ -562,6 +562,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             }),
             SourceVideoWidth > 0 && SourceVideoHeight > 0
                 ? $"{SourceVideoWidth}×{SourceVideoHeight}" : "—");
+    public string BluetoothMouseDirectionInfo =>
+        $"{LocalizationService.Get("BluetoothMouseDirectionHelp")}\n{BluetoothDeviceOrientationDisplay}";
     internal double AppliedBluetoothMouseSensitivity => _appliedBluetoothMouseSensitivity;
     internal double AppliedBluetoothWheelSensitivity => _appliedBluetoothWheelSensitivity;
     internal BluetoothMouseDirection AppliedBluetoothPortraitMouseDirection =>
@@ -714,6 +716,8 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
     }
     public string AppliedWirelessProfileDisplay => LocalizationService.Format(
         "WirelessProfileAppliedFormat", _wireless.AppliedProfile.Label);
+    public string WirelessResolutionInfo =>
+        $"{LocalizationService.Get("WirelessResolutionHelp")}\n{AppliedWirelessProfileDisplay}";
     private DeviceCaptureState? CurrentDeviceSession => SelectedDevice is null ? null :
         _sessions.Get(SelectedDevice.Udid);
     // A handle remains owned until native teardown completes, but it must never
@@ -4199,6 +4203,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(MediaCastReceiverName));
                 OnPropertyChanged(nameof(AppliedWirelessBackendDisplay));
                 OnPropertyChanged(nameof(AppliedWirelessProfileDisplay));
+                OnPropertyChanged(nameof(WirelessResolutionInfo));
                 RefreshWirelessStatus();
                 RefreshMediaCastStatus();
                 AddUiLog(WirelessStatus);
@@ -4755,6 +4760,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SourceVideoWidth));
         OnPropertyChanged(nameof(SourceVideoHeight));
         OnPropertyChanged(nameof(BluetoothDeviceOrientationDisplay));
+        OnPropertyChanged(nameof(BluetoothMouseDirectionInfo));
         Resolution = "—";
         FpsDisplay = "— fps";
         LatencyDisplay = "— ms";
@@ -5557,6 +5563,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(SourceVideoWidth));
             OnPropertyChanged(nameof(SourceVideoHeight));
             OnPropertyChanged(nameof(BluetoothDeviceOrientationDisplay));
+            OnPropertyChanged(nameof(BluetoothMouseDirectionInfo));
         }
         FpsDisplay = LocalizationService.Format("MediaCastFpsDisplayFormat",
             _wireless.AppliedProfile.FrameRate);
@@ -5948,6 +5955,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(SourceVideoWidth));
             OnPropertyChanged(nameof(SourceVideoHeight));
             OnPropertyChanged(nameof(BluetoothDeviceOrientationDisplay));
+            OnPropertyChanged(nameof(BluetoothMouseDirectionInfo));
         }
         if (status.Width != 0 && status.Height != 0 && SelectedDevice is { } selected)
         {
@@ -6652,12 +6660,14 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedWirelessReceiverBackend));
         OnPropertyChanged(nameof(AppliedWirelessBackendDisplay));
         OnPropertyChanged(nameof(AppliedWirelessProfileDisplay));
+        OnPropertyChanged(nameof(WirelessResolutionInfo));
         OnPropertyChanged(nameof(BluetoothControlActionText));
         OnPropertyChanged(nameof(UsbControlStatus));
         OnPropertyChanged(nameof(UsbControlActionText));
         OnPropertyChanged(nameof(WiredControlActionText));
         OnPropertyChanged(nameof(WirelessControlActionText));
         OnPropertyChanged(nameof(BluetoothDeviceOrientationDisplay));
+        OnPropertyChanged(nameof(BluetoothMouseDirectionInfo));
         if (_lastEnvironment is { } environment) UpdateEnvironmentStatus(environment);
         else
         {

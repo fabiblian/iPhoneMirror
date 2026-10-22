@@ -62,7 +62,6 @@ public partial class MainWindow
             _workspaceShortHeader = shortHeader;
             WorkspaceHeading.Visibility = shortHeader ? Visibility.Collapsed : Visibility.Visible;
             Grid.SetColumnSpan(WorkspaceHeading, compactHeader ? 5 : 1);
-            WorkspaceSubtitle.Visibility = compactHeader ? Visibility.Collapsed : Visibility.Visible;
             Grid.SetRow(DetectionStatus, compactHeader && !shortHeader ? 1 : 0);
             Grid.SetColumn(DetectionStatus, compactHeader ? 0 : 1);
             Grid.SetRow(HeaderCaptureActions, compactHeader && !shortHeader ? 1 : 0);

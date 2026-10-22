@@ -59,6 +59,8 @@ internal sealed class UpdateSettings
     public string SettingsTab { get; set; } = "Video";
     /// <summary>Whether the stream statistics below the preview are expanded.</summary>
     public bool StatsExpanded { get; set; } = true;
+    /// <summary>Open or closed state of settings sections the user toggled, by section name.</summary>
+    public Dictionary<string, bool> SettingsSectionsExpanded { get; set; } = new(StringComparer.Ordinal);
     /// <summary>Width in DIPs of the devices/mirroring panel left of the preview.</summary>
     public double LeftPanelWidth { get; set; } = 300;
     /// <summary>Width in DIPs of the settings sidebar right of the preview.</summary>
@@ -159,6 +161,7 @@ internal sealed class UpdateSettings
         UiStyle = UiStyle,
         SettingsTab = SettingsTab,
         StatsExpanded = StatsExpanded,
+        SettingsSectionsExpanded = new(SettingsSectionsExpanded ?? [], StringComparer.Ordinal),
         LeftPanelWidth = LeftPanelWidth,
         SettingsPanelWidth = SettingsPanelWidth,
         ApplicationDisplayMode = ApplicationDisplayMode,
@@ -255,6 +258,7 @@ internal sealed class ForkSettings
     public UiStyle? UiStyle { get; set; }
     public string? SettingsTab { get; set; }
     public bool? StatsExpanded { get; set; }
+    public Dictionary<string, bool>? SettingsSectionsExpanded { get; set; }
     public double? LeftPanelWidth { get; set; }
     public double? SettingsPanelWidth { get; set; }
 
@@ -269,6 +273,7 @@ internal sealed class ForkSettings
         UiStyle = settings.UiStyle,
         SettingsTab = settings.SettingsTab,
         StatsExpanded = settings.StatsExpanded,
+        SettingsSectionsExpanded = new(settings.SettingsSectionsExpanded ?? [], StringComparer.Ordinal),
         LeftPanelWidth = settings.LeftPanelWidth,
         SettingsPanelWidth = settings.SettingsPanelWidth,
     };
@@ -291,6 +296,8 @@ internal sealed class ForkSettings
         if (UiStyle is { } style) settings.UiStyle = style;
         if (SettingsTab is not null) settings.SettingsTab = SettingsTab;
         if (StatsExpanded is { } statsExpanded) settings.StatsExpanded = statsExpanded;
+        if (SettingsSectionsExpanded is not null)
+            settings.SettingsSectionsExpanded = new(SettingsSectionsExpanded, StringComparer.Ordinal);
         if (LeftPanelWidth is { } leftWidth) settings.LeftPanelWidth = leftWidth;
         if (SettingsPanelWidth is { } settingsWidth) settings.SettingsPanelWidth = settingsWidth;
     }
@@ -356,6 +363,7 @@ internal sealed class UpdateSettingsStore
                 settings.SettingsTab = "Video";
                 migrationChanged = true;
             }
+            settings.SettingsSectionsExpanded = new(settings.SettingsSectionsExpanded ?? [], StringComparer.Ordinal);
             var normalizedAccent = ThemePalette.IsWindowsAccent(settings.AccentColor)
                 ? ThemePalette.WindowsAccent
                 : ThemePalette.NormalizeHex(settings.AccentColor);

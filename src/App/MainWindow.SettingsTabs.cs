@@ -8,6 +8,14 @@ public partial class MainWindow
     private RadioButton[] SettingsTabButtons =>
         [SettingsTabVideo, SettingsTabControl, SettingsTabWireless, SettingsTabApp];
 
+    private Expander[] SettingsSections =>
+    [
+        SettingsSectionUsbMode, SettingsSectionPicture, SettingsSectionSound, SettingsSectionToolbar,
+        SettingsSectionKeyboard, SettingsSectionWheel, SettingsSectionMapping, SettingsSectionShortcuts,
+        SettingsSectionBluetoothMouse, SettingsSectionWirelessReceiver, SettingsSectionMediaCast,
+        SettingsSectionAppearance, SettingsSectionAutoConnect, AdvancedSettingsCard,
+    ];
+
     private void InitializeSettingsTabs()
     {
         var saved = Application.Current is App app ? app.UpdateSettings.SettingsTab : null;
@@ -17,6 +25,30 @@ public partial class MainWindow
         ShowSettingsPage(tab.Tag as string);
         StatsToggle.IsChecked = Application.Current is not App { UpdateSettings.StatsExpanded: false };
         ApplyStatsExpanded();
+        InitializeSettingsSections();
+    }
+
+    // Sections keep the open or closed state the user last chose; untouched
+    // sections keep their XAML default.
+    private void InitializeSettingsSections()
+    {
+        var saved = Application.Current is App app ? app.UpdateSettings.SettingsSectionsExpanded : null;
+        foreach (var section in SettingsSections)
+        {
+            if (saved?.TryGetValue(section.Name, out var expanded) == true) section.IsExpanded = expanded;
+            section.Expanded += OnSettingsSectionToggled;
+            section.Collapsed += OnSettingsSectionToggled;
+        }
+    }
+
+    private void OnSettingsSectionToggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Expander section || !ReferenceEquals(e.OriginalSource, section) ||
+            Application.Current is not App app) return;
+        var sections = app.UpdateSettings.SettingsSectionsExpanded;
+        if (sections.TryGetValue(section.Name, out var saved) && saved == section.IsExpanded) return;
+        sections[section.Name] = section.IsExpanded;
+        app.SaveUpdateSettings();
     }
 
     private void OnStatsToggleChanged(object sender, RoutedEventArgs e)

@@ -52,9 +52,24 @@
                     <TextBlock Grid.Column="1" Text="{Binding DeviceSummary}" Margin="8,0,0,0"
                                FontSize="{DynamicResource CaptionFontSize}" Foreground="{DynamicResource MutedTextBrush}"
                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding StageDescription}" ToolTip="{Binding StageDescription}"
+                    <!-- One line while collapsed; the open details show it in full. -->
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding StageDescription}"
                                FontSize="{DynamicResource CaptionFontSize}" Foreground="{DynamicResource MutedTextBrush}"
-                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                               Margin="0,2,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding StageDescription}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DetailsVisibility}" Value="Visible">
+                                        <Setter Property="TextTrimming" Value="None"/>
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                        <Setter Property="ToolTip" Value="{x:Null}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </Grid>
                 <StackPanel Grid.Column="2" Width="136" VerticalAlignment="Center" Margin="0,0,8,0"
                             Visibility="{Binding ProgressVisibility}">
@@ -111,7 +126,7 @@
                     <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="16"/>
                 </Button>
             </Grid>
-            <!-- Prompts, pairing steps, then the full description and the steps.
+            <!-- Prompts, pairing steps, then the steps.
                  Prompts and failures open this automatically: they wait for the user. -->
             <ScrollViewer x:Name="ControlContentScrollViewer" Grid.Row="1" MaxHeight="300" Margin="0,8,0,2"
                           Visibility="{Binding DetailsVisibility}"
@@ -203,8 +218,6 @@
                                        TextWrapping="Wrap" Margin="0,9,0,0"/>
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="{Binding StageDescription}" Style="{StaticResource BodyText}"
-                               Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,8"/>
                     <Border Background="{DynamicResource ControlFillBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
                             BorderThickness="1" CornerRadius="10" Padding="12,4">
                         <ItemsControl ItemsSource="{Binding Stages}">

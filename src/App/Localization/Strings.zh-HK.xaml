@@ -648,7 +648,6 @@
     <system:String x:Key="WirelessProfileReconnectInstructionsFormat">已重新宣告「{0}」。請在 iPhone 開啟「控制中心」 → 「螢幕鏡像」，重新選擇「{1}」。如果裝置清單仍保留舊連接，請先按一下「停止鏡像」，再重新選擇接收端。</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningTitle">原畫模式提示</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningBody">原畫模式在部分裝置或網絡環境下可能出現畫面停幀。建議優先使用 1080p；如仍需原畫，請確保區域網絡穩定，並從 iPhone「控制中心」 → 「螢幕鏡像」連接。</system:String>
-    <system:String x:Key="WirelessServiceAlwaysOn">自動啟動</system:String>
     <system:String x:Key="WirelessConnected">AirPlay 已連接</system:String>
     <system:String x:Key="WirelessLocalNetwork">本機網絡</system:String>
     <system:String x:Key="WirelessReady">AirPlay 接收端已就緒</system:String>
@@ -671,7 +670,6 @@
     <system:String x:Key="WirelessRuntimeIncompatible">無線解碼元件版本不相容，請重新安裝最新版本。</system:String>
     <system:String x:Key="WirelessRuntimeProbeTimedOut">無線解碼元件檢查逾時，請重新啟動應用程式後重試。</system:String>
     <system:String x:Key="WirelessRuntimeLoadFailedFormat">無線解碼元件無法載入（檢查代碼 {0}），請重新安裝最新版本。</system:String>
-    <system:String x:Key="FooterConnectivity">本機 USB / AirPlay，無需雲端中轉</system:String>
     <system:String x:Key="MediaCastTitle">影片 App 投放</system:String>
     <system:String x:Key="MediaCastDescription">接收影片 App 內「投放」按鈕發送的影片，不是控制中心的螢幕鏡像。</system:String>
     <system:String x:Key="MediaCastReady">影片投放接收端已就緒</system:String>
@@ -832,9 +830,8 @@
     <system:String x:Key="SettingsTabApp">應用程式</system:String>
     <system:String x:Key="PictureQualityTitle">畫質</system:String>
     <system:String x:Key="SoundTitle">聲音</system:String>
-    <system:String x:Key="SettingsVideoIdleHint">螢幕鏡像時，這裏會顯示畫面與聲音設定。</system:String>
     <system:String x:Key="KeyboardSectionTitle">鍵盤</system:String>
-    <system:String x:Key="KeyboardTypingHelp">點按預覽畫面後即可輸入。開啟鍵盤映射時，按鍵會觸發觸控操作而不是輸入文字。</system:String>
+    <system:String x:Key="KeyboardTypingHelp">點按預覽畫面後即可輸入。開啟鍵盤映射時，按鍵會觸發觸控操作而不是輸入文字。啟用有線或無線控制時，複製的文字和圖片會自動雙向同步。藍牙控制無法存取剪貼簿。</system:String>
     <system:String x:Key="ShortcutsTitle">快捷鍵</system:String>
     <system:String x:Key="ShortcutsHelp">用於主畫面、截圖、顯示應用程式或預覽以及停止螢幕鏡像的按鍵。</system:String>
     <system:String x:Key="AppearanceTitle">外觀</system:String>
@@ -874,7 +871,6 @@
     <system:String x:Key="UpdateDownloadFailedFormat">更新失敗：{0}</system:String>
     <system:String x:Key="RetryUpdate">重新下載</system:String>
     <system:String x:Key="NavMirroring">螢幕鏡像</system:String>
-    <system:String x:Key="ProjectionSettingsDescription">按需要展開常用螢幕鏡像操作；開始螢幕鏡像後可使用畫面、視窗和螢幕擷取功能。</system:String>
     <system:String x:Key="NavDevices">螢幕鏡像來源</system:String>
     <system:String x:Key="NavOutput">輸出</system:String>
     <system:String x:Key="NavSettings">設定</system:String>
@@ -1348,7 +1344,6 @@
     <system:String x:Key="KeyboardInputModeDirect">直接鍵盤輸入已啟用，鍵盤映射暫時無法使用。</system:String>
     <system:String x:Key="ArrowKeysSwipe">方向鍵滑動</system:String>
     <system:String x:Key="ArrowKeysSwipeHelp">方向鍵在螢幕中央滑動（↓ 下一個影片，→ 下一頁）。Ctrl+方向鍵傳送普通方向鍵。僅限有線或無線控制；藍牙不支援觸控手勢。</system:String>
-    <system:String x:Key="ClipboardAutoSyncHelp">啟用有線或無線控制時，複製的文字和圖片會自動雙向同步。藍牙控制無法存取剪貼簿。</system:String>
     <system:String x:Key="MappingPaused">鍵盤映射已暫停。點擊目前投屏畫面後恢復；編輯或文字輸入期間不執行映射。</system:String>
     <system:String x:Key="MappingNoDevice">等候裝置：請選取並連接 iPhone/iPad。</system:String>
     <system:String x:Key="MappingUnsupportedDevice">目前裝置不支援觸控反控。請選取 iPhone/iPad 投屏裝置。</system:String>
@@ -1716,7 +1711,6 @@
     <system:String x:Key="IphoneVolumeSliderHelp">按下 iPhone 的音量鍵。應用程式無法讀取 iPhone 的音量，因此位置為估計值；拖到任一端即可重新對齊。</system:String>
     <system:String x:Key="ToolbarSettingsTitle">工具列</system:String>
     <system:String x:Key="ToolbarSettingsSummary">預覽上方的按鈕</system:String>
-    <system:String x:Key="ToolbarSettingsHelp">選擇預覽上方工具列顯示哪些按鈕。</system:String>
     <system:String x:Key="SharpenSmallPreview">小預覽視窗中銳化文字</system:String>
     <system:String x:Key="SharpenSmallPreviewHelp">僅在預覽明顯小於 iPhone 畫面時生效。錄影、直播和截圖不受影響。</system:String>
     <system:String x:Key="PreviewMoveDot">拖曳以移動視窗</system:String>

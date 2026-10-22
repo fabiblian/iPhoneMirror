@@ -135,6 +135,14 @@ internal static partial class Program
                                 AssertVisibleButtonsFit(window);
                                 var name = $"{culture}-{theme}-{surface}";
                                 SaveWindowRender(window, Path.Combine(output, name + ".png"));
+                                if (surface == "workspace-settings")
+                                    foreach (var tab in new[] { "SettingsTabControl", "SettingsTabWireless", "SettingsTabApp", "SettingsTabVideo" })
+                                    {
+                                        ((System.Windows.Controls.Primitives.ToggleButton)window.FindName(tab)).IsChecked = true;
+                                        window.UpdateLayout();
+                                        AssertVisibleButtonsFit(window);
+                                        SaveWindowRender(window, Path.Combine(output, $"{name}-{tab}.png"));
+                                    }
                                 if (surface == "media-output")
                                     AssertMicrophoneReachable(window, Path.Combine(output, name + "-microphone.png"));
                                 if (surface is "reverse-control-prompt" or "reverse-control-prompt-long")
