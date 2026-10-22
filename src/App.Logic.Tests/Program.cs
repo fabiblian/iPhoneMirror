@@ -1112,6 +1112,14 @@ foreach (var iconSourcePath in iconSourceDirectories.SelectMany(directory =>
             @"&#x(?:[Ee][0-9A-Fa-f]{3}|[Ff][0-8][0-9A-Fa-f]{2});|\\[ux](?:[Ee][0-9A-Fa-f]{3}|[Ff][0-8][0-9A-Fa-f]{2})|[\uE000-\uF8FF]"),
         $"{Path.GetRelativePath(sourceDirectory, iconSourcePath)} uses packaged semantic icons");
 }
+var infoTipXamlText = File.ReadAllText(Path.Combine(sourceDirectory, "App", "Controls", "InfoTip.xaml"));
+var infoTipCodeText = File.ReadAllText(Path.Combine(sourceDirectory, "App", "Controls", "InfoTip.cs"));
+Equal(true, infoTipXamlText.Contains("Symbol=\"Info16\"", StringComparison.Ordinal) &&
+    infoTipXamlText.Contains("StaysOpen=\"False\"", StringComparison.Ordinal) &&
+    infoTipCodeText.Contains("\"InfoTipName\"", StringComparison.Ordinal) &&
+    File.ReadAllText(Path.Combine(sourceDirectory, "App", "App.xaml"))
+        .Contains("Controls/InfoTip.xaml", StringComparison.Ordinal),
+    "info tips use the Fluent info symbol, a dismissable popover and a localized name");
 
 var themedWindowDirectories = new[]
 {

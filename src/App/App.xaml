@@ -14,6 +14,7 @@
                 <ResourceDictionary Source="Controls/Buttons.xaml"/>
                 <ResourceDictionary Source="Controls/Inputs.xaml"/>
                 <ResourceDictionary Source="Controls/ModernControls.xaml"/>
+                <ResourceDictionary Source="Controls/InfoTip.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
         <Style TargetType="TextBlock">

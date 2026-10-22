@@ -557,6 +557,7 @@
     <system:String x:Key="UsbProjectionPerDeviceHint">三种模式都通过 USB 数据线；无线 AirPlay 是单独的来源。仅应用于当前选中的有线设备。</system:String>
     <system:String x:Key="UsbModeDetailsToolTip">此模式的作用</system:String>
     <system:String x:Key="UsbModeDetailsTitle">有线投屏模式说明</system:String>
+    <system:String x:Key="InfoTipName">更多信息</system:String>
     <system:String x:Key="UsbModeAdvantageTitle">优点</system:String>
     <system:String x:Key="UsbModeDisadvantageTitle">缺点</system:String>
     <system:String x:Key="UsbModeDemoAdvantage">发送 Valeria=true 和设备原生 DisplaySize，由 iOS 输出完整的手机镜像，并保持固定演示状态。兼容性和画面完整性最高，推荐日常使用。</system:String>

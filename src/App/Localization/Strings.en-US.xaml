@@ -557,6 +557,7 @@
     <system:String x:Key="UsbProjectionPerDeviceHint">All three modes use the USB cable; wireless AirPlay is a separate source. Applies only to the currently selected USB device.</system:String>
     <system:String x:Key="UsbModeDetailsToolTip">What this mode does</system:String>
     <system:String x:Key="UsbModeDetailsTitle">USB mirroring mode details</system:String>
+    <system:String x:Key="InfoTipName">More info</system:String>
     <system:String x:Key="UsbModeAdvantageTitle">Advantages</system:String>
     <system:String x:Key="UsbModeDisadvantageTitle">Disadvantages</system:String>
     <system:String x:Key="UsbModeDemoAdvantage">Shows the complete iPhone screen as you see it, including videos in apps such as TikTok or YouTube. The most reliable picture. Technical: sends Valeria=true with the native display size.</system:String>
