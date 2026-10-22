@@ -4,6 +4,7 @@
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource DeveloperToolsTitle}" Width="1002" Height="782"
         MinWidth="842" MinHeight="642" WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
         Foreground="{DynamicResource TextBrush}" ShowInTaskbar="False" Topmost="False"
@@ -25,12 +26,8 @@
                   shell:WindowChrome.IsHitTestVisibleInChrome="True"
                   animations:WindowDragBehavior.IsEnabled="True">
                 <StackPanel Margin="0,0,52,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{DynamicResource DeveloperToolsTitle}"
-                                   Style="{StaticResource SubWindowTitle}"/>
-                    </StackPanel>
-                    <TextBlock Text="{DynamicResource DeveloperToolsSubtitle}"
-                               Style="{StaticResource SubWindowSubtitle}"/>
+                    <TextBlock Text="{DynamicResource DeveloperToolsTitle}"
+                               Style="{StaticResource SubWindowTitle}"/>
                 </StackPanel>
                 <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                     <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
@@ -42,8 +39,10 @@
                 <StackPanel>
                     <Border Style="{StaticResource SettingsSection}" Padding="16">
                         <StackPanel>
-                            <TextBlock Text="{DynamicResource AutomationTitle}" Style="{StaticResource SubWindowSectionTitle}"/>
-                            <TextBlock Text="{DynamicResource AutomationHelp}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" Margin="0,6,0,0"/>
+                            <controls:InfoRow>
+                                <TextBlock Text="{DynamicResource AutomationTitle}" Style="{StaticResource SubWindowSectionTitle}"/>
+                                <controls:InfoTip Text="{DynamicResource AutomationHelp}"/>
+                            </controls:InfoRow>
                             <CheckBox x:Name="ApiEnabled" Content="{DynamicResource AutomationEnable}" Margin="0,10,0,8"/>
                             <TextBlock Text="127.0.0.1"/>
                             <TextBlock Text="{DynamicResource AutomationPort}" Margin="0,8,0,4"/>
@@ -66,8 +65,6 @@
                         <StackPanel>
                             <TextBlock Text="{DynamicResource DeveloperToolsWorkspaceSection}"
                                        Style="{StaticResource SubWindowSectionTitle}"/>
-                            <TextBlock Text="{DynamicResource DeveloperToolsWorkspaceHint}"
-                                       Style="{StaticResource SubWindowSubtitle}"/>
                             <ItemsControl ItemsSource="{Binding WorkspaceItems}" Margin="0,12,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -103,8 +100,6 @@
                         <StackPanel>
                             <TextBlock Text="{DynamicResource DeveloperToolsWindowsSection}"
                                        Style="{StaticResource SubWindowSectionTitle}"/>
-                            <TextBlock Text="{DynamicResource DeveloperToolsWindowsHint}"
-                                       Style="{StaticResource SubWindowSubtitle}"/>
                             <ItemsControl ItemsSource="{Binding WindowItems}" Margin="0,12,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -140,8 +135,6 @@
                         <StackPanel>
                             <TextBlock Text="{DynamicResource DeveloperToolsParametersSection}"
                                        Style="{StaticResource SubWindowSectionTitle}"/>
-                            <TextBlock Text="{DynamicResource DeveloperToolsParametersHint}"
-                                       Style="{StaticResource SubWindowSubtitle}"/>
                             <Grid Margin="0,14,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>

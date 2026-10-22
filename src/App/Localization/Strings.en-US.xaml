@@ -3,15 +3,12 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <FontFamily x:Key="NavigationTextFontFamily">Segoe UI</FontFamily>
-    <system:String x:Key="WindowTitle">iPhoneMirror — USB iPhone/iPad Mirroring</system:String>
-    <system:String x:Key="AppSubtitle">Wired iPhone/iPad screen capture for Windows</system:String>
     <system:String x:Key="LanguageSystem">System default</system:String>
     <system:String x:Key="LanguageChinese">简体中文</system:String>
     <system:String x:Key="LanguageTraditionalChineseHongKong">Traditional Chinese (Hong Kong)</system:String>
     <system:String x:Key="LanguageEnglish">English</system:String>
     <system:String x:Key="LanguageToolTip">Language</system:String>
     <system:String x:Key="DriverManagerButton">Driver manager</system:String>
-    <system:String x:Key="DriverManagerToolTip">Open the driver installation, repair, and removal tool</system:String>
     <system:String x:Key="DriverManagerTitle">Driver manager</system:String>
     <system:String x:Key="DriverManagerOpened">Driver manager opened</system:String>
     <system:String x:Key="DriverManagerOpenedAutomatically">A wired-device driver problem was detected; the driver manager was opened</system:String>
@@ -146,7 +143,6 @@
     <system:String x:Key="ReverseControlUsbOff">Wired control is off</system:String>
     <system:String x:Key="ReverseControlUsbStopFailedFormat">Wired control shutdown failed: {0}</system:String>
     <system:String x:Key="ReverseControlBridgeNotReady">The reverse-control bridge is not ready.</system:String>
-    <system:String x:Key="ReverseControlStopFailureDetailFormat">Shutdown failed: {0}</system:String>
     <system:String x:Key="DeviceBindingOpenFailedFormat">Could not open the device binder: {0}</system:String>
     <system:String x:Key="UsbControlOperationFailedFormat">Wired control operation failed: {0}</system:String>
     <system:String x:Key="WirelessControlOperationFailedFormat">Wireless control operation failed: {0}</system:String>
@@ -162,7 +158,6 @@
     <system:String x:Key="DevicesTitle">Sources</system:String>
     <system:String x:Key="RefreshDevices">Refresh devices</system:String>
     <system:String x:Key="MirrorSimultaneously">Mirror simultaneously</system:String>
-    <system:String x:Key="DeviceAlreadyMirroring">This device is already mirrored in the main preview</system:String>
     <system:String x:Key="SimultaneousMirrorStartedFormat">Opened a simultaneous mirror window for {0}</system:String>
     <system:String x:Key="SimultaneousMirrorFailedFormat">Could not start simultaneous mirroring: {0}</system:String>
     <system:String x:Key="DeviceCaptureErrorTitleFormat">Mirroring error — {0}</system:String>
@@ -186,7 +181,6 @@
     <system:String x:Key="IndependentWindowClose">Close</system:String>
     <system:String x:Key="IndependentWindowRotateLeft">Rotate left</system:String>
     <system:String x:Key="IndependentWindowRotateRight">Rotate right</system:String>
-    <system:String x:Key="IndependentWindowMute">Mute</system:String>
     <system:String x:Key="IndependentWindowMuteThis">Mute this window</system:String>
     <system:String x:Key="IndependentWindowUnmuteThis">Unmute this window</system:String>
     <system:String x:Key="IndependentWindowMuteOthers">Mute other windows</system:String>
@@ -199,7 +193,6 @@
     <system:String x:Key="ApplyLightweightMode">Switch to lightweight mode</system:String>
     <system:String x:Key="ApplicationModeComplete">Complete</system:String>
     <system:String x:Key="KeepUnlocked">Keep the Apple device unlocked after connecting</system:String>
-    <system:String x:Key="PreviewLabel">Preview</system:String>
     <system:String x:Key="ResolutionLabel">Resolution</system:String>
     <system:String x:Key="FrameRateLabel">Frame rate</system:String>
     <system:String x:Key="LatencyLabel">Latency</system:String>
@@ -214,9 +207,6 @@
     <system:String x:Key="RenderLimitHelp">Only limits drawing on this PC. The iPhone keeps sending full quality.</system:String>
     <system:String x:Key="RenderResolutionLimit">Maximum resolution</system:String>
     <system:String x:Key="TargetFrameRate">Maximum frame rate</system:String>
-    <system:String x:Key="ActualStream">Actual AirPlay stream currently being received</system:String>
-    <system:String x:Key="ActualResolution">Actual resolution</system:String>
-    <system:String x:Key="ActualFrameRate">Actual frame rate</system:String>
     <system:String x:Key="ApplyVideoSettings">Apply</system:String>
     <system:String x:Key="PlayAudioWindows">Play sound on this PC</system:String>
     <system:String x:Key="PlaybackVolume">Volume</system:String>
@@ -238,10 +228,6 @@
     <system:String x:Key="BluetoothDeviceOrientationPortrait">Portrait</system:String>
     <system:String x:Key="BluetoothDeviceOrientationLandscape">Landscape</system:String>
     <system:String x:Key="BluetoothDeviceOrientationUnknown">Unknown</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseLeft90">Left 90°</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseRight90">Right 90°</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseLeft90Reverse">Left 90° (reversed)</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseRight90Reverse">Right 90° (reversed)</system:String>
     <system:String x:Key="PlaybackSpeed">Playback speed</system:String>
     <system:String x:Key="MediaCastSpeedUnsupportedTitle">Playback speed unavailable</system:String>
     <system:String x:Key="MediaCastSpeedUnsupportedBody">This cast stream does not support {0} playback. Playback was restored to 1x.</system:String>
@@ -250,9 +236,6 @@
     <system:String x:Key="FullScreenPreview">Full-screen preview</system:String>
     <system:String x:Key="SeparateWindow">Preview window</system:String>
     <system:String x:Key="Screenshot">Screenshot</system:String>
-    <system:String x:Key="ObsWindowHelp">Use the detached window directly with OBS Window Capture.</system:String>
-    <system:String x:Key="OpenObsWindow">Open OBS preview window</system:String>
-    <system:String x:Key="ProjectionActions">Mirroring</system:String>
     <system:String x:Key="StartMirroring">Start mirroring</system:String>
     <system:String x:Key="StopMirroring">Stop mirroring</system:String>
     <system:String x:Key="StartBluetoothControl">Enable Bluetooth control</system:String>
@@ -304,13 +287,11 @@
     <system:String x:Key="IndependentWindowBluetoothControl">Bluetooth control</system:String>
     <system:String x:Key="IndependentWindowWirelessProjection">Wireless control</system:String>
     <system:String x:Key="IndependentWindowWiredProjection">Wired control</system:String>
-    <system:String x:Key="ShortcutSettings">Keyboard shortcuts</system:String>
     <system:String x:Key="ShortcutSettingsTitle">Keyboard shortcuts</system:String>
     <system:String x:Key="ShortcutSettingsCategoryControl">Control</system:String>
     <system:String x:Key="ShortcutSettingsCategoryNavigation">System navigation</system:String>
     <system:String x:Key="ShortcutSettingsCategoryAssistant">Assistant</system:String>
     <system:String x:Key="OpenShortcutSettings">Configure shortcuts</system:String>
-    <system:String x:Key="ShortcutSettingsReverseControl">Reverse control</system:String>
     <system:String x:Key="ShortcutSettingsBluetoothControl">Bluetooth control</system:String>
     <system:String x:Key="ShortcutSettingsWirelessControl">Wireless control</system:String>
     <system:String x:Key="ShortcutSettingsWiredControl">Wired control</system:String>
@@ -318,7 +299,6 @@
     <system:String x:Key="ShortcutSettingsNotificationCenter">Open Notification Center</system:String>
     <system:String x:Key="ShortcutSettingsAppSwitcher">Open App Switcher</system:String>
     <system:String x:Key="ShortcutSettingsHome">Go to Home Screen</system:String>
-    <system:String x:Key="ShortcutSettingsBossKey">Show app</system:String>
     <system:String x:Key="ShortcutSettingsLockScreen">Lock Screen</system:String>
     <system:String x:Key="ShortcutSettingsEnterPasscode">Enter iPhone passcode</system:String>
     <system:String x:Key="PasscodeEntryTitle">Unlock iPhone</system:String>
@@ -329,13 +309,6 @@
     <system:String x:Key="ShortcutSettingsVolumeUp">Volume up</system:String>
     <system:String x:Key="ShortcutSettingsVolumeDown">Volume down</system:String>
     <system:String x:Key="ShortcutSettingsDock">Show Dock</system:String>
-    <system:String x:Key="ShortcutSettingsSearch">Open Search</system:String>
-    <system:String x:Key="ShortcutSettingsKeyboardShortcuts">Show Keyboard Shortcuts</system:String>
-    <system:String x:Key="ShortcutSettingsAllWindows">Show All App Windows</system:String>
-    <system:String x:Key="ShortcutSettingsPreviousApp">Switch to Previous App</system:String>
-    <system:String x:Key="ShortcutSettingsNextApp">Switch to Next App</system:String>
-    <system:String x:Key="ShortcutSettingsFullScreen">Toggle Full Screen</system:String>
-    <system:String x:Key="ShortcutSettingsQuickNote">New Quick Note</system:String>
     <system:String x:Key="ShortcutSettingsSiri">Start Siri</system:String>
     <system:String x:Key="ShortcutSettingsUnbound">Unbound</system:String>
     <system:String x:Key="ShortcutSettingsDuplicate">Each action must use a different shortcut.</system:String>
@@ -439,11 +412,8 @@
     <system:String x:Key="CaptureCleaningDevice">Cleaning up device… Allow automatic reconnection if Windows requests permission.</system:String>
     <system:String x:Key="CaptureUsbRestoreReplugRequired">The USB connection isn't ready. Unlock the iPhone and confirm Trust; if it's still missing, replug the cable before mirroring again.</system:String>
     <system:String x:Key="CaptureQueued">Waiting for device cleanup…</system:String>
-    <system:String x:Key="SwitchingDeviceFormat">Stopping the current session before switching to {0}…</system:String>
-    <system:String x:Key="SwitchDeviceFailedFormat">Could not switch devices: {0}</system:String>
     <system:String x:Key="CaptureStopped">Mirroring stopped</system:String>
     <system:String x:Key="CaptureError">Mirroring error</system:String>
-    <system:String x:Key="CaptureErrorFormat">Mirroring error: {0}</system:String>
     <system:String x:Key="CaptureNoPingTitle">iPhone/iPad mirroring connection timed out</system:String>
     <system:String x:Key="CaptureNoPingRecovery" xml:space="preserve">The device is connected, but it did not respond to the mirroring handshake.&#xA;&#xA;Restart the iPhone or iPad, then reconnect it with an Apple original or MFi-certified cable and try again.&#xA;&#xA;Keep the device unlocked while retrying.</system:String>
     <system:String x:Key="CaptureNoPingSummary">The device is connected but didn't answer the mirroring handshake. Do both steps, then retry:</system:String>
@@ -451,7 +421,6 @@
     <system:String x:Key="CaptureNoPingCableAction">Replace the cable with an Apple original or MFi-certified cable</system:String>
     <system:String x:Key="CaptureNoPingUnlockHint">Keep the device unlocked when reconnecting.</system:String>
     <system:String x:Key="CaptureUsbConfigurationRecovery" xml:space="preserve">iPhone or iPad USB mirroring configuration could not be activated.&#xA;&#xA;Try these steps in order:&#xA;1. Unplug the cable, wait a few seconds, and plug it back in&#xA;2. Restart the iPhone or iPad, then reconnect it&#xA;3. Replace the cable with an Apple original or MFi-certified cable&#xA;&#xA;Keep the device unlocked when reconnecting and starting mirroring again.</system:String>
-    <system:String x:Key="CaptureFailureDetailsFormat" xml:space="preserve">Error type: {0}&#xA;Failure stage: {1}&#xA;Error code: {2}&#xA;&#xA;Details: {3}</system:String>
     <system:String x:Key="CaptureActionReconnectDevice">Keep the device unlocked, reconnect the cable, then try again.</system:String>
     <system:String x:Key="CaptureActionRestartDevice">Restart the iPhone or iPad, then try again.</system:String>
     <system:String x:Key="CaptureActionWaitForCleanup">Wait for device cleanup to finish, then start mirroring again.</system:String>
@@ -460,7 +429,6 @@
     <system:String x:Key="CaptureActionDeviceDisconnected">Reconnect and unlock the device, then start mirroring again.</system:String>
     <system:String x:Key="CaptureActionRestartApplication">Close and reopen iPhoneMirror, then try again.</system:String>
     <system:String x:Key="CaptureActionRetry">Stop and start mirroring again. If it still fails, reconnect the device.</system:String>
-    <system:String x:Key="CaptureFailureStatusFormat">Mirroring error: {0} ({1}, code {2})</system:String>
     <system:String x:Key="CaptureFailureUsbConnection">USB device connection failed</system:String>
     <system:String x:Key="CaptureFailureSessionCreation">Mirroring session creation failed</system:String>
     <system:String x:Key="CaptureFailureDriver">Apple/libusb driver error</system:String>
@@ -496,9 +464,6 @@
     <system:String x:Key="PreviewWindowOpened">Preview window opened</system:String>
     <system:String x:Key="IndependentPreviewOpened">Opened in independent window</system:String>
     <system:String x:Key="PreviewWindowOpenFailedFormat">Could not open the preview window: {0}</system:String>
-    <system:String x:Key="ObsWindowOpenFailedFormat">Could not open the OBS preview window: {0}</system:String>
-    <system:String x:Key="ObsWindowOpened">OBS preview window opened; title copied</system:String>
-    <system:String x:Key="ObsTitleCopyFailedFormat">OBS preview window opened; could not copy its title: {0}</system:String>
     <system:String x:Key="FullScreenFailedFormat">Could not toggle full screen: {0}</system:String>
     <system:String x:Key="ScreenshotBusy">A screenshot is already being processed</system:String>
     <system:String x:Key="ScreenshotSavedFormat">Screenshot saved: {0}</system:String>
@@ -578,11 +543,9 @@
     <system:String x:Key="DecoderRuntimeHardware">hardware acceleration</system:String>
     <system:String x:Key="DecoderRuntimeSoftware">software decoding</system:String>
     <system:String x:Key="DecoderRuntimeExternal">wireless receiver decoder</system:String>
-    <system:String x:Key="DecoderPreferenceSelectedFormat">Decoder selected: {0}</system:String>
     <system:String x:Key="VideoPipelineRestarting">Reconnecting the current device with the new video pipeline…</system:String>
     <system:String x:Key="DecoderPreferenceAppliedFormat">Decoder applied: {0}</system:String>
     <system:String x:Key="DecoderPreferenceSubmittedFormat">Decoder setting submitted: {0}; see the status below the preview for the active mode.</system:String>
-    <system:String x:Key="DecoderPreferenceQueuedFormat">Decoder switch requested: {0} (applies at a keyframe)</system:String>
     <system:String x:Key="MoreImageSettingsButton">More settings</system:String>
     <system:String x:Key="MoreImageSettingsTitle">Image adjustments</system:String>
     <system:String x:Key="ImageAdjustmentsPreviewOnlyNotice">Only affects this preview, not streams, the virtual camera, recordings or screenshots.</system:String>
@@ -611,8 +574,6 @@
     <system:String x:Key="WirelessBackendUnavailableFormat">The {0} wireless receiver component is missing. Reinstall the full iPhoneMirror package.</system:String>
     <system:String x:Key="WirelessBackendSettingsSaveFailed">The selected wireless receiver implementation could not be saved.</system:String>
     <system:String x:Key="WirelessUxPlayStartupFailed">UxPlay stopped immediately after startup. Repair the UxPlay runtime, then apply the wireless settings again.</system:String>
-    <system:String x:Key="ApplyReceiverName">Apply</system:String>
-    <system:String x:Key="WirelessResolutionTitle">Wireless mirroring quality</system:String>
     <system:String x:Key="WirelessSettingsTitle">Apply wireless AirPlay settings</system:String>
     <system:String x:Key="WirelessNameChangeFormat">Receiver name: {0} → {1}</system:String>
     <system:String x:Key="WirelessResolutionChangeFormat">Connection resolution: {0} → {1}</system:String>
@@ -630,8 +591,6 @@
     <system:String x:Key="WirelessProfile540p">540p (weak network · 30 fps)</system:String>
     <system:String x:Key="WirelessProfileAppliedFormat">Advertised now: {0}</system:String>
     <system:String x:Key="ApplyWirelessSettings">Apply</system:String>
-    <system:String x:Key="WirelessProfileDisconnectConfirmFormat">Connected wireless devices: {0}. Applying “{1}” will disconnect all wireless mirroring and restart the receiver. Continue?</system:String>
-    <system:String x:Key="WirelessProfileReconnectInstructionsFormat">“{0}” is now advertised. On the iPhone, choose “{1}” again under Control Center → Screen Mirroring (tap Stop Mirroring first if the old one is still listed).</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningTitle">Original quality notice</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningBody">Original quality can freeze on some devices or networks; 1080p is recommended.</system:String>
     <system:String x:Key="WirelessConnected">AirPlay connected</system:String>
@@ -650,7 +609,6 @@
     <system:String x:Key="WirelessMusicAudioFormat">AirPlay PCM audio</system:String>
     <system:String x:Key="WirelessStopping">Stopping the AirPlay receiver…</system:String>
     <system:String x:Key="WirelessStopped">Wireless mirroring stopped</system:String>
-    <system:String x:Key="WirelessRunningFormat">Wireless receiver active: {0}</system:String>
     <system:String x:Key="WirelessReceiverMissing">The wireless receiver component is missing. Reinstall the full iPhoneMirror package.</system:String>
     <system:String x:Key="WirelessRuntimeCodeIntegrityBlocked">Windows security policy blocked the wireless decoder. Use the Setup installer, or open the downloaded ZIP's Properties, select Unblock, and extract it again.</system:String>
     <system:String x:Key="WirelessRuntimeIncompatible">The wireless decoder version is incompatible. Reinstall the latest version.</system:String>
@@ -762,7 +720,6 @@
     <system:String x:Key="RecordingDiscardFailed">Could not discard the recording.</system:String>
     <system:String x:Key="UnknownError">Unknown error</system:String>
     <system:String x:Key="AboutTitle">About</system:String>
-    <system:String x:Key="AboutToolTip">About and update settings</system:String>
     <system:String x:Key="AboutDescription">Low-latency iPhone mirroring with recording, streaming and a virtual camera.</system:String>
     <system:String x:Key="UpdateStatusTitle">Update status</system:String>
     <system:String x:Key="UpdateStatusReady">Check GitHub Releases for updates at any time.</system:String>
@@ -865,9 +822,6 @@
     <system:String x:Key="NavOutputDescription">Output settings</system:String>
     <system:String x:Key="NavDriverDescription">Driver manager</system:String>
     <system:String x:Key="NavAboutDescription">About and updates</system:String>
-    <system:String x:Key="NavExpandDescription">Expand navigation</system:String>
-    <system:String x:Key="NavCollapseDescription">Collapse navigation</system:String>
-    <system:String x:Key="NavExpandToolTip">Expand left navigation</system:String>
     <system:String x:Key="AppPreferencesTitle">General</system:String>
     <system:String x:Key="InstanceConflictTitle">iPhoneMirror is already running</system:String>
     <system:String x:Key="InstanceConflictBody">Another iPhoneMirror instance is currently running. Choose which window to keep.</system:String>
@@ -882,14 +836,9 @@
     <system:String x:Key="TitleBarMaximizeToolTip">Maximize or restore</system:String>
     <system:String x:Key="TitleBarCloseToolTip">Close</system:String>
     <system:String x:Key="DeveloperToolsTitle">Developer tools</system:String>
-    <system:String x:Key="DeveloperToolsSubtitle">Manage Automation API and preview pages, dialogs, and runtime parameters</system:String>
-    <system:String x:Key="DeveloperToolsPreviewBadge">READ-ONLY PREVIEW</system:String>
     <system:String x:Key="DeveloperToolsWorkspaceSection">Workspace pages</system:String>
-    <system:String x:Key="DeveloperToolsWorkspaceHint">Jump through every workspace state in the main window</system:String>
     <system:String x:Key="DeveloperToolsWindowsSection">Child windows and dialogs</system:String>
-    <system:String x:Key="DeveloperToolsWindowsHint">Open safe previews; network, device, and destructive paths are isolated</system:String>
     <system:String x:Key="DeveloperToolsParametersSection">Runtime parameters</system:String>
-    <system:String x:Key="DeveloperToolsParametersHint">Session-only controls for theme, scale, and window coordination</system:String>
     <system:String x:Key="DeveloperToolsInspectorSection">Window inspector</system:String>
     <system:String x:Key="DeveloperMirroring">Mirroring controls</system:String>
     <system:String x:Key="DeveloperMirroringDescription">Main workspace and preview state</system:String>
@@ -969,7 +918,6 @@
     <system:String x:Key="DeveloperRuntimeDpi">Text scale</system:String>
     <system:String x:Key="DeveloperRuntimeWindows">Window count</system:String>
     <system:String x:Key="DeveloperSurfaceOpened">Preview window opened</system:String>
-    <system:String x:Key="DeveloperSurfaceOpenFailed">Preview failed</system:String>
     <system:String x:Key="DeveloperSurfaceOpenFailedFormat">Could not open the preview: {0}</system:String>
     <system:String x:Key="DeveloperParametersReset">Parameters restored to defaults</system:String>
     <system:String x:Key="DeveloperReadOnlyPreview">Read-only preview: no real output operation will run.</system:String>
@@ -1029,7 +977,6 @@
     <system:String x:Key="ControlBluetoothTouchFailed">Bluetooth touch check failed</system:String>
     <system:String x:Key="ControlHidRouteFailed">The HID mouse channel is connected, but touch routing validation failed.</system:String>
     <system:String x:Key="ControlCheckingDeviceBinding">Checking the device and its bindings…</system:String>
-    <system:String x:Key="ControlWirelessStartFailed">Could not enable wireless control</system:String>
     <system:String x:Key="ControlWirelessCancelled">Wireless control cancelled</system:String>
     <system:String x:Key="ControlCheckingDevicePermissions">Checking device permissions and connection status…</system:String>
     <system:String x:Key="ControlConnectingChannel">Establishing the device control channel…</system:String>
@@ -1040,9 +987,7 @@
     <system:String x:Key="ControlReconnectingChannel">The control channel was interrupted. Reconnecting…</system:String>
     <system:String x:Key="ControlWirelessRecoveryDisconnected">The wireless control channel disconnected before automatic reconnection completed.</system:String>
     <system:String x:Key="ControlWirelessRecoveryFailed">Automatic wireless control reconnection failed</system:String>
-    <system:String x:Key="ControlWiredStartFailed">Could not enable wired control</system:String>
     <system:String x:Key="ControlWiredCancelled">Wired control cancelled</system:String>
-    <system:String x:Key="ControlBindingNotFound">Device binding information was not found.</system:String>
     <system:String x:Key="ControlPreparingSupportFiles">Preparing the support files required by the device…</system:String>
     <system:String x:Key="ControlAutoReconnectingChannel">The control channel was interrupted. Reconnecting automatically…</system:String>
     <system:String x:Key="ControlRecoveryFailed">Automatic reconnection failed</system:String>
@@ -1050,7 +995,6 @@
     <system:String x:Key="ControlCheckConnectionAdvice">Check the device connection, then try again.</system:String>
     <system:String x:Key="ControlWirelessRetryFormat">Reconnecting wireless control automatically (attempt {0})…</system:String>
     <system:String x:Key="ControlWiredRetryFormat">Reconnecting wired control automatically (attempt {0})…</system:String>
-    <system:String x:Key="TouchBridgeStartFailed">Could not start the USB touch bridge.</system:String>
     <system:String x:Key="TouchBridgeNotReady">The USB touch bridge is not ready.</system:String>
     <system:String x:Key="ClipboardTextTooLarge">The text is too long to paste at once. Shorten it and try again.</system:String>
     <system:String x:Key="ClipboardPasteFailed">Could not paste to iPhone. Try again.</system:String>
@@ -1237,7 +1181,6 @@
     <system:String x:Key="TrayStarting">Opening mirroring window…</system:String>
     <system:String x:Key="TrayExit">Exit app</system:String>
     <system:String x:Key="TrayUnavailable">Could not create the tray icon: {0}</system:String>
-    <system:String x:Key="MultiDeviceControlHint">Enable control for each device, then switch tabs or focus its separate mirror window. Other device connections stay active.</system:String>
     <system:String x:Key="MultiDeviceControlAlreadyActive">This device is already controlled through another mirroring session. Use its existing window.</system:String>
     <system:String x:Key="UiRefreshing">Refreshing…</system:String>
     <system:String x:Key="UiBluetoothRefreshFailed">Could not refresh Bluetooth devices. Check Bluetooth and try again; the list may be out of date.</system:String>
@@ -1275,7 +1218,6 @@
     <system:String x:Key="MappingCapture">Record key</system:String>
     <system:String x:Key="MappingCaptureHint">Press the keyboard key to bind</system:String>
     <system:String x:Key="MappingWaiting">Waiting for a key… (click again to cancel)</system:String>
-    <system:String x:Key="MappingCaptureHelp">Press and release one physical key. Ctrl / Shift / Alt / Win trigger on standalone release; chords do not trigger a single-key mapping. A mapped Win key suppresses Start. Windows retains control of secure system shortcuts.</system:String>
     <system:String x:Key="MappingAction">Touch action</system:String>
     <system:String x:Key="MappingActionTap">Tap</system:String>
     <system:String x:Key="MappingActionLongPress">Long press</system:String>
@@ -1288,12 +1230,6 @@
     <system:String x:Key="MappingActionSwipeDown">Swipe down</system:String>
     <system:String x:Key="MappingActionSwipeLeft">Swipe left</system:String>
     <system:String x:Key="MappingActionSwipeRight">Swipe right</system:String>
-    <system:String x:Key="MappingCoordinateHelp">Click or drag directly on the current mirror to choose a position. No X/Y entry is needed. Swipe directions describe finger movement.</system:String>
-    <system:String x:Key="MappingX">X / start X (%)</system:String>
-    <system:String x:Key="MappingY">Y / start Y (%)</system:String>
-    <system:String x:Key="MappingEndX">End X (%)</system:String>
-    <system:String x:Key="MappingEndY">End Y (%)</system:String>
-    <system:String x:Key="MappingDistance">Distance (% of the movement axis)</system:String>
     <system:String x:Key="MappingDuration">Duration (ms, 50–10000)</system:String>
     <system:String x:Key="MappingInterval">Double-tap interval (ms, 40–1000)</system:String>
     <system:String x:Key="MappingPointSummary">X: {0:0.##}%, Y: {1:0.##}%</system:String>
@@ -1340,14 +1276,8 @@
     <system:String x:Key="MappingPickRequired">Choose a position on the current mirror.</system:String>
     <system:String x:Key="MappingPickNoPreview">Start mirroring the current device before choosing a position.</system:String>
     <system:String x:Key="MappingPicking">Choosing a position on the mirror</system:String>
-    <system:String x:Key="MappingPickInside">Move the pointer into the video content</system:String>
     <system:String x:Key="MappingPickClick">Click the target. Esc cancels.</system:String>
     <system:String x:Key="MappingPickDrag">Press, drag to the endpoint, then release. Esc cancels.</system:String>
-    <system:String x:Key="MappingStateIdle">Step 1: capture a Windows key</system:String>
-    <system:String x:Key="MappingStateWaitingForKey">Press and release a key; click again to cancel capture</system:String>
-    <system:String x:Key="MappingStateKeyCaptured">Step 2: choose an action, then a position</system:String>
-    <system:String x:Key="MappingStatePickingPosition">Choosing a position on the current mirror</system:String>
-    <system:String x:Key="MappingStateMappingReady">Key and position confirmed. Ready to save.</system:String>
     <system:String x:Key="WizardPressKey">Press a key</system:String>
     <system:String x:Key="WizardKeyWaiting">Press and release a key</system:String>
     <system:String x:Key="WizardKeyStart">Select the key above to begin</system:String>
@@ -1427,9 +1357,6 @@
     <system:String x:Key="SetupBindingSaved">The binding is saved. Continue, or set up again to use a different device.</system:String>
     <system:String x:Key="SetupStartMirror">Start mirroring →</system:String>
     <system:String x:Key="SetupLaterMain">Go to the main window</system:String>
-    <system:String x:Key="SetupSystemLanguage">Use system language</system:String>
-    <system:String x:Key="SetupModeHint">Lightweight mode shows everyday controls. Complete mode includes all settings. Tray mode runs in the notification area.</system:String>
-    <system:String x:Key="SetupAppearance">Appearance</system:String>
     <system:String x:Key="SetupThemeSystem">Use system appearance</system:String>
     <system:String x:Key="SetupThemeLight">Light</system:String>
     <system:String x:Key="SetupThemeDark">Dark</system:String>
@@ -1456,7 +1383,6 @@ Pair, select and save.</system:String>
     <system:String x:Key="SetupSkipHintWireless">You can still mirror by cable and add wireless later in Settings.</system:String>
     <system:String x:Key="SetupSkipHintWirelessControl">Wired control works on its own. Return to Settings when you want wireless control.</system:String>
     <system:String x:Key="SetupSkipHintBluetooth">Skip this if wired control is enough; add Bluetooth later in Settings.</system:String>
-    <system:String x:Key="SetupRecommended">Your current presets are used. New installations default to wireless 1080p at 60 FPS and automatic wired decoding. Adjust advanced options below.</system:String>
     <system:String x:Key="SetupWirelessVerified">✓ Wireless device address saved</system:String>
     <system:String x:Key="SetupSaveFailed">Couldn't save. Check disk space and file permissions, then retry.</system:String>
     <system:String x:Key="SetupWorking">Checking, please wait…</system:String>
@@ -1689,7 +1615,6 @@ Pair, select and save.</system:String>
     <system:String x:Key="SharpenSmallPreviewHelp">Only when the preview is much smaller than the iPhone. Recordings and screenshots stay unchanged.</system:String>
     <system:String x:Key="PreviewMoveDot">Drag to move the window</system:String>
     <system:String x:Key="PreviewResizeDot">Drag to make the window larger or smaller</system:String>
-    <system:String x:Key="PreviewPinButton">Always on top</system:String>
     <system:String x:Key="PreviewMute">Mute (Ctrl+Alt+M)</system:String>
     <system:String x:Key="PreviewUnmute">Sound on (Ctrl+Alt+M)</system:String>
     <system:String x:Key="StatusPillMuted">Muted</system:String>

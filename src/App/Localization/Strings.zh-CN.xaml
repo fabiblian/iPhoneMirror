@@ -3,15 +3,12 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <FontFamily x:Key="NavigationTextFontFamily">Microsoft YaHei UI</FontFamily>
-    <system:String x:Key="WindowTitle">iPhoneMirror — USB iPhone/iPad 投屏</system:String>
-    <system:String x:Key="AppSubtitle">Windows 有线 iPhone/iPad 屏幕采集</system:String>
     <system:String x:Key="LanguageSystem">跟随系统</system:String>
     <system:String x:Key="LanguageChinese">简体中文</system:String>
     <system:String x:Key="LanguageTraditionalChineseHongKong">繁體中文（香港）</system:String>
     <system:String x:Key="LanguageEnglish">English</system:String>
     <system:String x:Key="LanguageToolTip">界面语言</system:String>
     <system:String x:Key="DriverManagerButton">驱动管理器</system:String>
-    <system:String x:Key="DriverManagerToolTip">打开驱动安装、修复与卸载工具</system:String>
     <system:String x:Key="DriverManagerTitle">驱动管理器</system:String>
     <system:String x:Key="DriverManagerOpened">已打开驱动管理器</system:String>
     <system:String x:Key="DriverManagerOpenedAutomatically">检测到有线设备驱动异常，已自动打开驱动管理器</system:String>
@@ -146,7 +143,6 @@
     <system:String x:Key="ReverseControlUsbOff">有线控制未启用</system:String>
     <system:String x:Key="ReverseControlUsbStopFailedFormat">有线控制关闭失败：{0}</system:String>
     <system:String x:Key="ReverseControlBridgeNotReady">反向控制桥接器尚未就绪。</system:String>
-    <system:String x:Key="ReverseControlStopFailureDetailFormat">关闭失败：{0}</system:String>
     <system:String x:Key="DeviceBindingOpenFailedFormat">无法打开设备绑定器：{0}</system:String>
     <system:String x:Key="UsbControlOperationFailedFormat">有线控制操作失败：{0}</system:String>
     <system:String x:Key="WirelessControlOperationFailedFormat">无线控制操作失败：{0}</system:String>
@@ -162,7 +158,6 @@
     <system:String x:Key="DevicesTitle">投屏来源</system:String>
     <system:String x:Key="RefreshDevices">刷新设备</system:String>
     <system:String x:Key="MirrorSimultaneously">同时投屏</system:String>
-    <system:String x:Key="DeviceAlreadyMirroring">该设备已在主预览中投屏</system:String>
     <system:String x:Key="SimultaneousMirrorStartedFormat">已为 {0} 打开同时投屏窗口</system:String>
     <system:String x:Key="SimultaneousMirrorFailedFormat">同时投屏启动失败：{0}</system:String>
     <system:String x:Key="DeviceCaptureErrorTitleFormat">{0} 投屏错误</system:String>
@@ -186,7 +181,6 @@
     <system:String x:Key="IndependentWindowClose">关闭</system:String>
     <system:String x:Key="IndependentWindowRotateLeft">向左旋转</system:String>
     <system:String x:Key="IndependentWindowRotateRight">向右旋转</system:String>
-    <system:String x:Key="IndependentWindowMute">静音</system:String>
     <system:String x:Key="IndependentWindowMuteThis">静音该窗口</system:String>
     <system:String x:Key="IndependentWindowUnmuteThis">取消静音该窗口</system:String>
     <system:String x:Key="IndependentWindowMuteOthers">静音其他窗口</system:String>
@@ -199,7 +193,6 @@
     <system:String x:Key="ApplyLightweightMode">一键切换轻量模式</system:String>
     <system:String x:Key="ApplicationModeComplete">完整模式</system:String>
     <system:String x:Key="KeepUnlocked">连接后请保持 Apple 设备解锁</system:String>
-    <system:String x:Key="PreviewLabel">预览</system:String>
     <system:String x:Key="ResolutionLabel">分辨率</system:String>
     <system:String x:Key="FrameRateLabel">帧率</system:String>
     <system:String x:Key="LatencyLabel">延迟</system:String>
@@ -214,9 +207,6 @@
     <system:String x:Key="RenderLimitHelp">只限制 Windows 本地渲染；不会改变来源分辨率，也不会强制 iOS 固定输出帧率</system:String>
     <system:String x:Key="RenderResolutionLimit">渲染分辨率上限</system:String>
     <system:String x:Key="TargetFrameRate">本地渲染帧率上限</system:String>
-    <system:String x:Key="ActualStream">当前 AirPlay 接收到的实际码流</system:String>
-    <system:String x:Key="ActualResolution">实际分辨率</system:String>
-    <system:String x:Key="ActualFrameRate">实际帧率</system:String>
     <system:String x:Key="ApplyVideoSettings">应用画面设置</system:String>
     <system:String x:Key="PlayAudioWindows">在 Windows 播放声音</system:String>
     <system:String x:Key="PlaybackVolume">播放音量</system:String>
@@ -238,10 +228,6 @@
     <system:String x:Key="BluetoothDeviceOrientationPortrait">竖屏</system:String>
     <system:String x:Key="BluetoothDeviceOrientationLandscape">横屏</system:String>
     <system:String x:Key="BluetoothDeviceOrientationUnknown">未识别</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseLeft90">向左 90°</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseRight90">向右 90°</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseLeft90Reverse">向左 90°（反向）</system:String>
-    <system:String x:Key="BluetoothLandscapeMouseRight90Reverse">向右 90°（反向）</system:String>
     <system:String x:Key="PlaybackSpeed">播放倍速</system:String>
     <system:String x:Key="MediaCastSpeedUnsupportedTitle">当前流不支持倍速</system:String>
     <system:String x:Key="MediaCastSpeedUnsupportedBody">当前投放的视频不支持 {0} 播放速度，已恢复为 1x。</system:String>
@@ -250,9 +236,6 @@
     <system:String x:Key="FullScreenPreview">全屏预览</system:String>
     <system:String x:Key="SeparateWindow">独立窗口</system:String>
     <system:String x:Key="Screenshot">截图</system:String>
-    <system:String x:Key="ObsWindowHelp">独立窗口可直接用于 OBS“窗口采集”。</system:String>
-    <system:String x:Key="OpenObsWindow">打开 OBS 专用窗口</system:String>
-    <system:String x:Key="ProjectionActions">投屏操作</system:String>
     <system:String x:Key="StartMirroring">开始投屏</system:String>
     <system:String x:Key="StopMirroring">停止投屏</system:String>
     <system:String x:Key="StartBluetoothControl">启用蓝牙控制</system:String>
@@ -304,13 +287,11 @@
     <system:String x:Key="IndependentWindowBluetoothControl">蓝牙控制</system:String>
     <system:String x:Key="IndependentWindowWirelessProjection">无线控制</system:String>
     <system:String x:Key="IndependentWindowWiredProjection">有线控制</system:String>
-    <system:String x:Key="ShortcutSettings">快捷键设置</system:String>
     <system:String x:Key="ShortcutSettingsTitle">快捷键设置</system:String>
     <system:String x:Key="ShortcutSettingsCategoryControl">控制</system:String>
     <system:String x:Key="ShortcutSettingsCategoryNavigation">系统导航</system:String>
     <system:String x:Key="ShortcutSettingsCategoryAssistant">助理</system:String>
     <system:String x:Key="OpenShortcutSettings">设置快捷键</system:String>
-    <system:String x:Key="ShortcutSettingsReverseControl">反向控制</system:String>
     <system:String x:Key="ShortcutSettingsBluetoothControl">蓝牙控制</system:String>
     <system:String x:Key="ShortcutSettingsWirelessControl">无线控制</system:String>
     <system:String x:Key="ShortcutSettingsWiredControl">有线控制</system:String>
@@ -318,7 +299,6 @@
     <system:String x:Key="ShortcutSettingsNotificationCenter">打开通知栏</system:String>
     <system:String x:Key="ShortcutSettingsAppSwitcher">打开多任务</system:String>
     <system:String x:Key="ShortcutSettingsHome">回到桌面</system:String>
-    <system:String x:Key="ShortcutSettingsBossKey">显示应用</system:String>
     <system:String x:Key="ShortcutSettingsLockScreen">锁定屏幕</system:String>
     <system:String x:Key="ShortcutSettingsEnterPasscode">输入 iPhone 密码</system:String>
     <system:String x:Key="PasscodeEntryTitle">解锁 iPhone</system:String>
@@ -329,13 +309,6 @@
     <system:String x:Key="ShortcutSettingsVolumeUp">音量+</system:String>
     <system:String x:Key="ShortcutSettingsVolumeDown">音量-</system:String>
     <system:String x:Key="ShortcutSettingsDock">显示 Dock</system:String>
-    <system:String x:Key="ShortcutSettingsSearch">打开搜索</system:String>
-    <system:String x:Key="ShortcutSettingsKeyboardShortcuts">显示键盘快捷键</system:String>
-    <system:String x:Key="ShortcutSettingsAllWindows">显示所有应用窗口</system:String>
-    <system:String x:Key="ShortcutSettingsPreviousApp">切换到上一个应用</system:String>
-    <system:String x:Key="ShortcutSettingsNextApp">切换到下一个应用</system:String>
-    <system:String x:Key="ShortcutSettingsFullScreen">切换全屏</system:String>
-    <system:String x:Key="ShortcutSettingsQuickNote">新建快捷笔记</system:String>
     <system:String x:Key="ShortcutSettingsSiri">唤醒 Siri</system:String>
     <system:String x:Key="ShortcutSettingsUnbound">未绑定</system:String>
     <system:String x:Key="ShortcutSettingsDuplicate">每个动作必须使用不同的快捷键。</system:String>
@@ -439,11 +412,8 @@
     <system:String x:Key="CaptureCleaningDevice">正在清理设备…如系统请求权限，请允许设备自动重连。</system:String>
     <system:String x:Key="CaptureUsbRestoreReplugRequired">尚未确认 Apple USB 通道恢复可用。请解锁 iPhone，确认可能出现的信任提示并输入密码；若取消了自动重连的管理员授权或仍无法识别，请重新插拔后再开始投屏。</system:String>
     <system:String x:Key="CaptureQueued">等待设备清理…</system:String>
-    <system:String x:Key="SwitchingDeviceFormat">正在停止当前投屏并切换到 {0}…</system:String>
-    <system:String x:Key="SwitchDeviceFailedFormat">切换设备失败：{0}</system:String>
     <system:String x:Key="CaptureStopped">投屏已停止</system:String>
     <system:String x:Key="CaptureError">投屏出现错误</system:String>
-    <system:String x:Key="CaptureErrorFormat">投屏错误：{0}</system:String>
     <system:String x:Key="CaptureNoPingTitle">iPhone/iPad 投屏连接超时</system:String>
     <system:String x:Key="CaptureNoPingRecovery" xml:space="preserve">设备已连接，但长时间没有响应投屏握手。&#xA;&#xA;请重启 iPhone 或 iPad，然后使用 Apple 原装或 MFi 认证数据线重新连接后重试。&#xA;&#xA;重试时请保持设备解锁。</system:String>
     <system:String x:Key="CaptureNoPingSummary">设备已连接，但长时间没有响应投屏握手。再次尝试前，请优先完成以下两项操作：</system:String>
@@ -451,7 +421,6 @@
     <system:String x:Key="CaptureNoPingCableAction">更换 Apple 原装或 MFi 认证数据线</system:String>
     <system:String x:Key="CaptureNoPingUnlockHint">重新连接并开始投屏时，请保持设备处于解锁状态。</system:String>
     <system:String x:Key="CaptureUsbConfigurationRecovery" xml:space="preserve">未能切换 iPhone 或 iPad 的 USB 投屏配置。&#xA;&#xA;请依次尝试：&#xA;1. 拔下数据线，等待几秒后重新插入&#xA;2. 重启 iPhone 或 iPad 后再连接&#xA;3. 更换 Apple 原装或 MFi 认证数据线&#xA;&#xA;重新连接并开始投屏时，请保持设备处于解锁状态。</system:String>
-    <system:String x:Key="CaptureFailureDetailsFormat" xml:space="preserve">错误类型：{0}&#xA;失败阶段：{1}&#xA;错误码：{2}&#xA;&#xA;详细信息：{3}</system:String>
     <system:String x:Key="CaptureActionReconnectDevice">请保持设备解锁，重新插拔数据线后再试。</system:String>
     <system:String x:Key="CaptureActionRestartDevice">请重启 iPhone 或 iPad 后再试。</system:String>
     <system:String x:Key="CaptureActionWaitForCleanup">请等待设备清理完成后，再次开始投屏。</system:String>
@@ -460,7 +429,6 @@
     <system:String x:Key="CaptureActionDeviceDisconnected">请重新连接并解锁设备后，再次开始投屏。</system:String>
     <system:String x:Key="CaptureActionRestartApplication">请关闭后重新打开 iPhoneMirror，再试一次。</system:String>
     <system:String x:Key="CaptureActionRetry">请停止投屏后重新开始；仍失败时重新连接设备。</system:String>
-    <system:String x:Key="CaptureFailureStatusFormat">投屏错误：{0}（{1}，错误码 {2}）</system:String>
     <system:String x:Key="CaptureFailureUsbConnection">USB 设备连接失败</system:String>
     <system:String x:Key="CaptureFailureSessionCreation">投屏会话创建失败</system:String>
     <system:String x:Key="CaptureFailureDriver">Apple/libusb 驱动异常</system:String>
@@ -496,9 +464,6 @@
     <system:String x:Key="PreviewWindowOpened">已打开独立预览窗口</system:String>
     <system:String x:Key="IndependentPreviewOpened">已在独立窗口打开</system:String>
     <system:String x:Key="PreviewWindowOpenFailedFormat">打开独立预览失败：{0}</system:String>
-    <system:String x:Key="ObsWindowOpenFailedFormat">打开 OBS 专用窗口失败：{0}</system:String>
-    <system:String x:Key="ObsWindowOpened">OBS 专用窗口已打开；窗口标题已复制</system:String>
-    <system:String x:Key="ObsTitleCopyFailedFormat">OBS 专用窗口已打开；复制标题失败：{0}</system:String>
     <system:String x:Key="FullScreenFailedFormat">切换全屏失败：{0}</system:String>
     <system:String x:Key="ScreenshotBusy">截图正在处理中，请稍候</system:String>
     <system:String x:Key="ScreenshotSavedFormat">截图已保存：{0}</system:String>
@@ -578,11 +543,9 @@
     <system:String x:Key="DecoderRuntimeHardware">硬件加速</system:String>
     <system:String x:Key="DecoderRuntimeSoftware">软件解码</system:String>
     <system:String x:Key="DecoderRuntimeExternal">无线接收器解码</system:String>
-    <system:String x:Key="DecoderPreferenceSelectedFormat">已选择解码器：{0}</system:String>
     <system:String x:Key="VideoPipelineRestarting">正在按新的视频管线设置重新连接当前设备…</system:String>
     <system:String x:Key="DecoderPreferenceAppliedFormat">已应用解码器：{0}</system:String>
     <system:String x:Key="DecoderPreferenceSubmittedFormat">解码器设置已提交：{0}；请在预览下方查看实际状态。</system:String>
-    <system:String x:Key="DecoderPreferenceQueuedFormat">已请求切换解码器：{0}（将在关键帧生效）</system:String>
     <system:String x:Key="MoreImageSettingsButton">更多设置</system:String>
     <system:String x:Key="MoreImageSettingsTitle">画面调节</system:String>
     <system:String x:Key="ImageAdjustmentsPreviewOnlyNotice">仅对本地预览生效，无法应用到推流、虚拟摄像头、录屏或截图画面。</system:String>
@@ -611,8 +574,6 @@
     <system:String x:Key="WirelessBackendUnavailableFormat">缺少 {0} 无线接收组件。请重新安装完整的 iPhoneMirror 安装包。</system:String>
     <system:String x:Key="WirelessBackendSettingsSaveFailed">无法保存所选无线接收方案。</system:String>
     <system:String x:Key="WirelessUxPlayStartupFailed">UxPlay 启动后立即退出。请修复 UxPlay 运行时后重新应用无线设置。</system:String>
-    <system:String x:Key="ApplyReceiverName">应用</system:String>
-    <system:String x:Key="WirelessResolutionTitle">无线投屏清晰度</system:String>
     <system:String x:Key="WirelessSettingsTitle">应用无线 AirPlay 设置</system:String>
     <system:String x:Key="WirelessNameChangeFormat">接收端名称：{0} → {1}</system:String>
     <system:String x:Key="WirelessResolutionChangeFormat">连接分辨率：{0} → {1}</system:String>
@@ -630,8 +591,6 @@
     <system:String x:Key="WirelessProfile540p">540p（弱网 · 30 fps）</system:String>
     <system:String x:Key="WirelessProfileAppliedFormat">当前声明：{0}</system:String>
     <system:String x:Key="ApplyWirelessSettings">应用</system:String>
-    <system:String x:Key="WirelessProfileDisconnectConfirmFormat">当前有 {0} 台无线设备已连接。应用“{1}”会断开全部无线投屏并重启接收端。是否继续？</system:String>
-    <system:String x:Key="WirelessProfileReconnectInstructionsFormat">已重新声明“{0}”。请在 iPhone 打开“控制中心” → “屏幕镜像”，重新选择“{1}”。如果列表仍保留旧连接，请先点“停止镜像”，再重新选择接收端。</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningTitle">原画模式提示</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningBody">原画模式在部分设备或网络环境下可能出现画面停帧。建议优先使用 1080p；如仍需原画，请确保局域网稳定，并从 iPhone“控制中心” → “屏幕镜像”连接。</system:String>
     <system:String x:Key="WirelessConnected">AirPlay 已连接</system:String>
@@ -650,7 +609,6 @@
     <system:String x:Key="WirelessMusicAudioFormat">AirPlay PCM 音频</system:String>
     <system:String x:Key="WirelessStopping">正在停止 AirPlay 接收端…</system:String>
     <system:String x:Key="WirelessStopped">无线投屏已停止</system:String>
-    <system:String x:Key="WirelessRunningFormat">无线接收端运行中：{0}</system:String>
     <system:String x:Key="WirelessReceiverMissing">缺少无线接收组件。请重新安装完整的 iPhoneMirror 安装包。</system:String>
     <system:String x:Key="WirelessRuntimeCodeIntegrityBlocked">Windows 安全策略阻止了无线解码组件。请改用 Setup 安装版；若使用 ZIP，请先在 ZIP 的“属性”中勾选“解除锁定”，然后重新解压。</system:String>
     <system:String x:Key="WirelessRuntimeIncompatible">无线解码组件版本不兼容，请重新安装最新版本。</system:String>
@@ -762,7 +720,6 @@
     <system:String x:Key="RecordingDiscardFailed">无法丢弃录制文件。</system:String>
     <system:String x:Key="UnknownError">未知错误</system:String>
     <system:String x:Key="AboutTitle">关于</system:String>
-    <system:String x:Key="AboutToolTip">关于和更新设置</system:String>
     <system:String x:Key="AboutDescription">低延迟 iPhone 投屏、录制、直播推流与虚拟摄像头。</system:String>
     <system:String x:Key="UpdateStatusTitle">更新状态</system:String>
     <system:String x:Key="UpdateStatusReady">可随时检查 GitHub Release 更新。</system:String>
@@ -865,9 +822,6 @@
     <system:String x:Key="NavOutputDescription">输出设置</system:String>
     <system:String x:Key="NavDriverDescription">驱动管理</system:String>
     <system:String x:Key="NavAboutDescription">关于与更新</system:String>
-    <system:String x:Key="NavExpandDescription">展开导航</system:String>
-    <system:String x:Key="NavCollapseDescription">收起导航</system:String>
-    <system:String x:Key="NavExpandToolTip">展开左侧导航</system:String>
     <system:String x:Key="AppPreferencesTitle">通用</system:String>
     <system:String x:Key="InstanceConflictTitle">iPhoneMirror 已在运行</system:String>
     <system:String x:Key="InstanceConflictBody">检测到另一个 iPhoneMirror 程序正在运行。请选择要保留的窗口。</system:String>
@@ -882,14 +836,9 @@
     <system:String x:Key="TitleBarMaximizeToolTip">最大化或还原</system:String>
     <system:String x:Key="TitleBarCloseToolTip">关闭</system:String>
     <system:String x:Key="DeveloperToolsTitle">开发者工具</system:String>
-    <system:String x:Key="DeveloperToolsSubtitle">管理 Automation API，预览页面、弹窗和运行期参数</system:String>
-    <system:String x:Key="DeveloperToolsPreviewBadge">只读预览</system:String>
     <system:String x:Key="DeveloperToolsWorkspaceSection">工作区页面</system:String>
-    <system:String x:Key="DeveloperToolsWorkspaceHint">快速切换主窗口中的所有工作区状态</system:String>
     <system:String x:Key="DeveloperToolsWindowsSection">子窗口与弹窗</system:String>
-    <system:String x:Key="DeveloperToolsWindowsHint">打开现有窗口的安全预览；网络、设备和破坏性操作已隔离</system:String>
     <system:String x:Key="DeveloperToolsParametersSection">运行期参数</system:String>
-    <system:String x:Key="DeveloperToolsParametersHint">参数仅影响当前进程，便于检查主题、缩放和窗口协调</system:String>
     <system:String x:Key="DeveloperToolsInspectorSection">窗口检查器</system:String>
     <system:String x:Key="DeveloperMirroring">投屏控制</system:String>
     <system:String x:Key="DeveloperMirroringDescription">主工作区与预览状态</system:String>
@@ -969,7 +918,6 @@
     <system:String x:Key="DeveloperRuntimeDpi">文字缩放</system:String>
     <system:String x:Key="DeveloperRuntimeWindows">窗口数</system:String>
     <system:String x:Key="DeveloperSurfaceOpened">预览窗口已打开</system:String>
-    <system:String x:Key="DeveloperSurfaceOpenFailed">打开预览失败</system:String>
     <system:String x:Key="DeveloperSurfaceOpenFailedFormat">打开预览失败：{0}</system:String>
     <system:String x:Key="DeveloperParametersReset">参数已恢复默认值</system:String>
     <system:String x:Key="DeveloperReadOnlyPreview">只读预览：不会执行真实输出操作。</system:String>
@@ -1029,7 +977,6 @@
     <system:String x:Key="ControlBluetoothTouchFailed">蓝牙触控检查未通过</system:String>
     <system:String x:Key="ControlHidRouteFailed">HID 鼠标通道已连接，但触控路由校验失败。</system:String>
     <system:String x:Key="ControlCheckingDeviceBinding">正在检查设备和绑定状态…</system:String>
-    <system:String x:Key="ControlWirelessStartFailed">无法启用无线控制</system:String>
     <system:String x:Key="ControlWirelessCancelled">已取消无线控制</system:String>
     <system:String x:Key="ControlCheckingDevicePermissions">正在检查设备权限和连接状态…</system:String>
     <system:String x:Key="ControlConnectingChannel">正在建立设备控制通道…</system:String>
@@ -1040,9 +987,7 @@
     <system:String x:Key="ControlReconnectingChannel">控制通道暂时中断，正在尝试重新连接…</system:String>
     <system:String x:Key="ControlWirelessRecoveryDisconnected">无线控制通道在自动重连完成前已断开。</system:String>
     <system:String x:Key="ControlWirelessRecoveryFailed">无线控制自动重连失败</system:String>
-    <system:String x:Key="ControlWiredStartFailed">无法启用有线控制</system:String>
     <system:String x:Key="ControlWiredCancelled">已取消有线控制</system:String>
-    <system:String x:Key="ControlBindingNotFound">未找到设备绑定信息。</system:String>
     <system:String x:Key="ControlPreparingSupportFiles">正在准备设备所需的支持文件…</system:String>
     <system:String x:Key="ControlAutoReconnectingChannel">控制通道暂时中断，正在自动重新连接…</system:String>
     <system:String x:Key="ControlRecoveryFailed">自动重连失败</system:String>
@@ -1050,7 +995,6 @@
     <system:String x:Key="ControlCheckConnectionAdvice">请检查设备连接后重试。</system:String>
     <system:String x:Key="ControlWirelessRetryFormat">正在自动重新连接无线控制（第 {0} 次尝试）…</system:String>
     <system:String x:Key="ControlWiredRetryFormat">正在自动重新连接有线控制（第 {0} 次尝试）…</system:String>
-    <system:String x:Key="TouchBridgeStartFailed">无法启动 USB 触控桥接器。</system:String>
     <system:String x:Key="TouchBridgeNotReady">USB 触控桥接器尚未就绪。</system:String>
     <system:String x:Key="ClipboardTextTooLarge">文本过长，无法一次粘贴。请缩短文本后重试。</system:String>
     <system:String x:Key="ClipboardPasteFailed">粘贴到 iPhone 失败，请重试。</system:String>
@@ -1237,7 +1181,6 @@
     <system:String x:Key="TrayStarting">正在打开投屏窗口…</system:String>
     <system:String x:Key="TrayExit">退出应用</system:String>
     <system:String x:Key="TrayUnavailable">无法创建托盘图标：{0}</system:String>
-    <system:String x:Key="MultiDeviceControlHint">分别为各设备启用反控。切换选项卡或点击独立投屏窗口即可控制对应设备，连接会保持。</system:String>
     <system:String x:Key="MultiDeviceControlAlreadyActive">此设备已在另一个投屏会话中启用反控，请使用已有窗口。</system:String>
     <system:String x:Key="UiRefreshing">正在刷新…</system:String>
     <system:String x:Key="UiBluetoothRefreshFailed">无法刷新蓝牙设备。请检查蓝牙连接后重试；列表可能不是最新状态。</system:String>
@@ -1275,7 +1218,6 @@
     <system:String x:Key="MappingCapture">录入按键</system:String>
     <system:String x:Key="MappingCaptureHint">请按下要绑定的键盘按键</system:String>
     <system:String x:Key="MappingWaiting">等待按键…（再次点击取消）</system:String>
-    <system:String x:Key="MappingCaptureHelp">录入一个物理按键并松开。Ctrl / Shift / Alt / Win 单独松开时触发；组合键不触发单键映射。Win 单键映射会阻止开始菜单；系统安全快捷键仍由 Windows 处理。</system:String>
     <system:String x:Key="MappingAction">触控操作</system:String>
     <system:String x:Key="MappingActionTap">点击</system:String>
     <system:String x:Key="MappingActionLongPress">长按</system:String>
@@ -1288,12 +1230,6 @@
     <system:String x:Key="MappingActionSwipeDown">下滑</system:String>
     <system:String x:Key="MappingActionSwipeLeft">左滑</system:String>
     <system:String x:Key="MappingActionSwipeRight">右滑</system:String>
-    <system:String x:Key="MappingCoordinateHelp">在当前投屏画面点击或拖动选择位置，无需填写 X/Y。滑动方向表示手指移动方向。</system:String>
-    <system:String x:Key="MappingX">X / 起点 X（%）</system:String>
-    <system:String x:Key="MappingY">Y / 起点 Y（%）</system:String>
-    <system:String x:Key="MappingEndX">终点 X（%）</system:String>
-    <system:String x:Key="MappingEndY">终点 Y（%）</system:String>
-    <system:String x:Key="MappingDistance">滑动距离（所在轴的 %）</system:String>
     <system:String x:Key="MappingDuration">持续时间（毫秒，50–10000）</system:String>
     <system:String x:Key="MappingInterval">双击间隔（毫秒，40–1000）</system:String>
     <system:String x:Key="MappingPointSummary">X: {0:0.##}%, Y: {1:0.##}%</system:String>
@@ -1340,14 +1276,8 @@
     <system:String x:Key="MappingPickRequired">请在当前投屏画面选择位置。</system:String>
     <system:String x:Key="MappingPickNoPreview">请先开始当前设备的投屏，再选择位置。</system:String>
     <system:String x:Key="MappingPicking">正在投屏画面取点</system:String>
-    <system:String x:Key="MappingPickInside">将鼠标移入视频内容区域</system:String>
     <system:String x:Key="MappingPickClick">点击目标位置。Esc 取消。</system:String>
     <system:String x:Key="MappingPickDrag">按下并拖动到终点，松开完成。Esc 取消。</system:String>
-    <system:String x:Key="MappingStateIdle">第 1 步：录入 Windows 按键</system:String>
-    <system:String x:Key="MappingStateWaitingForKey">请按下一个按键并松开；再次点击可取消录入</system:String>
-    <system:String x:Key="MappingStateKeyCaptured">第 2 步：选择操作，然后选择位置</system:String>
-    <system:String x:Key="MappingStatePickingPosition">正在当前投屏画面选择位置</system:String>
-    <system:String x:Key="MappingStateMappingReady">按键和位置已确认，可以保存</system:String>
     <system:String x:Key="WizardPressKey">按下按键</system:String>
     <system:String x:Key="WizardKeyWaiting">按下一个键并松开</system:String>
     <system:String x:Key="WizardKeyStart">点击上方开始录入</system:String>
@@ -1427,9 +1357,6 @@
     <system:String x:Key="SetupBindingSaved">绑定已保存，可以直接继续；需要更换设备时再重新配置。</system:String>
     <system:String x:Key="SetupStartMirror">开始投屏 →</system:String>
     <system:String x:Key="SetupLaterMain">进入主界面</system:String>
-    <system:String x:Key="SetupSystemLanguage">跟随系统语言</system:String>
-    <system:String x:Key="SetupModeHint">精简模式保留常用功能；完整模式显示全部设置；托盘模式主要在通知区域运行。</system:String>
-    <system:String x:Key="SetupAppearance">外观</system:String>
     <system:String x:Key="SetupThemeSystem">跟随系统</system:String>
     <system:String x:Key="SetupThemeLight">浅色</system:String>
     <system:String x:Key="SetupThemeDark">深色</system:String>
@@ -1456,7 +1383,6 @@
     <system:String x:Key="SetupSkipHintWireless">跳过后仍可使用有线投屏，以后可以从设置重新打开助手。</system:String>
     <system:String x:Key="SetupSkipHintWirelessControl">可以只使用有线控制。需要无线操作时，再从设置重新配置。</system:String>
     <system:String x:Key="SetupSkipHintBluetooth">如果只使用有线控制，可以跳过。以后可从设置补充蓝牙配对。</system:String>
-    <system:String x:Key="SetupRecommended">沿用当前预设。新安装默认使用无线 1080p · 60 FPS，有线自动选择解码器。高级选项可在下方调整。</system:String>
     <system:String x:Key="SetupWirelessVerified">✓ 无线设备地址已保存</system:String>
     <system:String x:Key="SetupSaveFailed">无法保存，请检查磁盘空间和文件权限后重试。</system:String>
     <system:String x:Key="SetupWorking">正在检查，请稍候……</system:String>
@@ -1689,7 +1615,6 @@
     <system:String x:Key="SharpenSmallPreviewHelp">仅在预览明显小于 iPhone 画面时生效。录制、直播和截图不受影响。</system:String>
     <system:String x:Key="PreviewMoveDot">拖动以移动窗口</system:String>
     <system:String x:Key="PreviewResizeDot">拖动以放大或缩小窗口</system:String>
-    <system:String x:Key="PreviewPinButton">始终置顶</system:String>
     <system:String x:Key="PreviewMute">静音（Ctrl+Alt+M）</system:String>
     <system:String x:Key="PreviewUnmute">取消静音（Ctrl+Alt+M）</system:String>
     <system:String x:Key="StatusPillMuted">已静音</system:String>
