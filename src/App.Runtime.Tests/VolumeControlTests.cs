@@ -99,11 +99,37 @@ internal static partial class Program
             InteractionAssert(actions.IsAncestorOf(audio) && !header.IsAncestorOf(audio) && audio.IsVisible,
                 "Audio controls must be in the lower toolbar.");
             foreach (var id in new[] { "QuickImageSettingsButton", "QuickPreviewWindowButton", "QuickScreenshotButton", "QuickFullScreenButton" })
-                InteractionAssert(!Visuals(actions).OfType<FrameworkElement>().Any(e => AutomationProperties.GetAutomationId(e) == id),
-                    $"Removed toolbar action remains: {id}.");
+                InteractionAssert(!((FrameworkElement)window.FindName(id)).IsVisible,
+                    $"Opt-in toolbar action is shown by default: {id}.");
             var iphone = (FrameworkElement)window.FindName("IphoneVolumeControls");
-            InteractionAssert(iphone.IsVisible && Visuals(iphone).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "IphoneVolumeUpButton").IsEnabled,
+            var iphoneSlider = (Slider)window.FindName("IphoneVolumeSlider");
+            InteractionAssert(iphone.IsVisible && iphoneSlider.IsEnabled,
                 "iPhone volume must be available while PC audio capture is enabled.");
+            if (mode != "Bluetooth")
+            {
+                // A user move of three steps presses three times; reaching an end adds resync presses.
+                // Reset the estimate without pressing, as a shortcut press would.
+                KeyboardCall(vm, "SetIphoneVolumeEstimate", (double)(MainViewModel.IphoneVolumeSteps / 2));
+                window.UpdateLayout(); DrainDispatcher();
+                packets.SetLength(0);
+                iphoneSlider.Value = iphoneSlider.Value + 3;
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                while (ReadShortcutPackets(packets).Length < 6 && DateTime.UtcNow < deadline)
+                    AdvanceDispatcher(TimeSpan.FromMilliseconds(20));
+                var frames = ReadShortcutPackets(packets);
+                InteractionAssert(frames.Length == 6 && frames.All(f => f.GetProperty("usageCode").GetInt32() == 0xE9),
+                    $"{mode}: moving the iPhone slider three steps up must press volume up three times, got {frames.Length / 2}.");
+            }
+            vm.ShowToolbarScreenshot = true;
+            window.UpdateLayout(); DrainDispatcher(); window.UpdateLayout();
+            InteractionAssert(((FrameworkElement)window.FindName("QuickScreenshotButton")).IsVisible,
+                "Turning on Screenshot in Settings > Toolbar must show it in the toolbar.");
+            vm.ShowToolbarScreenshot = false;
+            vm.ShowToolbarStop = false;
+            window.UpdateLayout(); DrainDispatcher(); window.UpdateLayout();
+            InteractionAssert(!actions.Children.OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "ToolbarStopButton").IsVisible,
+                "Turning off Stop in Settings > Toolbar must hide it.");
+            vm.ShowToolbarStop = true;
             if (mode == "Usb") SaveWindowRender(window, Path.Combine(output, "toolbar-pc-and-iphone.png"));
             state.UsbVideoOnly = true;
             KeyboardCall(vm, "OnPropertyChanged", "CaptureUsbAudio");

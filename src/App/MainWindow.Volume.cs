@@ -1,12 +1,14 @@
 using IPhoneMirror.App.Localization;
+using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
+using IPhoneMirror.App.ViewModels;
 
 namespace IPhoneMirror.App;
 
 // Volume and mute for the toolbar and the shortcuts
 // Ctrl+Alt+M and Ctrl+Alt+Plus/Minus. Sound on the PC changes only this app's
 // volume; sound that stays on the iPhone uses the iPhone's volume buttons
-// (the app cannot read the iPhone's level, so these are steps).
+// (the app cannot read the iPhone's level, so its slider is an estimate).
 public partial class MainWindow
 {
     private const double PlaybackVolumeStep = 10;
@@ -25,11 +27,21 @@ public partial class MainWindow
     private void OnToolbarMuteClick(object sender, System.Windows.RoutedEventArgs e) =>
         ToggleAppMute(_viewModel.SelectedDevice?.Udid);
 
-    private void OnIphoneVolumeDownClick(object sender, System.Windows.RoutedEventArgs e) =>
-        _ = PressIphoneConsumerButtonAsync(CoreDeviceTouchProtocol.IndigoVolumeDown, _viewModel.SelectedDevice?.Udid);
+    private void InitializeIphoneVolumeSlider() =>
+        _viewModel.IphoneVolumeStepsRequested += (delta, level) =>
+            _ = PressIphoneVolumeStepsAsync(delta, level, _viewModel.SelectedDevice?.Udid);
 
-    private void OnIphoneVolumeUpClick(object sender, System.Windows.RoutedEventArgs e)
-        => _ = PressIphoneConsumerButtonAsync(CoreDeviceTouchProtocol.IndigoVolumeUp, _viewModel.SelectedDevice?.Udid);
+    // The slider is an estimate. Reaching either end presses a few extra times,
+    // so the iPhone really is at its minimum or maximum and the estimate is exact again.
+    private async Task PressIphoneVolumeStepsAsync(int delta, int level, string? udid)
+    {
+        const int resyncPresses = 2;
+        var presses = Math.Abs(delta);
+        if (level is 0 or MainViewModel.IphoneVolumeSteps) presses += resyncPresses;
+        var usage = delta > 0 ? CoreDeviceTouchProtocol.IndigoVolumeUp : CoreDeviceTouchProtocol.IndigoVolumeDown;
+        for (var i = 0; i < presses; i++)
+            await PressIphoneConsumerButtonAsync(usage, udid);
+    }
 
     private async Task StepAppVolumeAsync(bool up)
     {
@@ -39,6 +51,8 @@ public partial class MainWindow
             _viewModel.StepPlaybackVolume(up ? PlaybackVolumeStep : -PlaybackVolumeStep);
             return;
         }
+        if (DeviceViewModel.UdidEquals(target, _viewModel.SelectedDevice?.Udid))
+            _viewModel.StepIphoneVolumeEstimate(up ? 1 : -1);
         await PressIphoneConsumerButtonAsync(up
             ? CoreDeviceTouchProtocol.IndigoVolumeUp
             : CoreDeviceTouchProtocol.IndigoVolumeDown, target);

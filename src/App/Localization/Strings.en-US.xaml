@@ -1703,12 +1703,15 @@ Pair, select and save.</system:String>
     <system:String x:Key="AudioMuted">iPhoneMirror is muted (Ctrl+Alt+M).</system:String>
     <system:String x:Key="AudioUnmuted">iPhoneMirror sound is on again.</system:String>
     <system:String x:Key="IphoneVolumeNeedsControl">Turn on wired, wireless or Bluetooth control to change the iPhone volume from here.</system:String>
+    <system:String x:Key="IphoneVolumeSliderName">iPhone volume</system:String>
+    <system:String x:Key="IphoneVolumeSliderHelp">Presses the iPhone volume buttons. The app cannot read the iPhone level, so the position is an estimate; drag to either end to match it again.</system:String>
+    <system:String x:Key="ToolbarSettingsTitle">Toolbar</system:String>
+    <system:String x:Key="ToolbarSettingsSummary">Buttons above the preview</system:String>
+    <system:String x:Key="ToolbarSettingsHelp">Choose which buttons the toolbar above the preview shows.</system:String>
     <system:String x:Key="SharpenSmallPreview">Sharpen text in a small preview</system:String>
     <system:String x:Key="SharpenSmallPreviewHelp">Only when the preview is clearly smaller than the iPhone image. Recording, streaming and screenshots stay unchanged.</system:String>
     <system:String x:Key="PreviewMoveDot">Drag to move the window</system:String>
     <system:String x:Key="PreviewResizeDot">Drag to make the window larger or smaller</system:String>
-    <system:String x:Key="PreviewIphoneVolumeDown">iPhone quieter</system:String>
-    <system:String x:Key="PreviewIphoneVolumeUp">iPhone louder</system:String>
     <system:String x:Key="PreviewPinButton">Always on top</system:String>
     <system:String x:Key="PreviewMute">Mute (Ctrl+Alt+M)</system:String>
     <system:String x:Key="PreviewUnmute">Sound on (Ctrl+Alt+M)</system:String>

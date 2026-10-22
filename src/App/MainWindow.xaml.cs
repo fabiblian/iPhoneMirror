@@ -391,6 +391,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         InitializeAutoMirror();
+        InitializeIphoneVolumeSlider();
         _viewModel.Devices.CollectionChanged += OnDevicesCollectionChanged;
         _viewModel.DeviceVideoSizeChanged += OnDeviceVideoSizeChanged;
         _viewModel.DeviceSessionHandleChanged += OnDeviceSessionHandleChanged;

@@ -58,9 +58,13 @@ internal sealed class EverydaySettings
     public Dictionary<string, PreviewPlacement> PreviewPlacements { get; set; } =
         new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>The actions shown in the toolbar above the preview.</summary>
+    public PreviewToolbarSettings PreviewToolbar { get; set; } = new();
+
     internal EverydaySettings Clone()
     {
         var copy = (EverydaySettings)MemberwiseClone();
+        copy.PreviewToolbar = (PreviewToolbar ?? new()).Clone();
         copy.PreviewPlacements = new(StringComparer.OrdinalIgnoreCase);
         foreach (var (udid, placement) in PreviewPlacements ?? [])
             if (placement is not null) copy.PreviewPlacements[udid] = placement.Clone();

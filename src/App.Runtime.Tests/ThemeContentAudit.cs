@@ -45,6 +45,8 @@ internal static partial class Program
             ((FrameworkElement)owner.FindName("EnvironmentPanel")).Visibility = Visibility.Visible;
             actions.Visibility = Visibility.Visible;
             var buttons = actions.Children.OfType<Button>().ToArray();
+            // Include the opt-in actions of Settings > Toolbar in theming and overflow.
+            foreach (var button in buttons) button.Visibility = Visibility.Visible;
             foreach (var culture in new[] { "zh-CN", "en-US", "zh-HK", "zh-TW" })
             {
                 DisplayLanguage(culture);

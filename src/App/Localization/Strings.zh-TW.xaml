@@ -1703,12 +1703,15 @@
     <system:String x:Key="AudioMuted">iPhoneMirror 已靜音（Ctrl+Alt+M）。</system:String>
     <system:String x:Key="AudioUnmuted">iPhoneMirror 聲音已恢復。</system:String>
     <system:String x:Key="IphoneVolumeNeedsControl">請開啟有線、無線或藍牙控制，才能從這裡調整 iPhone 音量。</system:String>
+    <system:String x:Key="IphoneVolumeSliderName">iPhone 音量</system:String>
+    <system:String x:Key="IphoneVolumeSliderHelp">按下 iPhone 的音量鍵。應用程式無法讀取 iPhone 的音量，因此位置為估計值；拖到任一端即可重新對齊。</system:String>
+    <system:String x:Key="ToolbarSettingsTitle">工具列</system:String>
+    <system:String x:Key="ToolbarSettingsSummary">預覽上方的按鈕</system:String>
+    <system:String x:Key="ToolbarSettingsHelp">選擇預覽上方工具列顯示哪些按鈕。</system:String>
     <system:String x:Key="SharpenSmallPreview">小預覽視窗中銳化文字</system:String>
     <system:String x:Key="SharpenSmallPreviewHelp">僅在預覽明顯小於 iPhone 畫面時生效。錄影、直播和截圖不受影響。</system:String>
     <system:String x:Key="PreviewMoveDot">拖曳以移動視窗</system:String>
     <system:String x:Key="PreviewResizeDot">拖曳以放大或縮小視窗</system:String>
-    <system:String x:Key="PreviewIphoneVolumeDown">iPhone 音量調低</system:String>
-    <system:String x:Key="PreviewIphoneVolumeUp">iPhone 音量調高</system:String>
     <system:String x:Key="PreviewPinButton">永遠置頂</system:String>
     <system:String x:Key="PreviewMute">靜音（Ctrl+Alt+M）</system:String>
     <system:String x:Key="PreviewUnmute">取消靜音（Ctrl+Alt+M）</system:String>
