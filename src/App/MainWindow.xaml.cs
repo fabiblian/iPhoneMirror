@@ -474,6 +474,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         BluetoothShortcutAction.WiredControl => WiredModeHotKeyId,
         BluetoothShortcutAction.ShowPreview => 0x4995,
         BluetoothShortcutAction.StopMirroring => 0x4994,
+        BluetoothShortcutAction.EnterPasscode => 0x4996,
         BluetoothShortcutAction.ControlCenter => BluetoothControlCenterHotKeyId,
         BluetoothShortcutAction.NotificationCenter => BluetoothNotificationCenterHotKeyId,
         BluetoothShortcutAction.AppSwitcher => BluetoothAppSwitcherHotKeyId,
@@ -623,6 +624,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             app.UpdateSettings.ShowPreviewShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.ShowPreview].Modifiers;
             app.UpdateSettings.StopMirroringShortcutVirtualKey = (int)shortcuts[BluetoothShortcutAction.StopMirroring].VirtualKey;
             app.UpdateSettings.StopMirroringShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.StopMirroring].Modifiers;
+            app.UpdateSettings.EnterPasscodeShortcutVirtualKey = (int)shortcuts[BluetoothShortcutAction.EnterPasscode].VirtualKey;
+            app.UpdateSettings.EnterPasscodeShortcutModifiers = (int)shortcuts[BluetoothShortcutAction.EnterPasscode].Modifiers;
             app.UpdateSettings.BluetoothShortcutSchema = 6;
             if (!app.SaveUpdateSettings())
             {
@@ -7028,6 +7031,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (action == BluetoothShortcutAction.BossKey)
         {
             _ = ToggleBossKeyWindowsAsync();
+            return;
+        }
+        if (action == BluetoothShortcutAction.EnterPasscode)
+        {
+            ShowPasscodeEntry();
             return;
         }
         if (action == BluetoothShortcutAction.BluetoothControl)

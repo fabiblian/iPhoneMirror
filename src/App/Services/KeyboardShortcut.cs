@@ -23,13 +23,15 @@ internal readonly record struct KeyboardShortcut(uint Modifiers, uint VirtualKey
     internal static KeyboardShortcut BossKeyDefault { get; } = new(Control | Alt, 0x42); // Ctrl+Alt+B
     internal static KeyboardShortcut ShowPreviewDefault { get; } = new(Control | Alt, 0x50); // Ctrl+Alt+P
     internal static KeyboardShortcut StopMirroringDefault { get; } = new(Control | Shift, 0x58); // Ctrl+Shift+X
+    internal static KeyboardShortcut EnterPasscodeDefault { get; } = new(Control | Alt, 0x55); // Ctrl+Alt+U
     internal static KeyboardShortcut Unbound { get; } = new(0, 0);
     internal bool IsBound => VirtualKey != 0;
     internal bool IsMouse => VirtualKey is MouseRight or MouseMiddle;
 
     internal bool IsValidFor(BluetoothShortcutAction action) =>
         IsValid((int)Modifiers, (int)VirtualKey) &&
-        (action is not (BluetoothShortcutAction.BossKey or BluetoothShortcutAction.ShowPreview or BluetoothShortcutAction.StopMirroring) || !IsMouse);
+        (action is not (BluetoothShortcutAction.BossKey or BluetoothShortcutAction.ShowPreview or BluetoothShortcutAction.StopMirroring or
+            BluetoothShortcutAction.EnterPasscode) || !IsMouse);
 
     internal uint RegistrationModifiers => Modifiers | NoRepeat;
 
@@ -50,6 +52,8 @@ internal readonly record struct KeyboardShortcut(uint Modifiers, uint VirtualKey
                 settings.ShowPreviewShortcutVirtualKey, ShowPreviewDefault, allowMouse: false),
             BluetoothShortcutAction.StopMirroring => FromStoredSettings(settings.StopMirroringShortcutModifiers,
                 settings.StopMirroringShortcutVirtualKey, StopMirroringDefault, allowMouse: false),
+            BluetoothShortcutAction.EnterPasscode => FromStoredSettings(settings.EnterPasscodeShortcutModifiers,
+                settings.EnterPasscodeShortcutVirtualKey, EnterPasscodeDefault, allowMouse: false),
             BluetoothShortcutAction.ReverseControl => Unbound,
             BluetoothShortcutAction.BluetoothControl => FromStoredSettings(settings.BluetoothModeShortcutModifiers, settings.BluetoothModeShortcutVirtualKey, Default),
             BluetoothShortcutAction.WirelessControl => FromStoredSettings(settings.WirelessModeShortcutModifiers, settings.WirelessModeShortcutVirtualKey, Unbound),
@@ -165,6 +169,7 @@ internal readonly record struct KeyboardShortcut(uint Modifiers, uint VirtualKey
     {
         BluetoothShortcutAction.ShowPreview => ShowPreviewDefault,
         BluetoothShortcutAction.StopMirroring => StopMirroringDefault,
+        BluetoothShortcutAction.EnterPasscode => EnterPasscodeDefault,
         BluetoothShortcutAction.ReverseControl => Unbound,
         BluetoothShortcutAction.BluetoothControl => Default,
         BluetoothShortcutAction.AppSwitcher => AppSwitcherDefault,
@@ -240,4 +245,5 @@ internal enum BluetoothShortcutAction
     LockScreen,
     StopMirroring,
     ShowPreview,
+    EnterPasscode,
 }

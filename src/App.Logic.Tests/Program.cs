@@ -101,6 +101,7 @@ static async Task ThrowsAsync<TException>(Func<Task> action, string name)
 }
 
 SwissKeyboardLayoutTests.Run();
+PasscodeKeysTests.Run();
 ClipboardPushPolicyTests.Run();
 if (args is ["--swiss-keyboard"]) return;
 await ClipboardSyncTests.RunAsync();

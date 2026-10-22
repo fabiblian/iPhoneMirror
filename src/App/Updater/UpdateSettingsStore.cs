@@ -96,6 +96,8 @@ internal sealed class UpdateSettings
     public int ShowPreviewShortcutModifiers { get; set; } = 0x0003;
     public int StopMirroringShortcutVirtualKey { get; set; } = 0x58;
     public int StopMirroringShortcutModifiers { get; set; } = 0x0006;
+    public int EnterPasscodeShortcutVirtualKey { get; set; } = 0x55;
+    public int EnterPasscodeShortcutModifiers { get; set; } = 0x0003;
     public int BluetoothVolumeUpShortcutVirtualKey { get; set; }
     public int BluetoothVolumeUpShortcutModifiers { get; set; }
     public int BluetoothVolumeDownShortcutVirtualKey { get; set; }
@@ -190,6 +192,8 @@ internal sealed class UpdateSettings
         ShowPreviewShortcutModifiers = ShowPreviewShortcutModifiers,
         StopMirroringShortcutVirtualKey = StopMirroringShortcutVirtualKey,
         StopMirroringShortcutModifiers = StopMirroringShortcutModifiers,
+        EnterPasscodeShortcutVirtualKey = EnterPasscodeShortcutVirtualKey,
+        EnterPasscodeShortcutModifiers = EnterPasscodeShortcutModifiers,
         BluetoothVolumeUpShortcutVirtualKey = BluetoothVolumeUpShortcutVirtualKey,
         BluetoothVolumeUpShortcutModifiers = BluetoothVolumeUpShortcutModifiers,
         BluetoothVolumeDownShortcutVirtualKey = BluetoothVolumeDownShortcutVirtualKey,
@@ -564,6 +568,19 @@ internal sealed class UpdateSettingsStore
             {
                 settings.StopMirroringShortcutVirtualKey = (int)stopMirroring.VirtualKey;
                 settings.StopMirroringShortcutModifiers = (int)stopMirroring.Modifiers;
+                migrationChanged = true;
+            }
+            var enterPasscode = KeyboardShortcut.FromSettings(settings, BluetoothShortcutAction.EnterPasscode);
+            // The passcode default must not take a chord the user already assigned.
+            if (enterPasscode.IsBound && Enum.GetValues<BluetoothShortcutAction>().Any(action =>
+                    action != BluetoothShortcutAction.EnterPasscode &&
+                    KeyboardShortcut.FromSettings(settings, action) == enterPasscode))
+                enterPasscode = KeyboardShortcut.Unbound;
+            if (settings.EnterPasscodeShortcutVirtualKey != (int)enterPasscode.VirtualKey ||
+                settings.EnterPasscodeShortcutModifiers != (int)enterPasscode.Modifiers)
+            {
+                settings.EnterPasscodeShortcutVirtualKey = (int)enterPasscode.VirtualKey;
+                settings.EnterPasscodeShortcutModifiers = (int)enterPasscode.Modifiers;
                 migrationChanged = true;
             }
             var bossKey = KeyboardShortcut.FromSettings(settings, BluetoothShortcutAction.BossKey);

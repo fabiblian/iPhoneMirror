@@ -326,6 +326,12 @@
     <system:String x:Key="ShortcutSettingsHome">返回主畫面</system:String>
     <system:String x:Key="ShortcutSettingsBossKey">顯示應用程式</system:String>
     <system:String x:Key="ShortcutSettingsLockScreen">鎖定螢幕</system:String>
+    <system:String x:Key="ShortcutSettingsEnterPasscode">輸入 iPhone 密碼</system:String>
+    <system:String x:Key="PasscodeEntryTitle">解鎖 iPhone</system:String>
+    <system:String x:Key="PasscodeEntryPrompt">輸入密碼。字母按鍵盤上的標示換算（2 = ABC … 9 = WXYZ）。iPhoneMirror 會喚醒 iPhone、開啟鍵盤並自動輸入密碼。</system:String>
+    <system:String x:Key="PasscodeEntryPrivacy">密碼只輸入一次，不會被儲存或記錄。</system:String>
+    <system:String x:Key="PasscodeEntryConfirm">解鎖</system:String>
+    <system:String x:Key="PasscodeEntryNeedsControl">請先為此 iPhone 啟動有線、無線或藍牙控制。密碼會透過該連線輸入。</system:String>
     <system:String x:Key="ShortcutSettingsVolumeUp">音量+</system:String>
     <system:String x:Key="ShortcutSettingsVolumeDown">音量-</system:String>
     <system:String x:Key="ShortcutSettingsDock">顯示 Dock</system:String>

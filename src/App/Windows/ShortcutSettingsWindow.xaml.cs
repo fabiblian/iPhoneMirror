@@ -218,7 +218,8 @@ public partial class ShortcutSettingsWindow : IPhoneMirror.UI.Controls.RoundedWi
             BluetoothShortcutAction.WiredControl or
             BluetoothShortcutAction.VolumeUp or
             BluetoothShortcutAction.VolumeDown or
-            BluetoothShortcutAction.LockScreen => ShortcutBindingCategory.Control,
+            BluetoothShortcutAction.LockScreen or
+            BluetoothShortcutAction.EnterPasscode => ShortcutBindingCategory.Control,
             BluetoothShortcutAction.BossKey or BluetoothShortcutAction.ShowPreview => ShortcutBindingCategory.Control,
             BluetoothShortcutAction.Siri => ShortcutBindingCategory.Assistant,
             _ => ShortcutBindingCategory.Navigation,
@@ -304,6 +305,7 @@ public sealed class ShortcutBindingRow : INotifyPropertyChanged
             BluetoothShortcutAction.VolumeUp => "ShortcutSettingsVolumeUp",
             BluetoothShortcutAction.VolumeDown => "ShortcutSettingsVolumeDown",
             BluetoothShortcutAction.LockScreen => "ShortcutSettingsLockScreen",
+            BluetoothShortcutAction.EnterPasscode => "ShortcutSettingsEnterPasscode",
             _ => "ShortcutSettingsBluetoothControl",
         });
         OnPropertyChanged(nameof(Label));

@@ -326,6 +326,12 @@
     <system:String x:Key="ShortcutSettingsHome">Go to Home Screen</system:String>
     <system:String x:Key="ShortcutSettingsBossKey">Show app</system:String>
     <system:String x:Key="ShortcutSettingsLockScreen">Lock Screen</system:String>
+    <system:String x:Key="ShortcutSettingsEnterPasscode">Enter iPhone passcode</system:String>
+    <system:String x:Key="PasscodeEntryTitle">Unlock iPhone</system:String>
+    <system:String x:Key="PasscodeEntryPrompt">Type the passcode. Letters count like the keypad (2 = ABC … 9 = WXYZ). iPhoneMirror wakes the iPhone, opens its keypad and types the code in.</system:String>
+    <system:String x:Key="PasscodeEntryPrivacy">The passcode is typed once and never saved or logged.</system:String>
+    <system:String x:Key="PasscodeEntryConfirm">Unlock</system:String>
+    <system:String x:Key="PasscodeEntryNeedsControl">Start wired, wireless or Bluetooth control for this iPhone first. The passcode is typed through that connection.</system:String>
     <system:String x:Key="ShortcutSettingsVolumeUp">Volume up</system:String>
     <system:String x:Key="ShortcutSettingsVolumeDown">Volume down</system:String>
     <system:String x:Key="ShortcutSettingsDock">Show Dock</system:String>
