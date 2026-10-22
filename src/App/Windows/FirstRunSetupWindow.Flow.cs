@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
@@ -102,7 +103,10 @@ public partial class FirstRunSetupWindow
                 Width = 26, Height = 26, Stretch = Stretch.Uniform, StrokeThickness = 1.5, StrokeLineJoin = PenLineJoin.Round,
                 HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 16) };
             icon.SetResourceReference(System.Windows.Shapes.Path.StrokeProperty, "TextBrush"); panel.Children.Add(icon);
-            var title = Text("SetupControl" + mode, 16); title.FontWeight = FontWeights.SemiBold; panel.Children.Add(title);
+            var title = Text("SetupControl" + mode, 16); title.FontWeight = FontWeights.SemiBold; title.Margin = new(0);
+            var hint = new InfoTip();
+            hint.SetResourceReference(InfoTip.TextProperty, "SetupControlHint" + mode);
+            panel.Children.Add(new InfoRow { Margin = new(0, 6, 0, 12), Children = { title, hint } });
             var enabled = new CheckBox { Margin = new(0, 0, 0, 8), IsChecked = mode switch {
                 "Usb" => _state.UsbControlEnabled ?? true, "Wireless" => _state.WirelessEnabled ?? true, _ => _state.BluetoothEnabled ?? true } };
             enabled.SetResourceReference(ContentControl.ContentProperty, "SetupCheckUseFeature");
@@ -114,14 +118,11 @@ public partial class FirstRunSetupWindow
                 Save();
             }
             enabled.Checked += StoreChoice; enabled.Unchecked += StoreChoice; panel.Children.Add(enabled);
-            var detail = Text("SetupControlHint" + mode, 13); detail.LineHeight = 20;
-            detail.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush"); panel.Children.Add(detail);
-            var border = new Border { Child = panel, Padding = new(18), MinHeight = 270, CornerRadius = new(14), BorderThickness = new(1), Margin = new(0, 0, 12, 12) };
+            var border = new Border { Child = panel, Padding = new(18), CornerRadius = new(14), BorderThickness = new(1), Margin = new(0, 0, 12, 12) };
             border.SetResourceReference(Border.BackgroundProperty, "CardBrush"); border.SetResourceReference(Border.BorderBrushProperty, "BorderSoftBrush");
             row.Children.Add(border);
         }
         Body.Children.Add(row);
-        var note = Text("SetupControlRecommend", 13); note.TextAlignment = TextAlignment.Center; Body.Children.Add(note);
     }
 
     private void StopDiscovery() => _discovery?.Cancel();

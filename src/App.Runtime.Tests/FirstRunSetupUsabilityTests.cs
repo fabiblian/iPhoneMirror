@@ -33,7 +33,8 @@ internal static partial class Program
             vm.SelectedWirelessReceiverBackend = vm.WirelessReceiverBackends.First(v => v.Backend == WirelessReceiverBackend.Original);
             window.Show(); window.UpdateLayout();
             ComponentVisuals<RadioButton>(window).Single(c => c.Content is StackPanel p &&
-                p.Children.OfType<TextBlock>().Any(t => t.Text == vm.WirelessReceiverBackends.First(v => v.Backend == WirelessReceiverBackend.UxPlay).Label)).IsChecked = true;
+                p.Children.OfType<TextBlock>().Concat(p.Children.OfType<Panel>().SelectMany(r => r.Children.OfType<TextBlock>()))
+                    .Any(t => t.Text == vm.WirelessReceiverBackends.First(v => v.Backend == WirelessReceiverBackend.UxPlay).Label)).IsChecked = true;
             pump(50);
             check(installs == 0 && Button("Next").IsEnabled, "Selecting a backend downloaded components before Next.");
             check(store.Load().WirelessBackendDraft == WirelessReceiverBackend.UxPlay, "Backend choice was not checkpointed.");

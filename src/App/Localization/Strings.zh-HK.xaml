@@ -1427,8 +1427,6 @@
     <system:String x:Key="SetupBindingSaved">綁定已儲存，可以直接繼續；需要更換裝置時再重新設定。</system:String>
     <system:String x:Key="SetupStartMirror">開始鏡像輸出 →</system:String>
     <system:String x:Key="SetupLaterMain">進入主畫面</system:String>
-    <system:String x:Key="SetupWelcomeNote" xml:space="preserve">選好使用方式，連接你的裝置。
-其餘設定，我們一步一步來。</system:String>
     <system:String x:Key="SetupSystemLanguage">跟隨系統語言</system:String>
     <system:String x:Key="SetupModeHint">精簡模式保留常用功能；完整模式顯示全部設定；系統匣模式主要在通知區域執行。</system:String>
     <system:String x:Key="SetupAppearance">外觀</system:String>
@@ -1454,7 +1452,6 @@
     <system:String x:Key="SetupControlHintBluetooth" xml:space="preserve">獨立於鏡像輸出連線
 需要藍牙和輔助觸控
 配對後選擇裝置並儲存</system:String>
-    <system:String x:Key="SetupControlRecommend">建議先完成有線綁定，再按需要新增無線和藍牙。</system:String>
     <system:String x:Key="SetupInstallConsent">需要準備 USB 連線環境。點選開始安裝後，會依序檢查裝置支援和連線元件。Windows 可能要求管理員權限。</system:String>
     <system:String x:Key="SetupSkipHintWireless">略過後仍可使用有線鏡像輸出，日後可以從設定重新開啟助手。</system:String>
     <system:String x:Key="SetupSkipHintWirelessControl">可以只使用有線控制。需要無線操作時，再從設定重新設定。</system:String>

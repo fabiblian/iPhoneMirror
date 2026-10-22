@@ -133,11 +133,7 @@ public partial class FirstRunSetupWindow : IPhoneMirror.UI.Controls.RoundedWindo
         Status.Text = Details.Text = ""; Help.Visibility = Visibility.Collapsed;
         switch (_state.Step)
         {
-            case SetupStep.Welcome:
-                var welcome = Text("SetupWelcomeNote", 16);
-                welcome.TextAlignment = TextAlignment.Center; welcome.MaxWidth = 440;
-                welcome.LineHeight = 28; welcome.HorizontalAlignment = HorizontalAlignment.Center;
-                welcome.Margin = new(0, 20, 0, 0); Body.Children.Add(welcome); break;
+            case SetupStep.Welcome: break;
             case SetupStep.Preferences: Preferences(); break;
             case SetupStep.ApplicationMode: ApplicationModeChoices(); break;
             case SetupStep.Appearance: AppearanceChoices(); break;

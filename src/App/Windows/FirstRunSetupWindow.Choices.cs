@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
@@ -103,8 +104,12 @@ public partial class FirstRunSetupWindow
     {
         var card = ValueCard(group, L(title), description is null ? null : L(description), selected);
         var panel = (StackPanel)card.Content;
-        ((TextBlock)panel.Children[0]).SetResourceReference(TextBlock.TextProperty, title);
-        if (description is not null) ((TextBlock)panel.Children[1]).SetResourceReference(TextBlock.TextProperty, description);
+        if (panel.Children[0] is InfoRow row)
+        {
+            ((TextBlock)row.Children[0]).SetResourceReference(TextBlock.TextProperty, title);
+            ((InfoTip)row.Children[1]).SetResourceReference(InfoTip.TextProperty, description);
+        }
+        else ((TextBlock)panel.Children[0]).SetResourceReference(TextBlock.TextProperty, title);
         System.Windows.Automation.AutomationProperties.SetName(card, L(title));
         return card;
     }
@@ -112,15 +117,12 @@ public partial class FirstRunSetupWindow
     private RadioButton ValueCard(string group, string title, string? description, bool selected)
     {
         var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Text = title, FontSize = 15, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, description is null ? 0 : 10) });
-        if (description is not null)
-        {
-            var detail = new TextBlock { Text = description, FontSize = 13, TextWrapping = TextWrapping.Wrap, LineHeight = 20 };
-            detail.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush"); panel.Children.Add(detail);
-        }
+        var heading = new TextBlock { Text = title, FontSize = 15, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap };
+        // A card shows only its name; what the choice means sits behind an info tip.
+        panel.Children.Add(description is null ? heading : new InfoRow { Children = { heading, new InfoTip { Text = description } } });
         var glyph = group switch { "language" => "language", "theme" => "sun", "usage" => "phone", "fps" => "bolt", "decoder" => "settings", "backend" => "wireless", "display" => "spark", _ => "image" };
         var card = new RadioButton { GroupName = group, Content = panel, IsChecked = selected, Tag = Symbol(glyph),
-            MinHeight = description is null ? 112 : 192, RenderTransformOrigin = new(.5, .5) };
+            MinHeight = 112, RenderTransformOrigin = new(.5, .5) };
         if (group == "language") card.Height = 120;
         card.SetResourceReference(StyleProperty, "SetupChoiceCard");
         System.Windows.Automation.AutomationProperties.SetName(card, title);

@@ -1427,8 +1427,6 @@
     <system:String x:Key="SetupBindingSaved">绑定已保存，可以直接继续；需要更换设备时再重新配置。</system:String>
     <system:String x:Key="SetupStartMirror">开始投屏 →</system:String>
     <system:String x:Key="SetupLaterMain">进入主界面</system:String>
-    <system:String x:Key="SetupWelcomeNote" xml:space="preserve">选好使用方式，连接你的设备。
-其余的设置，我们一步一步来。</system:String>
     <system:String x:Key="SetupSystemLanguage">跟随系统语言</system:String>
     <system:String x:Key="SetupModeHint">精简模式保留常用功能；完整模式显示全部设置；托盘模式主要在通知区域运行。</system:String>
     <system:String x:Key="SetupAppearance">外观</system:String>
@@ -1454,7 +1452,6 @@
     <system:String x:Key="SetupControlHintBluetooth" xml:space="preserve">独立于投屏连接
 需要蓝牙和辅助触控
 配对后选择设备并保存</system:String>
-    <system:String x:Key="SetupControlRecommend">推荐先完成有线绑定，再按需添加无线和蓝牙。</system:String>
     <system:String x:Key="SetupInstallConsent">需要准备 USB 连接环境。点击开始安装后，将依次检查设备支持和连接组件。Windows 可能请求管理员权限。</system:String>
     <system:String x:Key="SetupSkipHintWireless">跳过后仍可使用有线投屏，以后可以从设置重新打开助手。</system:String>
     <system:String x:Key="SetupSkipHintWirelessControl">可以只使用有线控制。需要无线操作时，再从设置重新配置。</system:String>
