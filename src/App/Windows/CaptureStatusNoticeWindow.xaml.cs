@@ -17,8 +17,6 @@ public partial class CaptureStatusNoticeWindow : IPhoneMirror.UI.Controls.Rounde
     public string BodyText => LocalizationService.RefreshText(_bodyText);
     public string? TechnicalDetails { get; }
     public bool HasTechnicalDetails => !string.IsNullOrWhiteSpace(TechnicalDetails);
-    private readonly string _badgeText;
-    public string BadgeText => LocalizationService.RefreshText(_badgeText);
     private readonly string _hintText;
     public string HintText => LocalizationService.RefreshText(_hintText);
     public bool IsStopped { get; }
@@ -35,12 +33,6 @@ public partial class CaptureStatusNoticeWindow : IPhoneMirror.UI.Controls.Rounde
         IsStopped = kind == NoticeKind.Stopped;
         IsUsbConfiguration = kind == NoticeKind.UsbConfiguration;
         IsReverseControl = reverseControl;
-        _badgeText = LocalizationService.Get(kind switch
-        {
-            NoticeKind.Stopped => "CaptureNoticeStoppedBadge",
-            NoticeKind.UsbConfiguration => "CaptureNoticeUsbBadge",
-            _ => reverseControl ? "ReverseControlNoticeErrorBadge" : "CaptureNoticeErrorBadge",
-        });
         _hintText = LocalizationService.Get(kind switch
         {
             NoticeKind.Stopped => "CaptureNoticeStoppedHint",

@@ -54,7 +54,7 @@
     <system:String x:Key="DeviceBindingAirPlaySelectDescription">Select the AirPlay device currently being mirrored to create a profile.</system:String>
     <system:String x:Key="DeviceBindingBluetoothWaitingTitle">Waiting for Bluetooth HID connection</system:String>
     <system:String x:Key="DeviceBindingBluetoothBroadcasting">The computer is broadcasting a Bluetooth HID device</system:String>
-    <system:String x:Key="DeviceBindingBluetoothWaitingDescription">On the iPhone/iPad, open Settings → Bluetooth, select this computer, and complete pairing. Return here and click “Next” to choose the HID device you just connected. This process only saves the device binding; Bluetooth reverse control will not start.</system:String>
+    <system:String x:Key="DeviceBindingBluetoothWaitingDescription">On the iPhone: Settings → Bluetooth, pick this PC and pair. Then click Next and choose it.</system:String>
     <system:String x:Key="DeviceBindingBluetoothWaitingStatus">Waiting for the device to connect to the HID service</system:String>
     <system:String x:Key="DeviceBindingCancel">Cancel</system:String>
     <system:String x:Key="DeviceBindingNext">Next</system:String>
@@ -94,29 +94,29 @@
     <system:String x:Key="ReverseControlInitializingTouchFormat">Initializing the {0} touch channel</system:String>
     <system:String x:Key="UsbControlFailureAppleUsbmux">The Apple USB pairing service is not ready. Install or repair Apple Devices/iTunes support in the driver manager, connect and unlock the iPhone, then try again.</system:String>
     <system:String x:Key="UsbControlFailureNotTrusted">This iPhone has not trusted the current Windows account. Keep the phone unlocked, reconnect the cable, and tap “Trust” on the phone.</system:String>
-    <system:String x:Key="UsbControlFailureDeviceLocked">The iPhone is locked or waiting for its passcode. Unlock the phone and keep the screen on, complete any Trust This Computer or passcode prompt on the phone, then start reverse control again.</system:String>
-    <system:String x:Key="UsbControlFailureDeveloperMode">Developer Mode is not enabled on this device. Turn it on under iPhone/iPad Settings → Privacy &amp; Security → Developer Mode, then restart the device and try again.</system:String>
+    <system:String x:Key="UsbControlFailureDeviceLocked">The iPhone is locked. Unlock it, confirm any Trust or passcode prompt, then start control again.</system:String>
+    <system:String x:Key="UsbControlFailureDeveloperMode">Developer Mode is off. Turn it on under Settings → Privacy &amp; Security → Developer Mode, restart the device and retry.</system:String>
     <system:String x:Key="UsbControlFailureImageRequired">The device has not mounted the Personalized Developer Disk Image. Mount the official Xcode image matching the device system, then try again.</system:String>
     <system:String x:Key="UsbControlFailureImageDownload">The developer image download failed or timed out. Check the GitHub network connection, or provide an official local image through IPHONE_MIRROR_DDI_DIR.</system:String>
-    <system:String x:Key="UsbControlFailureImageCache">The developer image cache could not be saved. Check free space and write permissions on the drive containing your user folder, and ensure security software is not blocking the write before retrying.</system:String>
+    <system:String x:Key="UsbControlFailureImageCache">Couldn't save the developer image. Check free space and write access to your user folder, then retry.</system:String>
     <system:String x:Key="UsbControlFailureImageRateLimited">GitHub has temporarily rate limited developer image downloads. Please retry later.</system:String>
     <system:String x:Key="UsbControlFailureImageIntegrity">Developer image verification failed. The download may be incomplete or damaged. Check the network or use another image source, then retry.</system:String>
-    <system:String x:Key="UsbControlFailureImageIncompatible">The developer image is incompatible with the device or control component. Update to the latest complete package and retry. If it persists, submit the device OS version and diagnostic log.</system:String>
+    <system:String x:Key="UsbControlFailureImageIncompatible">The developer image doesn't match this device. Update to the latest package and retry.</system:String>
     <system:String x:Key="UsbControlFailureImageTss">Apple image personalization failed or returned an invalid response. Check the network and proxy settings and retry. Retain the diagnostic log if it persists.</system:String>
     <system:String x:Key="UsbControlFailureImageRemount">The old Personalized Developer Disk Image could not be refreshed. Close Xcode or other tools using the device, restart the iPhone, and try again.</system:String>
-    <system:String x:Key="UsbControlFailureImageMount">The device could not mount the developer image. Unlock and reconnect the iPhone, close other development tools using it, and retry. If it persists, update the complete package and retain the diagnostic log.</system:String>
-    <system:String x:Key="UsbControlFailureUnsupportedIos">The device rejected media-stream authentication (9021), and no direct Universal HID touch channel is available. Restart the iPhone and try again; if it still fails, use Bluetooth control.</system:String>
+    <system:String x:Key="UsbControlFailureImageMount">The device couldn't mount the developer image. Unlock and reconnect it, close other developer tools, then retry.</system:String>
+    <system:String x:Key="UsbControlFailureUnsupportedIos">The device rejected touch control (9021). Restart the iPhone and retry; if it still fails, use Bluetooth control.</system:String>
     <system:String x:Key="UsbControlFailureTouchSurface">A CoreDevice session was established, but the developer image did not publish the mainTouchscreen (257) touch surface. Restart the iPhone and try again.</system:String>
-    <system:String x:Key="UsbControlFailureWirelessPairingRequired">This Windows account has not completed wireless CoreDevice pairing for this device. Connect by USB and unlock the iPhone, complete USB reverse-control initialization once, then try wireless control again.</system:String>
+    <system:String x:Key="UsbControlFailureWirelessPairingRequired">Wireless control isn't paired yet. Start wired control once over USB, then try wireless again.</system:String>
     <system:String x:Key="UsbControlFailureWirelessNotDiscoverable">The iPhone wireless CoreDevice service was not found. Keep the iPhone unlocked on the same local network and allow Windows firewall discovery.</system:String>
     <system:String x:Key="UsbControlFailureWirelessPairingFailed">Wireless CoreDevice pairing or tunnel setup failed. Connect by USB once and complete initialization, then confirm the iPhone is unlocked and the network does not isolate clients.</system:String>
-    <system:String x:Key="UsbControlFailureWirelessDiscoveryUnavailable">The PC could not start wireless device discovery. Check that a network adapter is enabled, the firewall allows local discovery, and another program is not exclusively using UDP port 5353, then retry.</system:String>
-    <system:String x:Key="UsbControlFailureWirelessAddressResolution">Wireless services were found, but no usable device address was resolved. Keep the iPhone unlocked, ensure it and the computer can communicate on the same local network, and check router client isolation and mDNS (UDP 5353) restrictions before retrying.</system:String>
+    <system:String x:Key="UsbControlFailureWirelessDiscoveryUnavailable">Couldn't search for wireless devices. Check the network adapter, the firewall and UDP port 5353, then retry.</system:String>
+    <system:String x:Key="UsbControlFailureWirelessAddressResolution">Found the iPhone but no usable address. Keep it unlocked on the same network and check router client isolation or mDNS (UDP 5353).</system:String>
     <system:String x:Key="UsbControlFailureGateUnavailable">The device did not confirm that CoreDevice touch authentication is enabled. Reverse control was not started to prevent silent input loss.</system:String>
     <system:String x:Key="UsbControlFailureDeviceConnectionTimeout">Connecting to the device timed out. Keep the iPhone unlocked, reconnect the USB cable and confirm that this computer is trusted, then retry.</system:String>
     <system:String x:Key="UsbControlFailureTouchService">The device has not provided the touch-control service. Keep it unlocked and trusted, then try again; otherwise use Bluetooth or wireless control.</system:String>
-    <system:String x:Key="UsbControlFailureDeviceNotFound">The Apple network-pairing session for this device was not found. Connect by cable once and enable “Sync with this iPhone over Wi-Fi” in Apple Devices or iTunes. Keep the phone unlocked and on the same local network as the computer, then try again.</system:String>
-    <system:String x:Key="UsbControlFailureWiredDeviceNotFound">The control channel for this device was not found over USB. While mirroring, the system may temporarily lose access to the device: stop the mirror before starting reverse control, or replug the cable, unlock the iPhone, confirm it trusts this PC, and retry.</system:String>
+    <system:String x:Key="UsbControlFailureDeviceNotFound">No network pairing found. Connect by cable once and turn on “Sync with this iPhone over Wi-Fi” in Apple Devices or iTunes, then retry.</system:String>
+    <system:String x:Key="UsbControlFailureWiredDeviceNotFound">No control channel over USB. Stop mirroring first, or replug the cable, unlock the iPhone, confirm Trust and retry.</system:String>
     <system:String x:Key="UsbControlFailureMux">The Apple USB service disconnected during the device handshake. Keep the device unlocked and trusted, reconnect the cable, and try again.</system:String>
     <system:String x:Key="UsbControlFailureNoDetails">The USB touch bridge provided no error details. Confirm the device is connected by USB and trusted.</system:String>
     <system:String x:Key="UsbControlFailureUnknown">Reverse control could not start for an unidentified reason. Reconnect the device and retry. If it persists, submit the diagnostic log.</system:String>
@@ -168,13 +168,9 @@
     <system:String x:Key="DeviceCaptureErrorTitleFormat">Mirroring error — {0}</system:String>
     <system:String x:Key="DeviceSessionClosedWarningTitleFormat">Mirroring stopped — {0}</system:String>
     <system:String x:Key="DeviceSessionClosedWarningBody">You stopped mirroring from Control Center. Restart the iPhone or iPad before using wired mirroring with this device again.</system:String>
-    <system:String x:Key="CaptureNoticeErrorBadge">Mirroring could not continue</system:String>
-    <system:String x:Key="ReverseControlNoticeErrorBadge">Reverse control could not continue</system:String>
     <system:String x:Key="CaptureNoticeErrorHint">Check the device and connection, then retry</system:String>
-    <system:String x:Key="CaptureNoticeUsbBadge">USB mirroring setup incomplete</system:String>
     <system:String x:Key="CaptureNoticeUsbHint">Reconnect the cable, then retry</system:String>
     <system:String x:Key="CaptureUsbConfigurationTitle">USB mirroring configuration error</system:String>
-    <system:String x:Key="CaptureNoticeStoppedBadge">Mirroring stopped</system:String>
     <system:String x:Key="CaptureNoticeStoppedHint">Restart the device before mirroring again</system:String>
     <system:String x:Key="IndependentWindowPin">Always on top</system:String>
     <system:String x:Key="IndependentWindowUnpin">Disable always on top</system:String>
@@ -265,17 +261,17 @@
     <system:String x:Key="BluetoothControlWaiting">Bluetooth control is advertising and waiting for an iPhone/iPad</system:String>
     <system:String x:Key="BluetoothControlConnected">iPhone/iPad connected for Bluetooth control</system:String>
     <system:String x:Key="BluetoothControlWaitingTitle">Waiting for Bluetooth control</system:String>
-    <system:String x:Key="BluetoothControlWaitingBody">Complete the iPhone and Windows system pairing in this order. If Windows is already connected to this HID device, disconnect it in Bluetooth settings before enabling control again and reconnecting.</system:String>
-    <system:String x:Key="BluetoothControlWaitingTargetFormat">This PC usually appears in the device list as: {0}</system:String>
-    <system:String x:Key="BluetoothControlWaitingDetail">After the phone connects, a Bluetooth client binding window will appear. Choose the matching phone; no input is sent before binding is confirmed, and the mouse remains available while waiting.</system:String>
-    <system:String x:Key="BluetoothControlPairStepOneFormat">iPhone: Open Settings → Accessibility → Touch → AssistiveTouch, then turn on AssistiveTouch.</system:String>
-    <system:String x:Key="BluetoothControlPairStepTwo">iPhone: Open Settings → Bluetooth, connect “{0}”, then tap Pair.</system:String>
-    <system:String x:Key="BluetoothControlPairStepThree">Windows: Click the “Add a device - click to set up iPhone” notification in the bottom-right corner.</system:String>
-    <system:String x:Key="BluetoothControlPairStepFour">Windows: Click Pair in the system Bluetooth pairing dialog.</system:String>
-    <system:String x:Key="BluetoothControlPairStepFive">iPhone: If another pairing prompt appears, tap Pair again.</system:String>
+    <system:String x:Key="BluetoothControlWaitingBody">Pair in this order. If Windows is already connected to this device, disconnect it in Bluetooth settings first.</system:String>
+    <system:String x:Key="BluetoothControlWaitingTargetFormat">This PC appears on the iPhone as: {0}</system:String>
+    <system:String x:Key="BluetoothControlWaitingDetail">Once the phone connects, you choose it in a binding window. No input is sent before that, and your mouse keeps working.</system:String>
+    <system:String x:Key="BluetoothControlPairStepOneFormat">iPhone: Settings → Accessibility → Touch → AssistiveTouch, turn it on.</system:String>
+    <system:String x:Key="BluetoothControlPairStepTwo">iPhone: Settings → Bluetooth, connect “{0}”, tap Pair.</system:String>
+    <system:String x:Key="BluetoothControlPairStepThree">Windows: click the “Add a device” notification at the bottom right.</system:String>
+    <system:String x:Key="BluetoothControlPairStepFour">Windows: click Pair in the Bluetooth dialog.</system:String>
+    <system:String x:Key="BluetoothControlPairStepFive">iPhone: tap Pair again if asked.</system:String>
     <system:String x:Key="BluetoothControlWaitingStatus">Waiting for HID mouse connection</system:String>
     <system:String x:Key="BluetoothControlFailedTitle">Bluetooth control could not start</system:String>
-    <system:String x:Key="BluetoothControlFailedBody">Windows could not start the BLE HID peripheral service. Check whether the Bluetooth adapter and driver support peripheral mode.</system:String>
+    <system:String x:Key="BluetoothControlFailedBody">Windows couldn't start the Bluetooth HID service. Check that the adapter and driver support peripheral mode.</system:String>
     <system:String x:Key="BluetoothControlFailedStatus">Startup failed</system:String>
     <system:String x:Key="ReverseControlErrorTitle">Reverse control error</system:String>
     <system:String x:Key="ReverseControlTitle">Reverse control</system:String>
@@ -291,17 +287,17 @@
     <system:String x:Key="ReverseControlErrorBodyFormat">{0} reverse control encountered an error: {1}</system:String>
     <system:String x:Key="ReverseControlPrerequisiteStatus">Confirm the prerequisites before continuing</system:String>
     <system:String x:Key="ReverseControlPrerequisiteWiredTitle">Before enabling wired control</system:String>
-    <system:String x:Key="ReverseControlPrerequisiteWiredBody" xml:space="preserve">1. Turn on Developer Mode and restart the device.&#xA;2. Connect by USB, unlock it, and tap “Trust This Computer”.&#xA;3. The matching DDI downloads from GitHub on first use.&#xA;4. No input is sent until setup is ready.&#xA;&#xA;Click Continue when ready, or Cancel.</system:String>
+    <system:String x:Key="ReverseControlPrerequisiteWiredBody" xml:space="preserve">1. Turn on Developer Mode and restart the device.&#xA;2. Connect by USB, unlock it and tap “Trust”.&#xA;3. The matching DDI downloads once from GitHub.&#xA;&#xA;Click Continue when ready.</system:String>
     <system:String x:Key="ReverseControlPrerequisiteWirelessTitle">Before enabling wireless control</system:String>
-    <system:String x:Key="ReverseControlPrerequisiteWirelessBody" xml:space="preserve">1. Turn on Developer Mode and restart the device.&#xA;2. Complete trust and wireless pairing once over USB.&#xA;3. Keep the device unlocked on the same local network.&#xA;4. Allow iPhoneMirror through Windows Firewall.&#xA;&#xA;Click Continue when ready, or Cancel.</system:String>
+    <system:String x:Key="ReverseControlPrerequisiteWirelessBody" xml:space="preserve">1. Turn on Developer Mode and restart the device.&#xA;2. Trust and pair it once over USB.&#xA;3. Keep it unlocked on the same network.&#xA;4. Allow iPhoneMirror in Windows Firewall.&#xA;&#xA;Click Continue when ready.</system:String>
     <system:String x:Key="BluetoothControlReportMapChangedTitle">Bluetooth control needs to be paired again</system:String>
-    <system:String x:Key="BluetoothControlReportMapChangedBody">This update changes the Bluetooth HID controls. On the iPhone/iPad, forget the existing iPhoneMirror device, then pair it again before enabling control.</system:String>
-    <system:String x:Key="BluetoothControlReportMapChangedDetail">Close this message after the old pairing has been removed. Enable Bluetooth control again after completing the new pairing.</system:String>
+    <system:String x:Key="BluetoothControlReportMapChangedBody">Bluetooth control changed in this update. On the iPhone, forget iPhoneMirror and pair it again.</system:String>
+    <system:String x:Key="BluetoothControlReportMapChangedDetail">Close this message once the old pairing is removed, then turn Bluetooth control on again after pairing.</system:String>
     <system:String x:Key="BluetoothControlReportMapChangedStatus">Pairing required again</system:String>
     <system:String x:Key="BluetoothControlReportMapChangedConfirm">I have re-paired</system:String>
     <system:String x:Key="BluetoothControlPromptTitle">Bluetooth control enabled</system:String>
-    <system:String x:Key="BluetoothControlPromptBodyFormat">Windows mouse input is now redirected to the iPhone/iPad. Press {0} to release the mouse and stop reverse control.</system:String>
-    <system:String x:Key="BluetoothControlPromptDetail">The Windows cursor is hidden while reverse control is active.</system:String>
+    <system:String x:Key="BluetoothControlPromptBodyFormat">Your mouse now controls the iPhone. Press {0} to release it and stop.</system:String>
+    <system:String x:Key="BluetoothControlPromptDetail">The Windows cursor stays hidden meanwhile.</system:String>
     <system:String x:Key="BluetoothControlPromptShortcutFormat">Press {0} to release the mouse</system:String>
     <system:String x:Key="BluetoothControlPromptAutoCloseFormat">Closes automatically in {0} s</system:String>
     <system:String x:Key="IndependentWindowReverseControl">Reverse control</system:String>
@@ -367,9 +363,9 @@
     <system:String x:Key="BluetoothClientConnectionTimeFormat">Connected: {0}</system:String>
     <system:String x:Key="BluetoothClientBoundToFormat">Bound to: {0}</system:String>
     <system:String x:Key="DeviceProfileGuidanceWiredTitle">First connection for this wired device</system:String>
-    <system:String x:Key="DeviceProfileGuidanceWiredBody" xml:space="preserve">A new wired iPhone/iPad was detected. Create a device profile now so wired mirroring, wireless mirroring, and reverse control always resolve to the same physical device.&#xA;&#xA;Keep the device unlocked and complete the “Trust This Computer” prompt. Click Continue to open the device binder and confirm or manage this profile; click Cancel to open it later from the Reverse control menu.</system:String>
+    <system:String x:Key="DeviceProfileGuidanceWiredBody" xml:space="preserve">Link this new iPhone in the device binder so mirroring and control always target it. Continue opens the binder; Cancel leaves it for later.</system:String>
     <system:String x:Key="DeviceProfileGuidanceWirelessTitle">First connection for this wireless device</system:String>
-    <system:String x:Key="DeviceProfileGuidanceWirelessBody" xml:space="preserve">A new AirPlay device was detected. Create a device profile now so wireless mirroring can match its wired identity and reverse control can target the correct device.&#xA;&#xA;Make sure the phone and computer are on the same local network and keep the device name recognizable. Click Continue to open the device binder and bind this AirPlay device; click Cancel to open it later from the Reverse control menu.</system:String>
+    <system:String x:Key="DeviceProfileGuidanceWirelessBody" xml:space="preserve">Link this new AirPlay device to its iPhone in the device binder. Continue opens the binder; Cancel leaves it for later.</system:String>
     <system:String x:Key="ClearBluetoothBindings">Remove Bluetooth bindings</system:String>
     <system:String x:Key="ClearBluetoothBindingsTitle">Clear Bluetooth bindings</system:String>
     <system:String x:Key="ClearBluetoothBindingsBody">This removes the Bluetooth identity from every device profile. Other USB and AirPlay identities remain bound.</system:String>
@@ -441,7 +437,7 @@
     <system:String x:Key="CaptureVideoProtectedNoticeHint">Closes when video returns</system:String>
     <system:String x:Key="CaptureStopping">Stopping mirroring…</system:String>
     <system:String x:Key="CaptureCleaningDevice">Cleaning up device… Allow automatic reconnection if Windows requests permission.</system:String>
-    <system:String x:Key="CaptureUsbRestoreReplugRequired">The Apple USB connection has not been confirmed ready. Unlock the iPhone, accept any Trust prompt and enter its passcode. If administrator approval for automatic reconnection was cancelled or the device is still missing, reconnect the cable before starting mirroring again.</system:String>
+    <system:String x:Key="CaptureUsbRestoreReplugRequired">The USB connection isn't ready. Unlock the iPhone and confirm Trust; if it's still missing, replug the cable before mirroring again.</system:String>
     <system:String x:Key="CaptureQueued">Waiting for device cleanup…</system:String>
     <system:String x:Key="SwitchingDeviceFormat">Stopping the current session before switching to {0}…</system:String>
     <system:String x:Key="SwitchDeviceFailedFormat">Could not switch devices: {0}</system:String>
@@ -450,10 +446,10 @@
     <system:String x:Key="CaptureErrorFormat">Mirroring error: {0}</system:String>
     <system:String x:Key="CaptureNoPingTitle">iPhone/iPad mirroring connection timed out</system:String>
     <system:String x:Key="CaptureNoPingRecovery" xml:space="preserve">The device is connected, but it did not respond to the mirroring handshake.&#xA;&#xA;Restart the iPhone or iPad, then reconnect it with an Apple original or MFi-certified cable and try again.&#xA;&#xA;Keep the device unlocked while retrying.</system:String>
-    <system:String x:Key="CaptureNoPingSummary">The device is connected, but it did not respond to the mirroring handshake. Complete these two steps before retrying:</system:String>
+    <system:String x:Key="CaptureNoPingSummary">The device is connected but didn't answer the mirroring handshake. Do both steps, then retry:</system:String>
     <system:String x:Key="CaptureNoPingRestartAction">Restart the iPhone or iPad</system:String>
     <system:String x:Key="CaptureNoPingCableAction">Replace the cable with an Apple original or MFi-certified cable</system:String>
-    <system:String x:Key="CaptureNoPingUnlockHint">Keep the device unlocked when reconnecting and starting mirroring again.</system:String>
+    <system:String x:Key="CaptureNoPingUnlockHint">Keep the device unlocked when reconnecting.</system:String>
     <system:String x:Key="CaptureUsbConfigurationRecovery" xml:space="preserve">iPhone or iPad USB mirroring configuration could not be activated.&#xA;&#xA;Try these steps in order:&#xA;1. Unplug the cable, wait a few seconds, and plug it back in&#xA;2. Restart the iPhone or iPad, then reconnect it&#xA;3. Replace the cable with an Apple original or MFi-certified cable&#xA;&#xA;Keep the device unlocked when reconnecting and starting mirroring again.</system:String>
     <system:String x:Key="CaptureFailureDetailsFormat" xml:space="preserve">Error type: {0}&#xA;Failure stage: {1}&#xA;Error code: {2}&#xA;&#xA;Details: {3}</system:String>
     <system:String x:Key="CaptureActionReconnectDevice">Keep the device unlocked, reconnect the cable, then try again.</system:String>
@@ -491,7 +487,7 @@
     <system:String x:Key="StartRequested">Mirroring start requested</system:String>
     <system:String x:Key="StartFailedFormat">Could not start mirroring: {0}</system:String>
     <system:String x:Key="StopSessionReleased">Mirroring stopped and session resources were released</system:String>
-    <system:String x:Key="StopUsbRestoreWarningFormat">Mirroring stopped and session resources were released, but the Apple USB connection has not been confirmed ready. Unlock the iPhone, accept any Trust prompt and enter its passcode. If administrator approval for automatic reconnection was cancelled or the device is still missing, reconnect the cable. Diagnostic: {0}</system:String>
+    <system:String x:Key="StopUsbRestoreWarningFormat">Mirroring stopped, but the USB connection isn't ready. Unlock the iPhone and confirm Trust; if it's still missing, replug the cable. Diagnostic: {0}</system:String>
     <system:String x:Key="StopFailedFormat">Could not stop mirroring: {0}</system:String>
     <system:String x:Key="LogViewCleared">Log view cleared (the log file was not deleted)</system:String>
 
@@ -635,9 +631,9 @@
     <system:String x:Key="WirelessProfileAppliedFormat">Advertised now: {0}</system:String>
     <system:String x:Key="ApplyWirelessSettings">Apply</system:String>
     <system:String x:Key="WirelessProfileDisconnectConfirmFormat">Connected wireless devices: {0}. Applying “{1}” will disconnect all wireless mirroring and restart the receiver. Continue?</system:String>
-    <system:String x:Key="WirelessProfileReconnectInstructionsFormat">“{0}” is now advertised. On iPhone, open Control Center → Screen Mirroring and select “{1}” again. If the old connection remains listed, tap Stop Mirroring first, then select the receiver again.</system:String>
+    <system:String x:Key="WirelessProfileReconnectInstructionsFormat">“{0}” is now advertised. On the iPhone, choose “{1}” again under Control Center → Screen Mirroring (tap Stop Mirroring first if the old one is still listed).</system:String>
     <system:String x:Key="WirelessOriginalQualityWarningTitle">Original quality notice</system:String>
-    <system:String x:Key="WirelessOriginalQualityWarningBody">Original quality may freeze on some devices or network conditions. 1080p is recommended. If you still need original quality, use a stable local network and connect from iPhone Control Center → Screen Mirroring.</system:String>
+    <system:String x:Key="WirelessOriginalQualityWarningBody">Original quality can freeze on some devices or networks; 1080p is recommended.</system:String>
     <system:String x:Key="WirelessConnected">AirPlay connected</system:String>
     <system:String x:Key="WirelessLocalNetwork">Local network</system:String>
     <system:String x:Key="WirelessReady">AirPlay receiver ready</system:String>
@@ -875,7 +871,7 @@
     <system:String x:Key="AppPreferencesTitle">General</system:String>
     <system:String x:Key="InstanceConflictTitle">iPhoneMirror is already running</system:String>
     <system:String x:Key="InstanceConflictBody">Another iPhoneMirror instance is currently running. Choose which window to keep.</system:String>
-    <system:String x:Key="InstanceConflictHint">Closing the other windows continues this launch. Closing this window leaves active mirroring sessions untouched.</system:String>
+    <system:String x:Key="InstanceConflictHint">Closing the other windows continues this launch. Closing this one keeps running mirrors untouched.</system:String>
     <system:String x:Key="CloseOtherInstances">Close other windows</system:String>
     <system:String x:Key="CloseCurrentInstance">Close this window</system:String>
     <system:String x:Key="ClosingOtherInstances">Safely closing other iPhoneMirror windows…</system:String>
@@ -1022,7 +1018,7 @@
     <system:String x:Key="ControlBluetoothBindingRequired">Bluetooth device binding is incomplete</system:String>
     <system:String x:Key="ControlBluetoothBindingAdvice">Complete the Bluetooth binding for this device in the device binder, then start Bluetooth control.</system:String>
     <system:String x:Key="ControlBindingRequired">This device is not correctly bound. Complete device binding before using reverse control.</system:String>
-    <system:String x:Key="ControlBindingAdvice">Close this window and open the device binder. Bind this device's wired USB identity; if using AirPlay mirroring, bind it to the same device profile. Then start wired or wireless control again.</system:String>
+    <system:String x:Key="ControlBindingAdvice">Open the device binder and bind this device's USB identity (and its AirPlay device, if used) to one profile. Then start control again.</system:String>
     <system:String x:Key="ControlBluetoothCancelled">Bluetooth control cancelled</system:String>
     <system:String x:Key="ControlPrerequisiteCancelled">The startup confirmation was cancelled.</system:String>
     <system:String x:Key="ControlCheckingBluetoothSupport">Checking that Bluetooth is on and supports BLE…</system:String>
@@ -1594,7 +1590,7 @@ Pair, select and save.</system:String>
     <system:String x:Key="UsbControlFailureImagePrepareTimeout">Developer image preparation or mounting timed out. Keep the device unlocked, close other development tools using it, and retry.</system:String>
     <system:String x:Key="UsbControlFailureStartTimeout">The reverse-control service did not start in time. Reconnect the device and retry. Check the last startup stage in the diagnostic log.</system:String>
     <system:String x:Key="UsbControlFailureRuntimeInvalid">Reverse-control component verification failed. Reinstall the latest complete package instead of replacing individual executables. Verification details are recorded in the diagnostic log.</system:String>
-    <system:String x:Key="UsbControlFailureDeveloperModeCheck">The device's Developer Mode status could not be confirmed. Unlock the iPhone, complete any Trust prompt, reconnect, and retry. This does not necessarily mean Developer Mode is disabled.</system:String>
+    <system:String x:Key="UsbControlFailureDeveloperModeCheck">Couldn't confirm Developer Mode. Unlock the iPhone, confirm Trust, reconnect and retry.</system:String>
     <system:String x:Key="UsbControlFailureConnectionLost">The control connection to the iPhone was interrupted. Keep the device unlocked, check the USB cable or wireless network, and retry.</system:String>
     <system:String x:Key="UsbControlFailureImageServiceUnavailable">The device's developer image service could not be opened. Unlock the iPhone, confirm Developer Mode is enabled, close other development tools using the device, and retry.</system:String>
     <system:String x:Key="UsbControlFailureImageUploadFailed">The developer image transfer failed. Keep the iPhone unlocked, check the connection, reconnect, and retry.</system:String>
@@ -1606,8 +1602,8 @@ Pair, select and save.</system:String>
     <system:String x:Key="UsbControlFailureBridgeExited">The reverse-control process exited unexpectedly. Retry; if it persists, reinstall the complete package and retain the exit details in the diagnostic log.</system:String>
     <system:String x:Key="UsbControlFailureUnknownCodeFormat">Reverse control could not start (error code: {0}). Reconnect the device and retry. If it persists, submit the diagnostic log.</system:String>
     <system:String x:Key="ReverseControlSwitchingImage">The current image is unavailable; trying another compatible image…</system:String>
-    <system:String x:Key="UsbControlFailureControlServiceTimeout">The device’s CoreDevice tunnel or touch service did not become ready in time. Unlock and reconnect the iPhone, close other developer tools using it, and retry. For wireless control, check the local network and firewall.</system:String>
-    <system:String x:Key="UsbControlFailureRecoveryExhausted">The control connection was interrupted and automatic recovery failed after several attempts. Unlock and reconnect the device, then restart reverse control. If this repeats, provide the diagnostic log.</system:String>
+    <system:String x:Key="UsbControlFailureControlServiceTimeout">The touch service didn't start in time. Unlock and reconnect the iPhone, close other developer tools and retry; for wireless, check network and firewall.</system:String>
+    <system:String x:Key="UsbControlFailureRecoveryExhausted">Control was interrupted and couldn't recover. Unlock and reconnect the device, then start control again.</system:String>
     <system:String x:Key="SetupCheckHeading">Checking your setup</system:String>
     <system:String x:Key="SetupCheckDescription">Checking saved settings, device identities, and required components.</system:String>
     <system:String x:Key="SetupCheckReady">Setup is complete</system:String>

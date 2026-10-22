@@ -46,26 +46,30 @@ public sealed partial class BluetoothControlNoticeWindow :
             NoticeState.ReportMapChanged => "BluetoothControlReportMapChangedBody",
             _ => "BluetoothControlFailedBody",
         });
+    // Visible detail: the failure reason, or the name this PC shows on the
+    // iPhone while pairing. Background explanations live in InfoText.
     public string DetailText
     {
         get
         {
-            if (_state == NoticeState.Prerequisite) return string.Empty;
             if (_state == NoticeState.Failed && !string.IsNullOrWhiteSpace(_failureDetail))
                 return LocalizationService.RefreshText(_failureDetail);
-            var detail = LocalizationService.Get(_state switch
-            {
-                NoticeState.Waiting => "BluetoothControlWaitingDetail",
-                NoticeState.ReportMapChanged => "BluetoothControlReportMapChangedDetail",
-                _ => "BluetoothControlPromptDetail",
-            });
             return (_state is NoticeState.Waiting or NoticeState.ReportMapChanged) &&
                 !string.IsNullOrWhiteSpace(_suggestedDeviceName)
-                ? $"{LocalizationService.Format("BluetoothControlWaitingTargetFormat", _suggestedDeviceName)}\n{detail}"
-                : detail;
+                ? LocalizationService.Format("BluetoothControlWaitingTargetFormat", _suggestedDeviceName)
+                : string.Empty;
         }
     }
     public Visibility DetailVisibility => string.IsNullOrWhiteSpace(DetailText)
+        ? Visibility.Collapsed : Visibility.Visible;
+    public string InfoText => _state switch
+    {
+        NoticeState.Waiting => LocalizationService.Get("BluetoothControlWaitingDetail"),
+        NoticeState.ReportMapChanged => LocalizationService.Get("BluetoothControlReportMapChangedDetail"),
+        NoticeState.Connected => LocalizationService.Get("BluetoothControlPromptDetail"),
+        _ => string.Empty,
+    };
+    public Visibility InfoVisibility => string.IsNullOrEmpty(InfoText)
         ? Visibility.Collapsed : Visibility.Visible;
     public string ShortcutText => LocalizationService.Format(
         "BluetoothControlPromptShortcutFormat", GetConfiguredShortcut().DisplayText);
@@ -295,6 +299,8 @@ public sealed partial class BluetoothControlNoticeWindow :
         OnPropertyChanged(nameof(BodyText));
         OnPropertyChanged(nameof(DetailText));
         OnPropertyChanged(nameof(DetailVisibility));
+        OnPropertyChanged(nameof(InfoText));
+        OnPropertyChanged(nameof(InfoVisibility));
         OnPropertyChanged(nameof(ShortcutText));
         OnPropertyChanged(nameof(PairStepOneText));
         OnPropertyChanged(nameof(PairStepTwoText));
@@ -319,6 +325,8 @@ public sealed partial class BluetoothControlNoticeWindow :
         OnPropertyChanged(nameof(BodyText));
         OnPropertyChanged(nameof(DetailText));
         OnPropertyChanged(nameof(DetailVisibility));
+        OnPropertyChanged(nameof(InfoText));
+        OnPropertyChanged(nameof(InfoVisibility));
         OnPropertyChanged(nameof(ShortcutText));
         OnPropertyChanged(nameof(PairStepOneText));
         OnPropertyChanged(nameof(PairStepTwoText));

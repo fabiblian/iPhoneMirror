@@ -116,10 +116,8 @@
                         </Grid>
                     </Border>
                     <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                        <TextBlock TextWrapping="Wrap" Text="{Binding BadgeText}"
-                                   FontSize="{DynamicResource SecondaryFontSize}" FontWeight="SemiBold"/>
                         <TextBlock TextWrapping="Wrap" Text="{Binding BodyText}"
-                                   Style="{StaticResource BodyText}" Margin="0,5,0,0"/>
+                                   Style="{StaticResource BodyText}" VerticalAlignment="Center" MinHeight="30"/>
                         <Expander Header="{DynamicResource ErrorTechnicalDetails}"
                                   Margin="0,8,0,0" MaxHeight="180">
                             <Expander.Style>

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Width="520" SizeToContent="Height"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
         Foreground="{DynamicResource TextBrush}" ShowInTaskbar="False"
@@ -46,8 +47,11 @@
                                        VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                        <TextBlock Text="{Binding BodyText}"
-                                   Style="{StaticResource BodyText}"/>
+                        <controls:InfoRow>
+                            <TextBlock Text="{Binding BodyText}"
+                                       Style="{StaticResource BodyText}"/>
+                            <controls:InfoTip Text="{Binding InfoText}" Visibility="{Binding InfoVisibility}"/>
+                        </controls:InfoRow>
                         <TextBlock Text="{Binding DetailText}"
                                    Visibility="{Binding DetailVisibility}"
                                    Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>

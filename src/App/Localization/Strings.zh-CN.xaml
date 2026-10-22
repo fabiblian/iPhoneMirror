@@ -168,13 +168,9 @@
     <system:String x:Key="DeviceCaptureErrorTitleFormat">{0} 投屏错误</system:String>
     <system:String x:Key="DeviceSessionClosedWarningTitleFormat">{0} 投屏已停止</system:String>
     <system:String x:Key="DeviceSessionClosedWarningBody">检测到您已经在控制中心点击了停止镜像，下一次该设备有线镜像需重启 iPhone/iPad</system:String>
-    <system:String x:Key="CaptureNoticeErrorBadge">投屏未能继续</system:String>
-    <system:String x:Key="ReverseControlNoticeErrorBadge">反向控制未能继续</system:String>
     <system:String x:Key="CaptureNoticeErrorHint">请检查设备和连接后重试</system:String>
-    <system:String x:Key="CaptureNoticeUsbBadge">USB 投屏配置未完成</system:String>
     <system:String x:Key="CaptureNoticeUsbHint">请重新插拔数据线后重试</system:String>
     <system:String x:Key="CaptureUsbConfigurationTitle">USB 投屏配置错误</system:String>
-    <system:String x:Key="CaptureNoticeStoppedBadge">投屏已停止</system:String>
     <system:String x:Key="CaptureNoticeStoppedHint">重启设备后可再次投屏</system:String>
     <system:String x:Key="IndependentWindowPin">置顶</system:String>
     <system:String x:Key="IndependentWindowUnpin">取消置顶</system:String>
