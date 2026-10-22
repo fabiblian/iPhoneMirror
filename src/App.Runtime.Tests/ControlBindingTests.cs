@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Interop;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Models;
@@ -53,7 +54,7 @@ internal static partial class Program
         Task Start(bool network, string? id = null) => network ? vm.StartWirelessControlAsync(id) : vm.StartUsbControlAsync(id);
         void Reset()
         {
-            foreach (var window in app.Windows.OfType<ReverseControlStatusWindow>().ToArray()) window.Close();
+            foreach (var card in ReverseControlStatusCard.Open.ToArray()) card.Close();
             controls.Clear();
             vm.Devices.Clear();
             Select(null);
@@ -98,7 +99,7 @@ internal static partial class Program
                 {
                     stages.Add(snapshot.Stage);
                     if (snapshot.Stage == ControlStage.Failed)
-                        windowPresentAtFailure = app.Windows.OfType<ReverseControlStatusWindow>().Any(w => w.IsVisible);
+                        windowPresentAtFailure = ReverseControlStatusCard.Open.Any(card => card.IsVisible);
                 };
                 (network ? wireless : wired).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 PumpBinding(TimeSpan.FromMilliseconds(100));
@@ -107,13 +108,13 @@ internal static partial class Program
                 BindingAssert(windowPresentAtFailure && stages[0] == ControlStage.CheckingBinding &&
                     stages.All(stage => stage is ControlStage.CheckingBinding or ControlStage.Failed),
                     "Window must open before binding fails, with no later startup stages.");
-                var windows = app.Windows.OfType<ReverseControlStatusWindow>().ToArray();
-                BindingAssert(windows.Length == 1, "Binding failure opened duplicate windows.");
+                var windows = ReverseControlStatusCard.Open.ToArray();
+                BindingAssert(windows.Length == 1, "Binding failure opened duplicate status cards.");
                 BindingAssert(((ReverseControlStatusViewModel)windows[0].DataContext).StageDescription == status.Current!.Error,
                     "Visible failure text omitted the next step.");
                 SaveWindowRender(windows[0], Path.Combine(output, $"unbound-{network}-{airplay}.png"));
                 AwaitBinding(Start(network));
-                BindingAssert(app.Windows.OfType<ReverseControlStatusWindow>().Count() == 1, "Retry duplicated the status window.");
+                BindingAssert(ReverseControlStatusCard.Open.Count == 1, "Retry duplicated the status card.");
                 // Complete the missing identity, then retry the same failed session.
                 if (partialProfile is not null)
                     bindings.Bind(partialProfile.Id, DeviceIdentityType.Wired, "usb-" + device.Udid, device.Name, null, true);
@@ -261,7 +262,7 @@ internal static partial class Program
                 BindingAssert(!recovery.IsCompleted && cleanupControl.Stopping && !cleanupControl.Starting &&
                     !wired.IsEnabled && !wireless.IsEnabled, "Recovery cleanup must keep both transport entries busy.");
                 Failed(cleanupControl);
-                cleanupStatus = (ReverseControlStatusViewModel)app.Windows.OfType<ReverseControlStatusWindow>().Single().DataContext;
+                cleanupStatus = (ReverseControlStatusViewModel)ReverseControlStatusCard.Open.Single().DataContext;
                 BindingAssert(cleanupStatus.RetryVisibility == Visibility.Visible && cleanupStatus.RetryRequested is not null,
                     "Recovery failure did not expose the production Retry action.");
                 var failure = cleanupControl.ControlStatus.Current;

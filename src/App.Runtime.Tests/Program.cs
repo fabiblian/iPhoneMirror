@@ -398,7 +398,7 @@ internal static partial class Program
     {
         var assembly = typeof(App).Assembly;
         var viewModelType = assembly.GetType(
-            "IPhoneMirror.App.Windows.ReverseControlStatusViewModel",
+            "IPhoneMirror.App.Controls.ReverseControlStatusViewModel",
             throwOnError: true)!;
         var modeType = assembly.GetType(
             "IPhoneMirror.App.Services.ControlStatusMode",

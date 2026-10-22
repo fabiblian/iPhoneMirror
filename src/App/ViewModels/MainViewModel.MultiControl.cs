@@ -2,6 +2,7 @@ using System.Windows;
 using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Services;
+using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Windows;
 
 namespace IPhoneMirror.App.ViewModels;
@@ -61,7 +62,7 @@ internal sealed partial class MainViewModel
                 if (_disposed || (snapshot.Prompt is null &&
                     !DeviceViewModel.UdidEquals(SelectedDevice?.Udid, udid))) return;
                 if (!SetupActive && Application.Current?.MainWindow is { } owner)
-                    ReverseControlStatusWindow.Show(owner, control.ControlStatus,
+                    ReverseControlStatusCard.Show(owner, control.ControlStatus,
                         () => _ = CancelReverseControlAsync(snapshot.Mode, udid),
                         () => _ = StartDeviceControlAsync(udid, snapshot.Mode == ControlStatusMode.Wireless));
             }));
@@ -120,7 +121,7 @@ internal sealed partial class MainViewModel
                 // Every entry (toolbar, shortcut, preview menu, command and retry)
                 // opens the same status surface before inspecting the binding.
                 if (!SetupActive && Application.Current?.MainWindow is { } owner)
-                    ReverseControlStatusWindow.Show(owner, control.ControlStatus,
+                    ReverseControlStatusCard.Show(owner, control.ControlStatus,
                         () => _ = CancelReverseControlAsync(mode, target),
                         () => _ = StartDeviceControlAsync(target, wireless));
                 token.ThrowIfCancellationRequested();

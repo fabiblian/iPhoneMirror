@@ -1700,6 +1700,11 @@
                     </Grid>
                 </Border>
 
+                <!-- Reverse-control status cards. Kept above the preview rather
+                     than over it: the native preview HWND hides WPF overlays. -->
+                <controls:ReverseControlStatusHost x:Name="ReverseControlStatusCards" Margin="0,0,0,6"
+                                                   SharesHeightWith="{Binding ElementName=PreviewPanel}"/>
+
                 </StackPanel>
 
                 <Border x:Name="PreviewPanel" Grid.Row="1" Background="{DynamicResource PreviewChromeBrush}" BorderBrush="{DynamicResource BorderBrush}"

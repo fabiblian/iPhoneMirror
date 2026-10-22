@@ -3,12 +3,12 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
-using IPhoneMirror.App.Windows;
+using IPhoneMirror.App.Controls;
 
 namespace IPhoneMirror.App.Runtime.Tests;
 
 // Opt-in hardware test. Uses real discovery, saved bindings, the toolbar
-// handler, USB bridge and status window. It never manufactures a Ready event.
+// handler, USB bridge and status card. It never manufactures a Ready event.
 internal static class WiredControlLiveCountdownTest
 {
     private const BindingFlags Instance = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -50,7 +50,7 @@ internal static class WiredControlLiveCountdownTest
             modelType.GetField("_wiredControlPrerequisiteAcknowledged", Instance)!.SetValue(model, true);
             typeof(MainWindow).GetMethod("OnStartUsbControlClick", Instance)!
                 .Invoke(main, [main, new RoutedEventArgs()]);
-            var window = app.Windows.Cast<Window>().Single(w => w is ReverseControlStatusWindow);
+            var window = ReverseControlStatusCard.Open.Single();
             var service = modelType.GetProperty("ControlStatus", Instance)!.GetValue(model)!;
             var current = service.GetType().GetProperty("Current", Instance)!;
             string? Stage() => current.GetValue(service)?.GetType().GetProperty("Stage")!
@@ -60,7 +60,7 @@ internal static class WiredControlLiveCountdownTest
             var closedAt = TimeSpan.Zero;
             var watch = Stopwatch.StartNew();
             window.Closed += (_, _) => { closed = true; closedAt = watch.Elapsed; };
-            Console.WriteLine($"HARDWARE: toolbar handler showed status window; visible={window.IsVisible}.");
+            Console.WriteLine($"HARDWARE: toolbar handler showed status card; visible={window.IsVisible}.");
             if (!WaitUntil(() => Stage() is "Ready" or "Failed" or "Cancelled", TimeSpan.FromSeconds(120)))
             {
                 Console.WriteLine($"HARDWARE BLOCKED: startup did not reach Ready; stage={Stage()}.");
@@ -73,11 +73,11 @@ internal static class WiredControlLiveCountdownTest
             }
             readyAt = watch.Elapsed;
             if (!WaitUntil(() => closed, TimeSpan.FromSeconds(7)))
-                throw new InvalidOperationException("Real device connected but its visible status window did not reach Closed.");
+                throw new InvalidOperationException("Real device connected but its visible status card did not reach Closed.");
             var duration = (closedAt - readyAt).TotalSeconds;
-            if (window.IsVisible || app.Windows.Cast<Window>().Contains(window) || duration < 4.8 || duration > 6.5)
+            if (window.IsVisible || ReverseControlStatusCard.Open.Contains(window) || duration < 4.8 || duration > 6.5)
                 throw new InvalidOperationException($"Unexpected real-device close: visible={window.IsVisible}, seconds={duration:F3}.");
-            Console.WriteLine($"HARDWARE PASS: real USB connection reached Ready; same visible window reached Closed after {duration:F3}s.");
+            Console.WriteLine($"HARDWARE PASS: real USB connection reached Ready; same visible card reached Closed after {duration:F3}s.");
             return 0;
         }
         finally

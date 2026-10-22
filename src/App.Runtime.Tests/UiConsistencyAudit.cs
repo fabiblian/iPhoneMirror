@@ -104,7 +104,7 @@ internal static partial class Program
                                     surface == "reverse-control-prompt" ? app.FindResource("ReverseControlPrerequisiteWiredBody") : string.Join(" ", Enumerable.Repeat("Check the device and confirm that this computer is trusted.", 20)),
                                     app.FindResource("Continue"), app.FindResource("Cancel"), true, null, null]);
                                 serviceType.GetMethod("RequestPromptAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(service, [prompt, CancellationToken.None]);
-                                assembly.GetType("IPhoneMirror.App.Windows.ReverseControlStatusWindow")!
+                                assembly.GetType("IPhoneMirror.App.Controls.ReverseControlStatusCard")!
                                     .GetMethod("Show", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [owner, service, null, null, null]);
                             }
                             else if (surface is "bluetooth-waiting" or "bluetooth-failure-long")
@@ -116,7 +116,15 @@ internal static partial class Program
                             else open.Invoke(owner, [surface]);
                             AdvanceDispatcher(TimeSpan.FromMilliseconds(240));
                             var windows = app.Windows.Cast<Window>().Where(w => w != owner && w.IsVisible).ToArray();
-                            if (!surface.StartsWith("workspace-") && windows.Length == 0)
+                            // The reverse-control status is a card under the main toolbar.
+                            var statusCard = surface is "reverse-control-status" or "reverse-control-prompt" or "reverse-control-prompt-long";
+                            if (statusCard && (windows.Length > 0 ||
+                                    IPhoneMirror.App.Controls.ReverseControlStatusCard.Open.SingleOrDefault() is not { IsVisible: true }))
+                                throw new InvalidOperationException("Reverse-control status must be one visible card in the main window, not a separate window " +
+                                    $"(windows: {string.Join(", ", windows.Select(w => w.GetType().Name))}; cards: " +
+                                    string.Join(", ", IPhoneMirror.App.Controls.ReverseControlStatusCard.Open.Select(card =>
+                                        $"visible={card.IsVisible}, in={Window.GetWindow(card)?.GetType().Name}")) + ").");
+                            if (!surface.StartsWith("workspace-") && !statusCard && windows.Length == 0)
                                 throw new InvalidOperationException("Preview entry did not open a window.");
                             foreach (var window in windows.Length == 0 ? new Window[] { owner } : windows)
                             {
@@ -144,6 +152,7 @@ internal static partial class Program
                         finally
                         {
                             foreach (var window in app.Windows.Cast<Window>().Where(w => w != owner).ToArray()) window.Close();
+                            foreach (var card in IPhoneMirror.App.Controls.ReverseControlStatusCard.Open.ToArray()) card.Close();
                             if (surface == "workspace-toolbar")
                             {
                                 ((FrameworkElement)owner.FindName("EnvironmentPanel")).ClearValue(UIElement.VisibilityProperty);
@@ -242,19 +251,20 @@ internal static partial class Program
 
     private static void AssertPromptActionsReachable(Window window, string renderPath)
     {
-        var primary = Visuals(window).OfType<Button>().Single(b =>
+        var card = Visuals(window).OfType<IPhoneMirror.App.Controls.ReverseControlStatusCard>().Single();
+        var primary = Visuals(card).OfType<Button>().Single(b =>
             System.Windows.Automation.AutomationProperties.GetAutomationId(b) == "ControlPromptPrimaryButton");
-        var scroll = (ScrollViewer)window.FindName("ControlContentScrollViewer");
+        var scroll = (ScrollViewer)card.FindName("ControlContentScrollViewer");
         foreach (var offset in new[] { 0.0, scroll.ScrollableHeight })
         {
             scroll.ScrollToVerticalOffset(offset);
             window.UpdateLayout();
-            var bounds = primary.TransformToAncestor(window).TransformBounds(new Rect(primary.RenderSize));
-            var scrollBounds = scroll.TransformToAncestor(window).TransformBounds(new Rect(scroll.RenderSize));
-            if (bounds.Top < scrollBounds.Bottom || bounds.Bottom > window.ActualHeight - 10 || bounds.Right > window.ActualWidth - 10)
-                throw new InvalidOperationException("Prompt primary action is not fully visible in the fixed footer.");
+            var bounds = primary.TransformToAncestor(card).TransformBounds(new Rect(primary.RenderSize));
+            if (!primary.IsVisible || scroll.IsAncestorOf(primary) || bounds.Left < -1 || bounds.Top < -1 ||
+                bounds.Bottom > card.ActualHeight + 1 || bounds.Right > card.ActualWidth + 1)
+                throw new InvalidOperationException("Prompt primary action must stay visible in the card header while its details scroll.");
         }
-        SaveWindowRender(window, renderPath);
+        SaveWindowRender(card, renderPath);
         scroll.ScrollToHome();
         window.UpdateLayout();
     }
@@ -309,17 +319,24 @@ internal static partial class Program
         }
     }
 
-    private static void SaveWindowRender(Window window, string path)
+    private static void SaveWindowRender(FrameworkElement window, string path)
     {
         if (window.ActualWidth <= 0 || window.ActualHeight <= 0) return;
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(window.ActualWidth), (int)Math.Ceiling(window.ActualHeight), 96, 96, PixelFormats.Pbgra32);
         var background = new DrawingVisual();
+        var bounds = new Rect(0, 0, window.ActualWidth, window.ActualHeight);
         using (var drawing = background.RenderOpen())
-            if (!window.AllowsTransparency)
+        {
+            if (window is not Window { AllowsTransparency: true })
                 drawing.DrawRectangle(window.TryFindResource("WindowBackgroundBrush") as Brush ?? Brushes.White,
-                    null, new Rect(0, 0, window.ActualWidth, window.ActualHeight));
+                    null, bounds);
+            // An element inside a window (a status card) renders at its own
+            // origin through a brush; rendering it directly keeps its offset.
+            if (window is not Window)
+                drawing.DrawRectangle(new VisualBrush(window), null, bounds);
+        }
         bitmap.Render(background);
-        bitmap.Render(window);
+        if (window is Window) bitmap.Render(window);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using var stream = File.Create(path);

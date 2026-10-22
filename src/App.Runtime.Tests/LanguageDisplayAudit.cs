@@ -80,7 +80,8 @@ internal static partial class Program
                         else open.Invoke(owner, [surface]);
                         AdvanceDispatcher(TimeSpan.FromMilliseconds(100));
                         var windows = app.Windows.Cast<Window>().Where(w => w != owner && w.IsVisible).ToArray();
-                        if (surface.StartsWith("workspace-")) windows = [owner];
+                        // The reverse-control status is a card inside the main window.
+                        if (surface.StartsWith("workspace-") || surface == "reverse-control-status") windows = [owner];
                         Verify(windows.Length > 0, surface + ": no window opened");
                         foreach (var window in windows)
                         {
@@ -139,6 +140,7 @@ internal static partial class Program
                     finally
                     {
                         foreach (var window in app.Windows.Cast<Window>().Where(w => w != owner).ToArray()) window.Close();
+                        foreach (var card in IPhoneMirror.App.Controls.ReverseControlStatusCard.Open.ToArray()) card.Close();
                     }
                 }
             }
@@ -298,7 +300,7 @@ internal static partial class Program
         var serviceType = DisplayType("Services.ControlStatusService");
         var modeType = DisplayType("Services.ControlStatusMode");
         var stageType = DisplayType("Services.ControlStage");
-        var vmType = DisplayType("Windows.ReverseControlStatusViewModel");
+        var vmType = DisplayType("Controls.ReverseControlStatusViewModel");
         foreach (var mode in Enum.GetValues(modeType))
         foreach (var stage in Enum.GetValues(stageType))
         {

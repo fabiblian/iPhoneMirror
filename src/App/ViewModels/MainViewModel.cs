@@ -11,6 +11,7 @@ using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
 using IPhoneMirror.App.Updater;
+using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Windows;
 
 namespace IPhoneMirror.App.ViewModels;
@@ -1194,7 +1195,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
             {
                 if (SetupActive) return;
                 if (Application.Current?.MainWindow is { } owner)
-                    ReverseControlStatusWindow.Show(owner, ControlStatus,
+                    ReverseControlStatusCard.Show(owner, ControlStatus,
                         () => _ = CancelReverseControlAsync(snapshot.Mode));
             }
             var dispatcher = Application.Current?.Dispatcher;
@@ -3220,7 +3221,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
                     };
                 };
                 if (SetupActive || Application.Current?.MainWindow is not { } owner) return;
-                ReverseControlStatusWindow.Show(
+                ReverseControlStatusCard.Show(
                     owner,
                     status,
                     cancel: () => _ = CancelReverseControlAsync(mode, target),
@@ -3585,7 +3586,7 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
         // The model fallback can win the race with the status window's
         // DispatcherTimer. Close the window first so live input never starts
         // while the UI still shows the final countdown second.
-        ReverseControlStatusWindow.CloseActive();
+        ReverseControlStatusCard.CloseActive();
         AllowBluetoothControlInput();
         NotifyBluetoothControlStateChanged();
     }

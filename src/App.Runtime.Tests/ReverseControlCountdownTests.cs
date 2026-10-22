@@ -3,14 +3,14 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
-using IPhoneMirror.App.Windows;
+using IPhoneMirror.App.Controls;
 
 namespace IPhoneMirror.App.Runtime.Tests;
 
-// Exercise the production status service, XAML window and timers on a real STA
+// Exercise the production status service, XAML status card and timers on a real STA
 // dispatcher. Only the transport's status reports are simulated.
 //
-// The windows are real top-level windows on the interactive desktop, so the
+// The cards sit in a real top-level window on the interactive desktop, so the
 // test swallows desktop input to them. The app's countdown runs on real time,
 // so a loaded machine can delay the test's own steps past its five-second
 // deadline. Scenarios measure that and retry instead of asserting on a
@@ -36,7 +36,11 @@ internal static class ReverseControlCountdownTests
         var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         typeof(App).GetProperty("IsUiPreviewMode", Instance)!.SetValue(app, true);
         app.InitializeComponent();
-        var owner = new Wpf.Ui.Controls.FluentWindow { Width = 320, Height = 240, ShowInTaskbar = false };
+        var owner = new Wpf.Ui.Controls.FluentWindow
+        {
+            Width = 640, Height = 360, ShowInTaskbar = false,
+            Content = new ReverseControlStatusHost(),
+        };
         owner.Show();
         try
         {
@@ -126,7 +130,7 @@ internal static class ReverseControlCountdownTests
                     $"display_timer_enabled={((DispatcherTimer)model.GetType().GetField("_timer", Instance)!.GetValue(model)!).IsEnabled}");
             }
             Require(closed && closedOnDispatcher && !window.IsVisible,
-                $"{modeName}: the visible status window must reach Closed after the five-second countdown.");
+                $"{modeName}: the visible status card must reach Closed after the five-second countdown.");
             Require(callbackCount == 1, "The completion callback must run exactly once.");
             // A restarted countdown could not close before duplicateAt + 5 s.
             Require(closedAt.TotalSeconds >= 4.95 && closedAt < duplicateAt + TimeSpan.FromSeconds(5),
@@ -134,8 +138,8 @@ internal static class ReverseControlCountdownTests
             Require(labels.Contains(string.Format(System.Globalization.CultureInfo.CurrentCulture,
                 (string)Application.Current.FindResource("ControlCloseCountdown"), 1)),
                 "The visible countdown must advance to its final second.");
-            Require(!Application.Current.Windows.Cast<Window>().Contains(window),
-                "Close must remove the actual displayed instance from Application.Windows.");
+            Require(!ReverseControlStatusCard.Open.Contains(window) && window.Parent is null,
+                "Close must remove the actual displayed card from its host.");
         }
         finally { if (!closed) window.Close(); }
     }
@@ -159,7 +163,7 @@ internal static class ReverseControlCountdownTests
             Pump(TimeSpan.FromMilliseconds(100));
             // Reproduce a missing one-shot completion (for example, its
             // callback arrived just before the absolute deadline). Reaching
-            // zero in the display timer must still close the real window.
+            // zero in the display timer must still close the real card.
             var timer = (System.Threading.Timer)window.DataContext.GetType()
                 .GetField("_deadlineTimer", Instance)!.GetValue(window.DataContext)!;
             timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -172,10 +176,10 @@ internal static class ReverseControlCountdownTests
             Require(closedAt.TotalSeconds >= 4.95,
                 $"The display timer must not complete auto-close before five seconds (closed_at={closedAt.TotalSeconds:F3}s, " +
                 $"utc_elapsed={(closedUtc - startUtc).TotalSeconds:F3}s, deadline_after_start={(Deadline(window) - startUtc).TotalSeconds:F3}s).");
-            Require(typeof(ReverseControlStatusWindow).GetField("_active",
+            Require(typeof(ReverseControlStatusCard).GetField("_active",
                 BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null) is null,
                 "Closed must clear the popup manager's active instance.");
-            Console.WriteLine("PASS: reaching zero closes the real window even without a pool-timer callback.");
+            Console.WriteLine("PASS: reaching zero closes the real card even without a pool-timer callback.");
         }
         finally { if (!closed) window.Close(); }
     }
@@ -261,7 +265,7 @@ internal static class ReverseControlCountdownTests
             Pump(TimeSpan.FromMilliseconds(100));
             // Queue a CloseActive from another thread, then close/reopen before it
             // executes. That queued close must keep targeting the old instance.
-            Task.Run(() => typeof(ReverseControlStatusWindow)
+            Task.Run(() => typeof(ReverseControlStatusCard)
                 .GetMethod("CloseActive", BindingFlags.Static | BindingFlags.NonPublic)!
                 .Invoke(null, null)).GetAwaiter().GetResult();
             RequireBeforeDeadline(elapsed, "The manual close");
@@ -281,8 +285,8 @@ internal static class ReverseControlCountdownTests
             replacement.Close();
             Pump(TimeSpan.FromMilliseconds(100));
             // Drains Apply after Dispose: no disposed-timer access or reopen.
-            Require(!Application.Current.Windows.Cast<Window>().Any(w => w is ReverseControlStatusWindow),
-                "Queued updates after manual close must not recreate the window.");
+            Require(ReverseControlStatusCard.Open.Count == 0,
+                "Queued updates after manual close must not recreate the card.");
             Console.WriteLine("PASS: Bluetooth manual close, instance replacement and queued updates after disposal.");
         }
         finally { if (replacement.IsVisible) replacement.Close(); }
@@ -317,36 +321,36 @@ internal static class ReverseControlCountdownTests
                 $"{step} ran {sinceReady.Elapsed.TotalSeconds:F2}s after Ready, too close to the five-second deadline.");
     }
 
-    private static string State(Window window, Stopwatch elapsed)
+    private static string State(ReverseControlStatusCard window, Stopwatch elapsed)
     {
         var model = window.DataContext;
         object? Field(string name) => model.GetType().GetField(name, Instance)!.GetValue(model);
         return $" [t={elapsed.Elapsed.TotalSeconds:F2}s, visible={window.IsVisible}, " +
-            $"open={Application.Current.Windows.Cast<Window>().Contains(window)}, " +
-            $"owner={window.Owner?.WindowState}/{window.Owner?.IsVisible}, armed={Field("_countdownArmed")}, " +
+            $"open={ReverseControlStatusCard.Open.Contains(window)}, " +
+            $"owner={Window.GetWindow(window)?.WindowState}/{Window.GetWindow(window)?.IsVisible}, armed={Field("_countdownArmed")}, " +
             $"completed={Field("_countdownElapsed")}, disposed={Field("_disposed")}, " +
             $"deadline_in={(Deadline(window) - DateTime.UtcNow).TotalSeconds:F2}s]";
     }
 
-    private static DateTime Deadline(Window window) =>
+    private static DateTime Deadline(FrameworkElement window) =>
         (DateTime)window.DataContext.GetType().GetField("_autoCloseAtUtc", Instance)!.GetValue(window.DataContext)!;
 
-    private static Window Show(Window owner, object service, Action? completed = null)
+    private static ReverseControlStatusCard Show(Window owner, object service, Action? completed = null)
     {
-        typeof(ReverseControlStatusWindow).GetMethod("Show", BindingFlags.Static | BindingFlags.NonPublic)!
+        typeof(ReverseControlStatusCard).GetMethod("Show", BindingFlags.Static | BindingFlags.NonPublic)!
             .Invoke(null, [owner, service, null, null, completed]);
-        var window = Application.Current.Windows.Cast<Window>().Single(w => w is ReverseControlStatusWindow);
-        Require(window.IsVisible, "The production status window must be visible before testing.");
+        var window = ReverseControlStatusCard.Open.Single();
+        Require(window.IsVisible, "The production status card must be visible before testing.");
         IgnoreDesktopInput(window);
         return window;
     }
 
-    private static readonly HashSet<Window> InputIsolated = [];
+    private static readonly HashSet<ReverseControlStatusCard> InputIsolated = [];
 
-    // Show activates the window on the interactive desktop, so a click or Enter
-    // meant for another app can press Close or a prompt button mid-scenario.
+    // A prompt activates the card's window on the interactive desktop, so a click
+    // or Enter meant for another app can press Close or a prompt button mid-scenario.
     // Every action here goes through the handlers directly; swallow real input.
-    private static void IgnoreDesktopInput(Window window)
+    private static void IgnoreDesktopInput(ReverseControlStatusCard window)
     {
         if (!InputIsolated.Add(window)) return;
         var reported = false;
@@ -355,7 +359,7 @@ internal static class ReverseControlCountdownTests
             e.Handled = true;
             if (reported) return;
             reported = true;
-            Console.WriteLine($"Ignored desktop input on the status window: {e.RoutedEvent.Name}.");
+            Console.WriteLine($"Ignored desktop input on the status card: {e.RoutedEvent.Name}.");
         }
         window.PreviewMouseDown += (_, e) => Swallow(e);
         window.PreviewMouseUp += (_, e) => Swallow(e);

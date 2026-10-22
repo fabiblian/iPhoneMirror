@@ -998,8 +998,10 @@
     <system:String x:Key="DeveloperNativePreviewTitle">iPhoneMirror independent preview</system:String>
     <system:String x:Key="DeveloperNativePreviewBody">Native preview window</system:String>
     <system:String x:Key="ControlPreparing">Preparing the control connection…</system:String>
-    <system:String x:Key="ControlCloseCountdown">This window closes in {0} s</system:String>
+    <system:String x:Key="ControlCloseCountdown">Hides in {0} s</system:String>
     <system:String x:Key="ControlTotalDuration">Connection time: {0:0.0} s</system:String>
+    <system:String x:Key="ControlShowSteps">Show steps</system:String>
+    <system:String x:Key="ControlHideSteps">Hide steps</system:String>
     <system:String x:Key="ControlBluetoothPairingTitle">Complete Bluetooth pairing on your device and Windows</system:String>
     <system:String x:Key="ControlStageCheckingDevice">Checking device</system:String>
     <system:String x:Key="ControlStageCheckingBinding">Checking device binding</system:String>

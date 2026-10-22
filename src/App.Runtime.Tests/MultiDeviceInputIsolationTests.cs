@@ -155,8 +155,7 @@ internal static partial class Program
         }
         finally
         {
-            foreach (var popup in Application.Current.Windows.Cast<Window>()
-                .Where(w => w.GetType().Name == "ReverseControlStatusWindow").ToArray()) popup.Close();
+            foreach (var card in IPhoneMirror.App.Controls.ReverseControlStatusCard.Open.ToArray()) card.Close();
             SetKeyboardField(vm, "_selectedDevice", previousSelection);
             SetKeyboardField(window, "_keyboardForegroundWindow", previousForeground);
         }

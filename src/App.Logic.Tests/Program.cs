@@ -1468,7 +1468,7 @@ Equal(true,
     mainWindowCode.Contains("physical mouse counts", StringComparison.Ordinal),
     "Bluetooth sensitivity uses physical mouse counts consistently across preview input paths");
 var statusWindowCode = File.ReadAllText(Path.Combine(sourceDirectory,
-    "App", "Windows", "ReverseControlStatusWindow.xaml.cs"));
+    "App", "Controls", "ReverseControlStatusCard.xaml.cs"));
 var mainViewModelCode = File.ReadAllText(Path.Combine(sourceDirectory,
     "App", "ViewModels", "MainViewModel.cs"));
 Equal(true,
@@ -1487,9 +1487,9 @@ Equal(true,
     statusWindowCode.Contains("CanBeginControlAfterClose", StringComparison.Ordinal) &&
     statusWindowCode.Contains("if (beginControl) _countdownElapsed?.Invoke();", StringComparison.Ordinal) &&
     !File.ReadAllText(Path.Combine(sourceDirectory,
-        "App", "Windows", "ReverseControlStatusWindow.xaml"))
+        "App", "Controls", "ReverseControlStatusCard.xaml"))
         .Contains("ReverseControlDetails", StringComparison.Ordinal),
-    "closing the Bluetooth status window at ready starts control immediately and the diagnostics details expander is removed");
+    "closing the Bluetooth status card at ready starts control immediately and the diagnostics details expander is removed");
 Equal(true,
     mainWindowCode.Contains("var drained = 0;", StringComparison.Ordinal) &&
     mainWindowCode.Contains("drained++ < 64", StringComparison.Ordinal),

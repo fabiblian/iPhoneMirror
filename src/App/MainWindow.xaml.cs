@@ -20,6 +20,7 @@ using IPhoneMirror.App.Models;
 using IPhoneMirror.App.Services;
 using IPhoneMirror.App.Updater;
 using IPhoneMirror.App.ViewModels;
+using IPhoneMirror.App.Controls;
 using IPhoneMirror.App.Windows;
 using Microsoft.Win32;
 using SymbolIcon = Wpf.Ui.Controls.SymbolIcon;
@@ -5070,7 +5071,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 ShortcutSettingsWindow.ShowDeveloperPreview(this);
                 break;
             case "reverse-control-status":
-                ReverseControlStatusWindow.ShowDeveloperPreview(this);
+                ReverseControlStatusCard.ShowDeveloperPreview(this);
                 break;
             case "prompt":
                 AppPromptWindow.ShowDeveloperPreview(this);
@@ -7004,7 +7005,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             !_viewModel.IsUsbControlTarget(target))
             status.Begin(mode, _viewModel.Devices.FirstOrDefault(d =>
                 DeviceViewModel.UdidEquals(d.Udid, target))?.Name ?? "iPhone");
-        ReverseControlStatusWindow.Show(this, status,
+        ReverseControlStatusCard.Show(this, status,
             () => _ = _viewModel.CancelReverseControlAsync(mode, target),
             countdownElapsed: mode == ControlStatusMode.Bluetooth
                 ? _viewModel.BeginBluetoothControlInputAfterStatusCountdown : null);

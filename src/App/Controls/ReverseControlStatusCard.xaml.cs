@@ -2,14 +2,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Interop;
+using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using IPhoneMirror.UI.Controls;
 using Wpf.Ui.Controls;
 using System.Windows.Threading;
 using IPhoneMirror.App.Localization;
 using IPhoneMirror.App.Services;
 
-namespace IPhoneMirror.App.Windows;
+namespace IPhoneMirror.App.Controls;
 
 internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
 {
@@ -35,8 +36,31 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
     public string CountdownText => _snapshot?.Stage == ControlStage.Ready ? LocalizationService.Format("ControlCloseCountdown", _remaining) : string.Empty;
     public string TotalDurationText => _snapshot?.Duration is { } duration
         ? LocalizationService.Format("ControlTotalDuration", duration.TotalSeconds) : string.Empty;
+    public bool IsCountingDown => CanBeginControlAfterClose;
+    // The card's single line: completed steps while starting, then the
+    // countdown at Ready.
+    public string ProgressText => _snapshot?.Stage == ControlStage.Ready
+        ? CountdownText : $"{Stages.Count(stage => stage.IsDone)}/{Stages.Count}";
+    public double ProgressValue => _snapshot?.Stage == ControlStage.Ready ? 1
+        : Stages.Count == 0 ? 0 : (double)Stages.Count(stage => stage.IsDone) / Stages.Count;
+    // A decision puts its buttons on the same line, so progress makes room.
+    public Visibility ProgressVisibility => NeedsAttention ||
+        _snapshot is { IsTerminal: true } and not { Stage: ControlStage.Ready }
+        ? Visibility.Collapsed : Visibility.Visible;
+    public StatusTone StageTone => _snapshot?.Stage switch
+    {
+        ControlStage.Ready => StatusTone.Success,
+        ControlStage.Failed => StatusTone.Error,
+        ControlStage.Cancelled => StatusTone.Neutral,
+        _ => StatusTone.Info,
+    };
+    public SymbolRegular StageSymbol => _snapshot?.Stage switch
+    {
+        ControlStage.Ready => SymbolRegular.CheckmarkCircle20,
+        ControlStage.Failed => SymbolRegular.ErrorCircle20,
+        _ => SymbolRegular.Cursor20,
+    };
     public Visibility CancelVisibility => _snapshot is { CanCancel: true, IsTerminal: false } ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility CloseVisibility => _snapshot is { IsTerminal: true } ? Visibility.Visible : Visibility.Collapsed;
     public Visibility RetryVisibility => _snapshot is { Stage: ControlStage.Failed } && RetryRequested is not null ? Visibility.Visible : Visibility.Collapsed;
     public Visibility PromptVisibility => _snapshot?.Prompt is null ? Visibility.Collapsed : Visibility.Visible;
     public Visibility BluetoothPairingStepsVisibility =>
@@ -81,7 +105,24 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
         get => _selectedPromptOption;
         set { if (ReferenceEquals(_selectedPromptOption, value)) return; _selectedPromptOption = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsPromptPrimaryEnabled)); }
     }
-    public bool IsDetailsExpanded { get => _details; set { _details = value; OnPropertyChanged(); } }
+    // Prompts, failures and Bluetooth pairing wait for the user, so their
+    // details stay open; otherwise the card keeps to one line until asked.
+    internal bool NeedsAttention => _snapshot is { Prompt: not null } or { Stage: ControlStage.Failed } ||
+        BluetoothPairingStepsVisibility == Visibility.Visible;
+    public bool IsDetailsExpanded
+    {
+        get => _details;
+        set
+        {
+            _details = value;
+            OnPropertyChanged();
+            foreach (var p in new[] { nameof(DetailsVisibility), nameof(ExpandSymbol), nameof(ExpandToolTip) }) OnPropertyChanged(p);
+        }
+    }
+    public Visibility DetailsVisibility => _details || NeedsAttention ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ExpandVisibility => NeedsAttention ? Visibility.Collapsed : Visibility.Visible;
+    public SymbolRegular ExpandSymbol => _details ? SymbolRegular.ChevronUp20 : SymbolRegular.ChevronDown20;
+    public string ExpandToolTip => LocalizationService.Get(_details ? "ControlHideSteps" : "ControlShowSteps");
     internal Action? CancelRequested { get; set; }
     internal Action? RetryRequested { get; set; }
     internal event Action? CountdownElapsed;
@@ -89,7 +130,7 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
     {
         // Tick more frequently than the displayed whole seconds. The deadline
         // is absolute, so a delayed UI tick cannot freeze the label at 5 or
-        // extend the window lifetime.
+        // extend the card's lifetime.
         _service = service;
         _dispatcher = Dispatcher.CurrentDispatcher;
         // Keep the visible countdown responsive while the preview is receiving
@@ -123,7 +164,7 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
     }
     private void OnStatusChanged(object? sender, ControlStatusSnapshot snapshot)
     {
-        // Apply owns both timers on the window's dispatcher. A burst of
+        // Apply owns both timers on the card's dispatcher. A burst of
         // Connecting -> InitializingServices -> Ready notifications can arrive
         // before any queued Apply runs. Arming here would let the older Apply
         // stop that deadline while leaving it marked as already armed.
@@ -174,6 +215,7 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
             _timer.Start();
         }
         NotifyAll();
+        AttentionChanged?.Invoke();
     }
     private static IReadOnlyList<ControlStage> GetWorkflowStages(ControlStatusMode mode) =>
         ControlStageWorkflow.GetStages(mode);
@@ -197,6 +239,7 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
             DiagnosticLogger.ReverseControl("status_window", "wired_control_auto_close_countdown_tick",
                 ("window_id", WindowId), ("remaining_seconds", _remaining));
             OnPropertyChanged(nameof(CountdownText));
+            OnPropertyChanged(nameof(ProgressText));
         }
         if (_remaining <= 0)
         {
@@ -243,13 +286,13 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
         _service.StatusChanged -= OnStatusChanged;
         LocalizationService.LanguageChanged -= OnLanguageChanged;
     }
+    internal event Action? AttentionChanged;
     internal bool HasPrompt => _snapshot?.Prompt is not null;
     internal bool CanBeginControlAfterClose =>
         _snapshot?.Stage == ControlStage.Ready && _snapshot.Prompt is null;
     internal void RefreshActions()
     {
         OnPropertyChanged(nameof(CancelVisibility));
-        OnPropertyChanged(nameof(CloseVisibility));
         OnPropertyChanged(nameof(RetryVisibility));
     }
     internal void ResolvePrompt(ControlPromptAction action)
@@ -259,7 +302,7 @@ internal sealed class ReverseControlStatusViewModel : INotifyPropertyChanged
     }
     private void NotifyAll()
     {
-        foreach (var p in new[] { nameof(DeviceSummary), nameof(StageTitle), nameof(StageDescription), nameof(CountdownText), nameof(TotalDurationText), nameof(CancelVisibility), nameof(CloseVisibility), nameof(RetryVisibility), nameof(PromptVisibility), nameof(BluetoothPairingStepsVisibility), nameof(PromptTitle), nameof(PromptMessage), nameof(PromptPrimaryText), nameof(PromptSecondaryText), nameof(PromptPrimaryVisibility), nameof(PromptSecondaryVisibility), nameof(PromptOptionsVisibility), nameof(PromptTechnicalDetails), nameof(PromptTechnicalDetailsVisibility), nameof(IsPromptPrimaryEnabled), nameof(PromptTone), nameof(PromptSymbol) }) OnPropertyChanged(p);
+        foreach (var p in new[] { nameof(DeviceSummary), nameof(StageTitle), nameof(StageDescription), nameof(CountdownText), nameof(TotalDurationText), nameof(IsCountingDown), nameof(ProgressText), nameof(ProgressValue), nameof(ProgressVisibility), nameof(StageTone), nameof(StageSymbol), nameof(CancelVisibility), nameof(RetryVisibility), nameof(PromptVisibility), nameof(BluetoothPairingStepsVisibility), nameof(DetailsVisibility), nameof(ExpandVisibility), nameof(ExpandSymbol), nameof(ExpandToolTip), nameof(PromptTitle), nameof(PromptMessage), nameof(PromptPrimaryText), nameof(PromptSecondaryText), nameof(PromptPrimaryVisibility), nameof(PromptSecondaryVisibility), nameof(PromptOptionsVisibility), nameof(PromptTechnicalDetails), nameof(PromptTechnicalDetailsVisibility), nameof(IsPromptPrimaryEnabled), nameof(PromptTone), nameof(PromptSymbol) }) OnPropertyChanged(p);
     }
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? n = null) => PropertyChanged?.Invoke(this, new(n));
@@ -269,6 +312,7 @@ internal sealed class ControlStageItem(ControlStage stage, ControlStatusService 
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     internal void NotifyLanguageChanged() => PropertyChanged?.Invoke(this, new(null));
+    internal bool IsDone => service.GetProgress(stage) is ControlStageProgress.Completed or ControlStageProgress.Skipped;
     public string Title => ReverseControlStatusViewModel.GetStageTitle(stage);
     public SymbolRegular MarkerSymbol => service.GetProgress(stage) switch
     {
@@ -295,85 +339,128 @@ internal sealed class ControlStageItem(ControlStage stage, ControlStatusService 
     };
 }
 
-public partial class ReverseControlStatusWindow : IPhoneMirror.UI.Controls.RoundedWindow
+/// <summary>
+/// Reverse-control progress, prompts and failures as a card pinned in the main
+/// workspace instead of a separate window. One card exists per status service.
+/// </summary>
+public partial class ReverseControlStatusCard : UserControl
 {
-    private static ReverseControlStatusWindow? _active;
+    private static readonly List<ReverseControlStatusCard> OpenCards = [];
+    private static ReverseControlStatusCard? _active;
     private readonly ControlStatusService _service;
     private readonly ReverseControlStatusViewModel _viewModel;
     private Action? _countdownElapsed;
-    private nint _nativeHandle;
+    private bool _attentionRequested;
     private bool _closed;
 
-    private ReverseControlStatusWindow(Window owner, ControlStatusService service, Action? cancel,
+    internal event EventHandler? Closed;
+    internal static IReadOnlyList<ReverseControlStatusCard> Open => OpenCards;
+
+    private ReverseControlStatusCard(ControlStatusService service, Action? cancel,
         Action? retry, Action? countdownElapsed)
     {
-        Owner = owner;
         _service = service;
         _countdownElapsed = countdownElapsed;
         _viewModel = new(service) { CancelRequested = cancel, RetryRequested = retry };
         _viewModel.CountdownElapsed += OnCountdownElapsed;
+        _viewModel.AttentionChanged += OnAttentionChanged;
         DataContext = _viewModel;
         InitializeComponent();
         DiagnosticLogger.ReverseControl("status_window", "wired_control_status_window_created",
             ("window_id", _viewModel.WindowId));
-        SourceInitialized += (_, _) =>
-            _nativeHandle = new WindowInteropHelper(this).Handle;
-        Closed += (_, _) =>
-        {
-            _closed = true;
-            DiagnosticLogger.ReverseControl("status_window", "wired_control_window_closed",
-                ("window_id", _viewModel.WindowId), ("handle", _nativeHandle));
-            _viewModel.CountdownElapsed -= OnCountdownElapsed;
-            _viewModel.Dispose();
-            if (ReferenceEquals(_active, this)) _active = null;
-        };
     }
     internal static void Show(Window owner, ControlStatusService service, Action? cancel = null,
         Action? retry = null, Action? countdownElapsed = null)
     {
-        var active = Application.Current.Windows.OfType<ReverseControlStatusWindow>()
-            .FirstOrDefault(window => window.IsVisible && ReferenceEquals(window._service, service));
+        var active = OpenCards.FirstOrDefault(card => ReferenceEquals(card._service, service));
         if (active is not null)
         {
             if (cancel is not null) active._viewModel.CancelRequested = cancel;
             if (retry is not null) active._viewModel.RetryRequested = retry;
             if (countdownElapsed is not null) active._countdownElapsed = countdownElapsed;
             active._viewModel.RefreshActions();
-            active.Activate();
+            active.RequestAttention(force: true);
             return;
         }
-        _active = new(owner, service, cancel, retry, countdownElapsed);
-        _active.Show();
-        _active.Activate();
+        _active = new(service, cancel, retry, countdownElapsed);
+        _active.Attach(owner);
         DiagnosticLogger.ReverseControl("status_window", "wired_control_status_window_shown",
-            ("window_id", _active._viewModel.WindowId), ("handle", _active._nativeHandle));
+            ("window_id", _active._viewModel.WindowId));
     }
     internal static void ShowDeveloperPreview(Window owner)
     {
         var service = new ControlStatusService();
         service.Report(ControlStatusMode.Usb, ControlStage.Connecting, "iPhone",
             LocalizationService.Get("ControlPreparing"), canCancel: false);
-        new ReverseControlStatusWindow(owner, service, null, null, null).Show();
+        new ReverseControlStatusCard(service, null, null, null).Attach(owner);
     }
     internal static void CloseActive()
     {
-        if (_active is { } window)
+        if (_active is { } card)
         {
-            if (!window.Dispatcher.CheckAccess())
+            if (!card.Dispatcher.CheckAccess())
             {
-                _ = window.Dispatcher.BeginInvoke(
-                    DispatcherPriority.Send, new Action(() => { if (!window._closed) window.Close(); }));
+                _ = card.Dispatcher.BeginInvoke(
+                    DispatcherPriority.Send, new Action(() => { if (!card._closed) card.Close(); }));
                 return;
             }
-            window.Close();
+            card.Close();
         }
     }
+
+    private void Attach(Window owner)
+    {
+        // The main window pins the card under its toolbar. Without a visible
+        // workspace (tray mode) a small borderless window carries the same card.
+        var host = owner.IsVisible ? ReverseControlStatusHost.Find(owner) : null;
+        host ??= ReverseControlStatusHost.CreateFloating(owner);
+        OpenCards.Add(this);
+        host.Add(this);
+        Opacity = 0;
+        BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1,
+            TryFindResource("NormalAnimationDuration") is Duration duration
+                ? duration : new Duration(TimeSpan.FromMilliseconds(180))));
+        RequestAttention(force: true);
+    }
+
+    internal void Close()
+    {
+        if (_closed) return;
+        _closed = true;
+        BeginAnimation(OpacityProperty, null);
+        (Parent as ReverseControlStatusHost)?.Remove(this);
+        OpenCards.Remove(this);
+        DiagnosticLogger.ReverseControl("status_window", "wired_control_window_closed",
+            ("window_id", _viewModel.WindowId));
+        _viewModel.CountdownElapsed -= OnCountdownElapsed;
+        _viewModel.AttentionChanged -= OnAttentionChanged;
+        _viewModel.Dispose();
+        if (ReferenceEquals(_active, this)) _active = null;
+        Closed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnAttentionChanged() => RequestAttention(force: false);
+
+    private void RequestAttention(bool force)
+    {
+        // Progress never takes focus. A prompt or failure waits for the user,
+        // so bring the window that holds the card forward once per request.
+        if (!_viewModel.NeedsAttention) { _attentionRequested = false; return; }
+        if (_closed || (_attentionRequested && !force) ||
+            Window.GetWindow(this) is not { IsVisible: true } window) return;
+        _attentionRequested = true;
+        if (window.WindowState == WindowState.Minimized) SystemCommands.RestoreWindow(window);
+        window.Activate();
+    }
+
+    private void OnToggleDetailsClick(object sender, RoutedEventArgs e) =>
+        _viewModel.IsDetailsExpanded = !_viewModel.IsDetailsExpanded;
     private void OnCloseClick(object sender, RoutedEventArgs e)
     {
         if (_viewModel.HasPrompt) _viewModel.ResolvePrompt(ControlPromptAction.Cancel);
         var beginControl = _viewModel.CanBeginControlAfterClose;
         Close();
-        // Bluetooth control is intentionally gated until the status window is
+        // Bluetooth control is intentionally gated until the status card is
         // gone. A manual close at the ready stage is an explicit equivalent of
         // waiting for the countdown to finish.
         if (beginControl) _countdownElapsed?.Invoke();
@@ -388,8 +475,8 @@ public partial class ReverseControlStatusWindow : IPhoneMirror.UI.Controls.Round
     private void OnPromptCardIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.NewValue is not true) return;
-        // The prompt can arrive after the stage list has filled the viewport.
-        // Wait for layout, then reveal its heading without moving the fixed actions.
+        // A prompt can arrive while the details are scrolled down. Wait for
+        // layout, then reveal its heading; its buttons stay in the header line.
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
         {
             if (!PromptCard.IsVisible) return;
@@ -404,8 +491,8 @@ public partial class ReverseControlStatusWindow : IPhoneMirror.UI.Controls.Round
 
     private void OnCountdownElapsed()
     {
-        // The view model completes on this window's dispatcher. Close this
-        // exact instance; native hiding does not perform WPF Closed cleanup.
+        // The view model completes on this card's dispatcher. Close this
+        // exact instance so its timers and subscriptions are released.
         Dispatcher.VerifyAccess();
         if (_closed || !_viewModel.CanBeginControlAfterClose) return;
         DiagnosticLogger.ReverseControl("status_window", "wired_control_auto_close_requested",
@@ -413,12 +500,9 @@ public partial class ReverseControlStatusWindow : IPhoneMirror.UI.Controls.Round
         try
         {
             DiagnosticLogger.ReverseControl("status_window", "wired_control_window_close_called",
-                ("window_id", _viewModel.WindowId), ("handle", _nativeHandle), ("visible", IsVisible));
+                ("window_id", _viewModel.WindowId), ("visible", IsVisible));
             Close();
             if (_closed) _countdownElapsed?.Invoke();
-            else
-                DiagnosticLogger.ReverseControlWarning("status_window", "wired_control_auto_close_failed",
-                    ("window_id", _viewModel.WindowId), ("reason", "closing_cancelled"));
         }
         catch (Exception error)
         {

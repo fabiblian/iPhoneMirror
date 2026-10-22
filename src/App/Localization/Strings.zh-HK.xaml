@@ -998,8 +998,10 @@
     <system:String x:Key="DeveloperNativePreviewTitle">iPhoneMirror 獨立預覽</system:String>
     <system:String x:Key="DeveloperNativePreviewBody">原生預覽視窗</system:String>
     <system:String x:Key="ControlPreparing">正在準備控制連線…</system:String>
-    <system:String x:Key="ControlCloseCountdown">視窗將於 {0} 秒後關閉</system:String>
+    <system:String x:Key="ControlCloseCountdown">{0} 秒後收起</system:String>
     <system:String x:Key="ControlTotalDuration">本次連線耗時 {0:0.0} 秒</system:String>
+    <system:String x:Key="ControlShowSteps">顯示步驟</system:String>
+    <system:String x:Key="ControlHideSteps">隱藏步驟</system:String>
     <system:String x:Key="ControlBluetoothPairingTitle">請在裝置及 Windows 上完成藍牙配對</system:String>
     <system:String x:Key="ControlStageCheckingDevice">檢查裝置</system:String>
     <system:String x:Key="ControlStageCheckingBinding">檢查裝置綁定</system:String>
