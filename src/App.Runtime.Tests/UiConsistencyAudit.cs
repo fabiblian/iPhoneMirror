@@ -66,7 +66,7 @@ internal static partial class Program
                         "reverse-control-wired-prerequisite", "reverse-control-wireless-prerequisite",
                         "reverse-control-error", "capture-error", "session-closed", "usb-config-error",
                         "capture-recovery", "image-settings", "projection-settings", "media-output",
-                        "usb-mode", "startup-error", "update", "instance-conflict", "protected-content" }.Where(s => onlySurface == null || onlySurface.Split(',').Contains(s)))
+                        "startup-error", "update", "instance-conflict", "protected-content" }.Where(s => onlySurface == null || onlySurface.Split(',').Contains(s)))
                     {
                         try
                         {

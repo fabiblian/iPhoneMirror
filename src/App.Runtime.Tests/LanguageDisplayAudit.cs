@@ -65,7 +65,7 @@ internal static partial class Program
                     "bluetooth-connection", "bluetooth-client-binding", "bluetooth-control-notice", "shortcut-settings",
                     "reverse-control-status", "prompt", "reverse-control-wired-prerequisite", "reverse-control-wireless-prerequisite",
                     "reverse-control-error", "capture-error", "session-closed", "usb-config-error", "capture-recovery",
-                    "image-settings", "projection-settings", "media-output", "usb-mode", "startup-error", "update", "instance-conflict", "protected-content" }.Where(surface => onlySurface is null || surface == onlySurface))
+                    "image-settings", "projection-settings", "media-output", "startup-error", "update", "instance-conflict", "protected-content" }.Where(surface => onlySurface is null || surface == onlySurface))
                 {
                     Console.WriteLine($"Checking live language switches: {surface}");
                     DisplayLanguage("zh-CN");

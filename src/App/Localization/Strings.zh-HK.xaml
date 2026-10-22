@@ -555,20 +555,13 @@
     <system:String x:Key="UsbModeAirPlaySummary">狀態列顯示真實時間和電量。影片 App 會把連接線當成第二個螢幕，鏡像裡常常只剩黑色影片區域和聲音。使用連接線，不是無線 AirPlay。</system:String>
     <system:String x:Key="UsbModeAisiSummary">固定的方形畫面尺寸，用於其他模式無法正常運作的 iPhone。清晰度較低，橫向內容可能有黑邊。</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">三種模式都經 USB 連接線；無線 AirPlay 是另一個來源。只套用至目前選取的有線裝置。</system:String>
-    <system:String x:Key="UsbModeDetailsToolTip">此模式的作用</system:String>
-    <system:String x:Key="UsbModeDetailsTitle">有線螢幕鏡像模式說明</system:String>
     <system:String x:Key="InfoTipName">更多資訊</system:String>
-    <system:String x:Key="UsbModeAdvantageTitle">優點</system:String>
-    <system:String x:Key="UsbModeDisadvantageTitle">缺點</system:String>
     <system:String x:Key="UsbModeDemoAdvantage">發送 Valeria=true 和裝置原始 DisplaySize，由 iOS 輸出完整的手機鏡像，並保持固定示範狀態。相容性和畫面完整性最高，推薦日常使用。</system:String>
     <system:String x:Key="UsbModeDemoDisadvantage">iOS 會進入 Apple 示範狀態，狀態列日期、時間和電量會鎖定為示範值，不能反映手機目前狀態。</system:String>
-    <system:String x:Key="UsbModeDemoNotice">此模式不會啟用影片 App 的 AirPlay 或外接播放畫面。</system:String>
     <system:String x:Key="UsbModeAirPlayAdvantage">狀態列顯示手機的真實時間、日期和電量。發送 Valeria=false，使用裝置原始尺寸，並保留現有的首幀偵測、橫直螢幕辨識和自動調整。影片 App 可以切換到 AirPlay 或外接播放。</system:String>
     <system:String x:Key="UsbModeAirPlayDisadvantage">主要影響影片 App：外接內容的解像度無法保證與手機和視窗完美自適應，可能出現裁切、比例異常或畫面顯示不全。</system:String>
-    <system:String x:Key="UsbModeAirPlayNotice">需要自訂時，連續按右下角版本號 5 次開啟進階模式。自訂 HPD1 尺寸存在風險，錯誤參數可能導致黑畫面、裁切或 USB 重新連接失敗。</system:String>
     <system:String x:Key="UsbModeAisiAdvantage">採用愛思同類方案，發送 Valeria=false 並固定請求 1565×1565，減少不同裝置之間的解像度協商差異。</system:String>
     <system:String x:Key="UsbModeAisiDisadvantage">方形目標會限制原始畫面的畫質，不適合畫質優先；橫向螢幕內容還可能出現縮放、黑邊或比例不理想。</system:String>
-    <system:String x:Key="UsbModeAisiNotice">此模式不會使用本項目的原始解像度偵測和橫直螢幕自動調整。</system:String>
     <system:String x:Key="UsbProjectionModeSelectedFormat">已選擇：{0}</system:String>
     <system:String x:Key="UsbProjectionModeRestarting">正在按新模式重新連接目前有線裝置…</system:String>
     <system:String x:Key="UsbProjectionModeAppliedFormat">已套用：{0}</system:String>
@@ -951,8 +944,6 @@
     <system:String x:Key="DeveloperProjectionSettingsDescription">裝置狀態和快速操作</system:String>
     <system:String x:Key="DeveloperMediaOutput">媒體輸出視窗</system:String>
     <system:String x:Key="DeveloperMediaOutputDescription">錄製、直播和攝影機分頁</system:String>
-    <system:String x:Key="DeveloperUsbMode">USB 模式詳情</system:String>
-    <system:String x:Key="DeveloperUsbModeDescription">模式說明和注意事項</system:String>
     <system:String x:Key="DeveloperStartupError">啟動錯誤視窗</system:String>
     <system:String x:Key="DeveloperStartupErrorDescription">錯誤摘要和診斷記錄</system:String>
     <system:String x:Key="DeveloperUpdate">更新視窗</system:String>

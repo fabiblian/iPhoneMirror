@@ -30,22 +30,23 @@ internal sealed class ResolutionPreset(string resourceKey, uint width, uint heig
 internal sealed record ClipboardHistoryEntry(string Text, DateTime TimestampUtc);
 
 internal sealed class UsbProjectionModeOption(UsbProjectionMode mode, string labelResourceKey,
-    string summaryResourceKey, string advantageResourceKey, string disadvantageResourceKey,
-    string noticeResourceKey) : INotifyPropertyChanged
+    string summaryResourceKey, string advantageResourceKey, string disadvantageResourceKey)
+    : INotifyPropertyChanged
 {
     public UsbProjectionMode Mode { get; } = mode;
     public string Label => LocalizationService.Get(labelResourceKey);
     public string Summary => LocalizationService.Get(summaryResourceKey);
     public string Advantage => LocalizationService.Get(advantageResourceKey);
     public string Disadvantage => LocalizationService.Get(disadvantageResourceKey);
-    public string Notice => LocalizationService.Get(noticeResourceKey);
+    // What the mode does, then one line each for its upside and downside.
+    public string InfoText => $"{Summary}\n+ {Advantage}\n− {Disadvantage}";
     internal void NotifyLanguageChanged()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Label)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Summary)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Advantage)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Disadvantage)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Notice)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InfoText)));
     }
     public event PropertyChangedEventHandler? PropertyChanged;
 }
@@ -305,11 +306,11 @@ internal sealed partial class MainViewModel : INotifyPropertyChanged
     public IReadOnlyList<UsbProjectionModeOption> UsbProjectionModes { get; } =
     [
         new(UsbProjectionMode.Demo, "UsbModeDemoLabel", "UsbModeDemoSummary",
-            "UsbModeDemoAdvantage", "UsbModeDemoDisadvantage", "UsbModeDemoNotice"),
+            "UsbModeDemoAdvantage", "UsbModeDemoDisadvantage"),
         new(UsbProjectionMode.AirPlay, "UsbModeAirPlayLabel", "UsbModeAirPlaySummary",
-            "UsbModeAirPlayAdvantage", "UsbModeAirPlayDisadvantage", "UsbModeAirPlayNotice"),
+            "UsbModeAirPlayAdvantage", "UsbModeAirPlayDisadvantage"),
         new(UsbProjectionMode.Aisi, "UsbModeAisiLabel", "UsbModeAisiSummary",
-            "UsbModeAisiAdvantage", "UsbModeAisiDisadvantage", "UsbModeAisiNotice"),
+            "UsbModeAisiAdvantage", "UsbModeAisiDisadvantage"),
     ];
     public IReadOnlyList<DecoderPreferenceOption> DecoderPreferences { get; } =
     [

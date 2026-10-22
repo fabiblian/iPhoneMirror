@@ -889,43 +889,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="UsbModeInfoButton" TargetType="Button">
-            <Setter Property="Width" Value="18"/>
-            <Setter Property="Height" Value="18"/>
-            <Setter Property="MinHeight" Value="18"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize11}"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource ControlFillBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource MutedTextBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="InfoRoot" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="9">
-                            <TextBlock Text="i" Foreground="{TemplateBinding Foreground}"
-                                       FontSize="{TemplateBinding FontSize}"
-                                       FontWeight="{TemplateBinding FontWeight}"
-                                       FontFamily="Georgia"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="InfoRoot" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="InfoRoot" Property="Background" Value="{DynamicResource ControlPressedBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <Style x:Key="CaptureActionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="MinWidth" Value="132"/>
             <Setter Property="MinHeight" Value="40"/>
@@ -2307,20 +2270,16 @@
                                         </ListBox.ItemsPanel>
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid>
+                                                <controls:InfoRow>
                                                     <TextBlock Text="{Binding Label}" FontSize="{DynamicResource SecondaryFontSize}"
                                                                FontWeight="SemiBold" TextWrapping="Wrap"
                                                                TextAlignment="Left" VerticalAlignment="Center"
-                                                               Margin="4,0,28,0"
+                                                               Margin="4,0,0,0"
                                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
-                                                    <Button Style="{StaticResource UsbModeInfoButton}"
-                                                            HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                            ToolTip="{Binding Summary}"
-                                                            ToolTipService.InitialShowDelay="150"
-                                                            ToolTipService.ShowDuration="20000"
-                                                            AutomationProperties.Name="{DynamicResource UsbModeDetailsToolTip}"
-                                                            Click="OnUsbProjectionModeInfoClick"/>
-                                                </Grid>
+                                                    <!-- Follows the item color so it stays readable on the selected accent fill. -->
+                                                    <controls:InfoTip Text="{Binding InfoText}" Opacity="0.85"
+                                                                      Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+                                                </controls:InfoRow>
                                             </DataTemplate>
                                         </ListBox.ItemTemplate>
                                     </ListBox>

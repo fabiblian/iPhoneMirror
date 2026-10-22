@@ -551,24 +551,17 @@
     <system:String x:Key="UsbModeDemoLabel">Full mirror (recommended)</system:String>
     <system:String x:Key="UsbModeAirPlayLabel">Real clock and battery</system:String>
     <system:String x:Key="UsbModeAisiLabel">Compatibility</system:String>
-    <system:String x:Key="UsbModeDemoSummary">Shows everything, including videos in apps such as TikTok. The status bar shows 9:41 and a full battery instead of the real values.</system:String>
-    <system:String x:Key="UsbModeAirPlaySummary">The status bar shows the real time and battery. Video apps treat the cable as a second screen, so the mirror often shows a black video area with sound only. Uses the cable, not wireless AirPlay.</system:String>
-    <system:String x:Key="UsbModeAisiSummary">Fixed square picture size for iPhones where the other modes fail. Less sharp; landscape content can get black bars.</system:String>
+    <system:String x:Key="UsbModeDemoSummary">Shows everything, including videos in apps such as TikTok or YouTube.</system:String>
+    <system:String x:Key="UsbModeAirPlaySummary">Shows the real time and battery in the status bar. Still uses the cable.</system:String>
+    <system:String x:Key="UsbModeAisiSummary">Fixed square picture for iPhones where the other modes fail.</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">All modes use the USB cable; wireless AirPlay is a separate source. Applies to the selected device only.</system:String>
-    <system:String x:Key="UsbModeDetailsToolTip">What this mode does</system:String>
-    <system:String x:Key="UsbModeDetailsTitle">USB mirroring mode details</system:String>
     <system:String x:Key="InfoTipName">More info</system:String>
-    <system:String x:Key="UsbModeAdvantageTitle">Advantages</system:String>
-    <system:String x:Key="UsbModeDisadvantageTitle">Disadvantages</system:String>
-    <system:String x:Key="UsbModeDemoAdvantage">Shows the complete iPhone screen as you see it, including videos in apps such as TikTok or YouTube. The most reliable picture. Technical: sends Valeria=true with the native display size.</system:String>
-    <system:String x:Key="UsbModeDemoDisadvantage">While mirroring, iOS switches to Apple's demo state: the status bar shows 9:41 and a full battery instead of the real time and battery.</system:String>
-    <system:String x:Key="UsbModeDemoNotice">Video apps cannot switch to second-screen playback in this mode, which is why their videos stay visible.</system:String>
-    <system:String x:Key="UsbModeAirPlayAdvantage">The status bar shows the real time, date and battery. The picture adapts when you rotate the iPhone. Technical: sends Valeria=false with the native display size.</system:String>
-    <system:String x:Key="UsbModeAirPlayDisadvantage">iOS treats the cable like an external screen. Video apps (TikTok, YouTube and others) then send their video to that screen as a separate stream that the mirror does not show: the video area stays black and only the sound plays. Despite the old name &quot;AirPlay&quot;, this mode always uses the cable.</system:String>
-    <system:String x:Key="UsbModeAirPlayNotice">For custom sizing, click the version in the lower-right corner five times to enable Advanced mode. Custom HPD1 dimensions are risky and can cause a black screen, cropping, or failed USB reconnection.</system:String>
-    <system:String x:Key="UsbModeAisiAdvantage">Requests a fixed square picture (1565×1565), the same approach as 3uTools (Aisi). Helps with iPhones where the other modes show no picture or a wrong size.</system:String>
-    <system:String x:Key="UsbModeAisiDisadvantage">The square target limits source clarity and is unsuitable when image quality is the priority. Landscape content may also be scaled, letterboxed, or shown at an imperfect ratio.</system:String>
-    <system:String x:Key="UsbModeAisiNotice">This mode does not use this application's native-resolution probing or adaptive orientation reconfiguration.</system:String>
+    <system:String x:Key="UsbModeDemoAdvantage">The most reliable picture.</system:String>
+    <system:String x:Key="UsbModeDemoDisadvantage">The status bar shows 9:41 and a full battery instead of the real values.</system:String>
+    <system:String x:Key="UsbModeAirPlayAdvantage">The picture follows when you rotate the iPhone.</system:String>
+    <system:String x:Key="UsbModeAirPlayDisadvantage">Video apps often show a black area with sound only.</system:String>
+    <system:String x:Key="UsbModeAisiAdvantage">Works where the other modes show no picture or a wrong size.</system:String>
+    <system:String x:Key="UsbModeAisiDisadvantage">Less sharp; landscape content can get black bars.</system:String>
     <system:String x:Key="UsbProjectionModeSelectedFormat">Selected: {0}</system:String>
     <system:String x:Key="UsbProjectionModeRestarting">Reconnecting the current USB device with the new mode…</system:String>
     <system:String x:Key="UsbProjectionModeAppliedFormat">Applied: {0}</system:String>
@@ -951,8 +944,6 @@
     <system:String x:Key="DeveloperProjectionSettingsDescription">Device status and quick actions</system:String>
     <system:String x:Key="DeveloperMediaOutput">Media output window</system:String>
     <system:String x:Key="DeveloperMediaOutputDescription">Recording, live, and camera tabs</system:String>
-    <system:String x:Key="DeveloperUsbMode">USB mode details</system:String>
-    <system:String x:Key="DeveloperUsbModeDescription">Mode explanation and notices</system:String>
     <system:String x:Key="DeveloperStartupError">Startup error window</system:String>
     <system:String x:Key="DeveloperStartupErrorDescription">Error summary and diagnostic log</system:String>
     <system:String x:Key="DeveloperUpdate">Update window</system:String>

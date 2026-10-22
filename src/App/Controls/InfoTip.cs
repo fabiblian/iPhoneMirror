@@ -20,6 +20,7 @@ public sealed class InfoTip : Button
             OnIsPopoverOpenChanged));
 
     private long _closedByOutsideClickAt;
+    private bool _closingFromCode;
 
     public InfoTip()
     {
@@ -51,17 +52,17 @@ public sealed class InfoTip : Button
     protected override void OnClick()
     {
         base.OnClick();
-        // The popover closes itself on the mouse-down outside it; when that
+        // The popover closes itself on a mouse-down outside it; when that
         // mouse-down was on this button, the click must not reopen it.
-        if (Environment.TickCount64 - _closedByOutsideClickAt < 400) return;
-        IsPopoverOpen = !IsPopoverOpen;
+        if (Environment.TickCount64 - _closedByOutsideClickAt < 300) return;
+        SetPopoverOpen(!IsPopoverOpen);
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
         if (e.Key == Key.Escape && IsPopoverOpen)
         {
-            IsPopoverOpen = false;
+            SetPopoverOpen(false);
             e.Handled = true;
             return;
         }
@@ -71,7 +72,14 @@ public sealed class InfoTip : Button
     protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
     {
         base.OnLostKeyboardFocus(e);
-        if (!IsKeyboardFocusWithin) IsPopoverOpen = false;
+        if (!IsKeyboardFocusWithin) SetPopoverOpen(false);
+    }
+
+    private void SetPopoverOpen(bool open)
+    {
+        _closingFromCode = !open;
+        try { IsPopoverOpen = open; }
+        finally { _closingFromCode = false; }
     }
 
     private static void OnIsPopoverOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -80,6 +88,7 @@ public sealed class InfoTip : Button
         var open = (bool)e.NewValue;
         if (info.ToolTip is ToolTip tip && open) tip.IsOpen = false;
         ToolTipService.SetIsEnabled(info, !open);
-        if (!open && info.IsMouseOver) info._closedByOutsideClickAt = Environment.TickCount64;
+        // Only the popup itself closes the popover without going through code.
+        if (!open && !info._closingFromCode) info._closedByOutsideClickAt = Environment.TickCount64;
     }
 }

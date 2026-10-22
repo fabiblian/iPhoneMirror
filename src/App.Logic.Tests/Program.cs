@@ -2452,11 +2452,6 @@ Equal(true, updateWindowText.Contains("PageTransition.IsEnabled=\"True\"",
 Equal(true, updateWindowText.Contains(
         "Value=\"{Binding ProgressValue, Mode=OneWay}\"", StringComparison.Ordinal),
     "update progress does not write back to a read-only view-model property");
-var usbInfoWindowText = File.ReadAllText(Path.Combine(sourceDirectory, "App", "Windows",
-    "UsbProjectionModeInfoWindow.xaml"));
-Equal(true, (double?)XDocument.Parse(usbInfoWindowText).Root?.Attribute("Height") >= 620 &&
-            usbInfoWindowText.Contains("ScrollViewer Grid.Row=\"2\"", StringComparison.Ordinal),
-    "USB mode guidance is tall enough and scrolls long localized content");
 Equal(true, modernControlsText.Contains("FocusVisualStyle", StringComparison.Ordinal),
     "shared icon controls replace the default rectangular focus adorner");
 var driverMainWindowText = File.ReadAllText(Path.Combine(sourceDirectory,

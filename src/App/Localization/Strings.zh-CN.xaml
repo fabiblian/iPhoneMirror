@@ -555,20 +555,13 @@
     <system:String x:Key="UsbModeAirPlaySummary">状态栏显示真实时间和电量。视频 App 会把数据线当成第二块屏幕，镜像里常常只剩黑色视频区域和声音。使用数据线，不是无线 AirPlay。</system:String>
     <system:String x:Key="UsbModeAisiSummary">固定的方形画面尺寸，用于其他模式无法正常工作的 iPhone。清晰度较低，横屏内容可能有黑边。</system:String>
     <system:String x:Key="UsbProjectionPerDeviceHint">三种模式都通过 USB 数据线；无线 AirPlay 是单独的来源。仅应用于当前选中的有线设备。</system:String>
-    <system:String x:Key="UsbModeDetailsToolTip">此模式的作用</system:String>
-    <system:String x:Key="UsbModeDetailsTitle">有线投屏模式说明</system:String>
     <system:String x:Key="InfoTipName">更多信息</system:String>
-    <system:String x:Key="UsbModeAdvantageTitle">优点</system:String>
-    <system:String x:Key="UsbModeDisadvantageTitle">缺点</system:String>
     <system:String x:Key="UsbModeDemoAdvantage">发送 Valeria=true 和设备原生 DisplaySize，由 iOS 输出完整的手机镜像，并保持固定演示状态。兼容性和画面完整性最高，推荐日常使用。</system:String>
     <system:String x:Key="UsbModeDemoDisadvantage">iOS 会进入 Apple 演示状态，状态栏日期、时间和电量会锁定为演示值，不能反映手机当前状态。</system:String>
-    <system:String x:Key="UsbModeDemoNotice">此模式不会启用视频 App 的 AirPlay 或外接播放画面。</system:String>
     <system:String x:Key="UsbModeAirPlayAdvantage">状态栏显示手机的真实时间、日期和电量。发送 Valeria=false，使用设备原生尺寸，并保留当前的首帧探测、横竖屏识别和自适应重配。视频 App 可以切换到 AirPlay 或外接播放。</system:String>
     <system:String x:Key="UsbModeAirPlayDisadvantage">主要影响视频 App：外接内容的分辨率无法保证与手机和窗口完美自适应，可能出现裁切、比例异常或画面显示不全。</system:String>
-    <system:String x:Key="UsbModeAirPlayNotice">需要自定义时，连续点击右下角版本号 5 次开启高级模式。自定义 HPD1 尺寸存在风险，错误参数可能导致黑屏、裁切或 USB 重连失败。</system:String>
     <system:String x:Key="UsbModeAisiAdvantage">采用爱思同类方案，发送 Valeria=false 并固定请求 1565×1565，减少不同设备之间的分辨率协商差异。</system:String>
     <system:String x:Key="UsbModeAisiDisadvantage">方形目标会限制源画面的清晰度，不适合画质优先；横屏内容还可能出现缩放、黑边或比例不理想。</system:String>
-    <system:String x:Key="UsbModeAisiNotice">此模式不会使用本项目的原生分辨率探测和横竖屏自适应重配。</system:String>
     <system:String x:Key="UsbProjectionModeSelectedFormat">已选择：{0}</system:String>
     <system:String x:Key="UsbProjectionModeRestarting">正在按新模式重新连接当前有线设备…</system:String>
     <system:String x:Key="UsbProjectionModeAppliedFormat">已应用：{0}</system:String>
@@ -951,8 +944,6 @@
     <system:String x:Key="DeveloperProjectionSettingsDescription">设备状态和快捷操作</system:String>
     <system:String x:Key="DeveloperMediaOutput">媒体输出窗口</system:String>
     <system:String x:Key="DeveloperMediaOutputDescription">录制、直播和摄像头标签页</system:String>
-    <system:String x:Key="DeveloperUsbMode">USB 模式详情</system:String>
-    <system:String x:Key="DeveloperUsbModeDescription">模式说明和注意事项</system:String>
     <system:String x:Key="DeveloperStartupError">启动错误窗口</system:String>
     <system:String x:Key="DeveloperStartupErrorDescription">错误摘要和诊断日志</system:String>
     <system:String x:Key="DeveloperUpdate">更新窗口</system:String>

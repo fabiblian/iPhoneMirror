@@ -187,6 +187,8 @@ internal static partial class Program
                 return RunTrayStartupThemeTests(trayThemeOutput);
             if (args is ["--button-borders", var borderOutput])
                 return RunButtonBorderTests(borderOutput);
+            if (args is ["--info-tip", var infoTipOutput])
+                return RunInfoTipTests(infoTipOutput);
             if (args is ["--theme-content", var themeContentOutput])
                 return RunThemeContentAudit(themeContentOutput);
             if (args is ["--tray-mode", var trayOutput])
@@ -1214,7 +1216,7 @@ internal static partial class Program
                     "prompt", "reverse-control-wired-prerequisite", "reverse-control-wireless-prerequisite",
                     "reverse-control-error", "capture-error", "session-closed", "usb-config-error",
                     "capture-recovery", "image-settings", "projection-settings", "media-output",
-                    "usb-mode", "startup-error", "update", "instance-conflict", "protected-content",
+                    "startup-error", "update", "instance-conflict", "protected-content",
                     "native-preview",
                 ]);
                 foreach (var controlName in new[]

@@ -5109,10 +5109,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             case "media-output":
                 ShowDeveloperMediaOutputSettings();
                 break;
-            case "usb-mode":
-                if (_viewModel.UsbProjectionModes.FirstOrDefault() is { } option)
-                    new UsbProjectionModeInfoWindow(option) { Owner = this }.Show();
-                break;
             case "startup-error":
                 new StartupErrorWindow(
                     new InvalidOperationException(LocalizationService.Get("DeveloperStartupErrorBody")),
@@ -5193,13 +5189,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             LocalizationService.Get("DeveloperNativePreviewTitle"),
             () => true, _ => { }, () => 1, () => { }, () => { },
             out _, message => _viewModel.AddDiagnosticLog(message));
-    }
-
-    private void OnUsbProjectionModeInfoClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: UsbProjectionModeOption option }) return;
-        e.Handled = true;
-        new Windows.UsbProjectionModeInfoWindow(option) { Owner = this }.ShowDialog();
     }
 
     private async void OnMirrorSimultaneouslyClick(object sender, RoutedEventArgs e)
