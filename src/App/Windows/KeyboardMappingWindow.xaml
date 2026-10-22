@@ -4,6 +4,7 @@
     xmlns:chrome="clr-namespace:IPhoneMirror.UI.Controls"
     xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
     Title="{DynamicResource MappingTitle}" Width="740" Height="680" MinWidth="560" MinHeight="560"
     WindowStartupLocation="CenterOwner" ResizeMode="CanResize" WindowStyle="None"
     AllowsTransparency="True" Background="Transparent" Foreground="{DynamicResource TextBrush}">
@@ -14,8 +15,10 @@
         </Grid.RowDefinitions>
         <Grid Style="{StaticResource SubWindowHeader}" animations:WindowDragBehavior.IsEnabled="True">
             <StackPanel Margin="0,0,48,16">
-                <TextBlock Text="{DynamicResource MappingTitle}" Style="{StaticResource SubWindowTitle}"/>
-                <TextBlock Text="{DynamicResource MappingDescription}" Style="{StaticResource SubWindowSubtitle}" TextWrapping="Wrap"/>
+                <controls:InfoRow>
+                    <TextBlock Text="{DynamicResource MappingTitle}" Style="{StaticResource SubWindowTitle}"/>
+                    <controls:InfoTip Text="{DynamicResource MappingDescription}" Margin="8,0,0,0"/>
+                </controls:InfoRow>
             </StackPanel>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                 <ui:SymbolIcon Symbol="Dismiss20" Style="{StaticResource ButtonSymbolIcon}"/>
@@ -23,15 +26,16 @@
         </Grid>
         <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="16" Margin="0,0,0,12">
             <StackPanel>
-                <CheckBox x:Name="EnabledBox" Content="{DynamicResource MappingEnable}"
-                    Click="OnEnabledClick" AutomationProperties.AutomationId="MappingEnable"/>
+                <controls:InfoRow>
+                    <CheckBox x:Name="EnabledBox" Content="{DynamicResource MappingEnable}"
+                        Click="OnEnabledClick" AutomationProperties.AutomationId="MappingEnable"/>
+                    <controls:InfoTip Text="{DynamicResource MappingGlobalHelp}"/>
+                </controls:InfoRow>
                 <TextBlock x:Name="RuntimeStatus" TextWrapping="Wrap" Foreground="{DynamicResource AccentBrush}" Margin="0,8,0,0"/>
                 <CheckBox x:Name="SuppressBox" Margin="0,12,0,0" Click="OnSuppressClick"
                           AutomationProperties.Name="{DynamicResource MappingSuppress}">
                     <TextBlock Text="{DynamicResource MappingSuppress}" TextWrapping="Wrap"/>
                 </CheckBox>
-                <TextBlock Text="{DynamicResource MappingGlobalHelp}" TextWrapping="Wrap" Margin="0,6,0,0"
-                    Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
             </StackPanel>
         </Border>
         <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="14">
@@ -68,9 +72,7 @@
             </Grid>
         </Border>
         <StackPanel Grid.Row="3" Margin="0,12,0,0">
-            <TextBlock x:Name="ErrorText" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
-            <TextBlock Text="{DynamicResource MappingAutoSave}" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}"
-                FontSize="{DynamicResource CaptionFontSize}" Margin="0,4,0,8"/>
+            <TextBlock x:Name="ErrorText" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}" Margin="0,0,0,8"/>
             <WrapPanel HorizontalAlignment="Right">
                 <Button Content="{DynamicResource Close}" Click="OnCloseClick" MinWidth="90" Margin="0,0,8,0"/>
                 <Button Content="{DynamicResource MappingAdd}" Click="OnAddClick" Style="{StaticResource PrimaryButton}"

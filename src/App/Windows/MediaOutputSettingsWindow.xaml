@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource MediaOutputTitle}"
         Width="582" Height="682" MinWidth="522" MinHeight="582"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
@@ -32,12 +33,13 @@
         <Grid Style="{StaticResource SubWindowHeader}"
               animations:WindowDragBehavior.IsEnabled="True">
             <StackPanel Margin="0,0,48,0">
-                <TextBlock Text="{DynamicResource MediaOutputTitle}"
-                           Style="{StaticResource SubWindowTitle}"/>
+                <controls:InfoRow>
+                    <TextBlock Text="{DynamicResource MediaOutputTitle}"
+                               Style="{StaticResource SubWindowTitle}"/>
+                    <controls:InfoTip Text="{Binding MediaOutputCapabilitiesText}" Margin="8,0,0,0"/>
+                </controls:InfoRow>
                 <TextBlock Text="{Binding SelectedName}"
                            Style="{StaticResource SubWindowSubtitle}"/>
-                <TextBlock Text="{Binding MediaOutputCapabilitiesText}" FontSize="{DynamicResource CaptionFontSize}"
-                           Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,5,0,0"/>
             </StackPanel>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
@@ -49,9 +51,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
-                            <TextBlock Text="{DynamicResource RecordDescription}" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource SecondaryFontSize}"/>
-                            <Grid Margin="0,12,0,0">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="8"/>
@@ -81,10 +81,17 @@
                                     <TextBox AutomationProperties.Name="{DynamicResource OutputBitrate}" x:Name="RecordBitrateBox" Style="{StaticResource RoundedTextBox}" MinHeight="40"/>
                                 </StackPanel>
                             </Grid>
-                            <Button x:Name="StartRecordingButton"
-                                    Content="{DynamicResource StartRecording}" Click="OnStartRecordingClick"
-                                    IsEnabled="False"
-                                    Style="{StaticResource PrimaryButton}" Margin="0,18,0,0"/>
+                            <Grid Margin="0,18,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="StartRecordingButton"
+                                        Content="{DynamicResource StartRecording}" Click="OnStartRecordingClick"
+                                        IsEnabled="False"
+                                        Style="{StaticResource PrimaryButton}"/>
+                                <controls:InfoTip Grid.Column="1" Margin="8,0,0,0" Text="{DynamicResource RecordDescription}"/>
+                            </Grid>
                         </StackPanel>
                     </Border>
                 </ScrollViewer>
@@ -94,9 +101,10 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
-                            <TextBlock Text="{DynamicResource StreamDescription}" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource SecondaryFontSize}"/>
-                            <TextBlock Text="{DynamicResource StreamProtocol}" Style="{StaticResource DetailLabel}"/>
+                            <controls:InfoRow Margin="0,0,0,4">
+                                <TextBlock Text="{DynamicResource StreamProtocol}" Style="{StaticResource DetailLabel}" Margin="0"/>
+                                <controls:InfoTip Text="{DynamicResource StreamDescription}"/>
+                            </controls:InfoRow>
                             <ComboBox AutomationProperties.Name="{DynamicResource StreamProtocol}" x:Name="StreamProtocolBox" SelectedIndex="0"
                                       SelectionChanged="OnStreamProtocolChanged">
                                 <ComboBoxItem x:Name="RtmpProtocolItem" Content="RTMP"
@@ -140,7 +148,10 @@
                                     <TextBox AutomationProperties.Name="{DynamicResource OutputBitrate}" x:Name="StreamBitrateBox" Style="{StaticResource RoundedTextBox}" MinHeight="40"/>
                                 </StackPanel>
                             </Grid>
-                            <TextBlock Text="{DynamicResource StreamMicrophone}" Style="{StaticResource DetailLabel}" Margin="0,14,0,4"/>
+                            <controls:InfoRow Margin="0,14,0,4">
+                                <TextBlock Text="{DynamicResource StreamMicrophone}" Style="{StaticResource DetailLabel}" Margin="0"/>
+                                <controls:InfoTip Text="{DynamicResource StreamMicrophoneHint}"/>
+                            </controls:InfoRow>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -154,8 +165,6 @@
                                     <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="ArrowClockwise20" FontSize="18"/>
                                 </Button>
                             </Grid>
-                            <TextBlock Text="{DynamicResource StreamMicrophoneHint}" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource MutedTextBrush}" Margin="0,6,0,0"/>
                             <Button x:Name="StartStreamingButton"
                                     Content="{DynamicResource StartStreaming}" Click="OnStartStreamingClick"
                                     IsEnabled="False"
@@ -169,9 +178,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <Border Style="{StaticResource SectionCard}">
                     <StackPanel>
-                        <TextBlock Text="{DynamicResource VirtualCameraDescription}" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource SecondaryFontSize}"/>
-                        <Grid Margin="0,4,0,0">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -198,9 +205,11 @@
                                 </ComboBox>
                             </StackPanel>
                         </Grid>
-                        <TextBlock Text="{Binding VirtualCameraStatusText}" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource SecondaryFontSize}"
-                                   Margin="0,14,0,0"/>
+                        <controls:InfoRow Margin="0,14,0,0">
+                            <TextBlock Text="{Binding VirtualCameraStatusText}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource SecondaryFontSize}"/>
+                            <controls:InfoTip Text="{DynamicResource VirtualCameraDescription}"/>
+                        </controls:InfoRow>
                         <Button Content="{Binding VirtualCameraInstallActionText}"
                                 Click="OnInstallVirtualCameraClick"
                                 IsEnabled="{Binding CanInstallVirtualCamera}"

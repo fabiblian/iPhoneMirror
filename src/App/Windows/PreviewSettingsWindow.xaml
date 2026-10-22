@@ -4,6 +4,7 @@
         xmlns:chrome="clr-namespace:IPhoneMirror.UI.Controls"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource PreviewSettingsTitle}"
         Width="600" Height="680" MinWidth="480" MinHeight="460"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
@@ -20,7 +21,6 @@
         <Grid Style="{StaticResource SubWindowHeader}" animations:WindowDragBehavior.IsEnabled="True">
             <StackPanel Margin="0,0,48,0">
                 <TextBlock Text="{DynamicResource PreviewSettingsTitle}" Style="{StaticResource SubWindowTitle}"/>
-                <TextBlock Text="{DynamicResource PreviewSettingsDescription}" Style="{StaticResource SubWindowSubtitle}"/>
             </StackPanel>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
@@ -48,31 +48,27 @@
                         <Button x:Name="BorderlessTile" Click="OnBorderlessTileClick" Padding="12" BorderThickness="1"
                                 HorizontalContentAlignment="Stretch" Background="{DynamicResource ControlFillBrush}"
                                 AutomationProperties.AutomationId="PreviewBorderlessTile"
-                                AutomationProperties.Name="{DynamicResource PreviewLookBorderless}">
+                                AutomationProperties.Name="{DynamicResource PreviewLookBorderless}"
+                                ToolTip="{DynamicResource PreviewLookBorderlessHelp}">
                             <DockPanel>
                                 <Border DockPanel.Dock="Left" Width="30" Height="60" CornerRadius="8" Margin="0,0,12,0"
                                         Background="{DynamicResource PreviewSampleScreenBrush}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{DynamicResource PreviewLookBorderless}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{DynamicResource PreviewLookBorderlessHelp}" TextWrapping="Wrap"
-                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                                </StackPanel>
+                                <TextBlock Text="{DynamicResource PreviewLookBorderless}" FontWeight="SemiBold"
+                                           TextWrapping="Wrap" VerticalAlignment="Center"/>
                             </DockPanel>
                         </Button>
                         <Button x:Name="CaseTile" Grid.Column="2" Click="OnCaseTileClick" Padding="12" BorderThickness="1"
                                 HorizontalContentAlignment="Stretch" Background="{DynamicResource ControlFillBrush}"
                                 AutomationProperties.AutomationId="PreviewCaseTile"
-                                AutomationProperties.Name="{DynamicResource PreviewLookCase}">
+                                AutomationProperties.Name="{DynamicResource PreviewLookCase}"
+                                ToolTip="{DynamicResource PreviewLookCaseHelp}">
                             <DockPanel>
                                 <Border x:Name="CaseTileSample" DockPanel.Dock="Left" Width="34" Height="64" CornerRadius="10"
                                         Padding="3" Margin="0,0,12,0" Background="{DynamicResource PreviewSampleCaseBrush}">
                                     <Border CornerRadius="7" Background="{DynamicResource PreviewSampleScreenBrush}"/>
                                 </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{DynamicResource PreviewLookCase}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{DynamicResource PreviewLookCaseHelp}" TextWrapping="Wrap"
-                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                                </StackPanel>
+                                <TextBlock Text="{DynamicResource PreviewLookCase}" FontWeight="SemiBold"
+                                           TextWrapping="Wrap" VerticalAlignment="Center"/>
                             </DockPanel>
                         </Button>
                     </Grid>
@@ -80,25 +76,27 @@
 
                     <!-- Controls drawn over the preview -->
                     <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
-                    <TextBlock Text="{DynamicResource PreviewControlsTitle}" FontWeight="SemiBold"/>
+                    <controls:InfoRow>
+                        <TextBlock Text="{DynamicResource PreviewControlsTitle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <controls:InfoTip Text="{DynamicResource PreviewControlsHelp}"/>
+                    </controls:InfoRow>
                     <CheckBox x:Name="HoverOnlyCheckBox" Margin="0,10,0,0" Content="{DynamicResource PreviewControlsOnHover}"
                               Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
                               AutomationProperties.AutomationId="PreviewControlsOnHoverCheckBox"/>
                     <CheckBox x:Name="SnapCheckBox" Margin="0,8,0,0" Content="{DynamicResource PreviewSnapToEdges}"
                               Checked="OnEverydayCheckChanged" Unchecked="OnEverydayCheckChanged"
                               AutomationProperties.AutomationId="PreviewSnapToEdgesCheckBox"/>
-                    <TextBlock Text="{DynamicResource PreviewControlsHelp}" TextWrapping="Wrap" Margin="0,6,0,0"
-                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
 
                     <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
                     <!-- Frame -->
                     <TextBlock Text="{DynamicResource PreviewFrameTitle}" FontWeight="SemiBold"/>
-                    <CheckBox x:Name="FrameEnabledCheckBox" Margin="0,10,0,0"
-                              Content="{DynamicResource PreviewFrameShow}"
-                              Checked="OnFrameEnabledChanged" Unchecked="OnFrameEnabledChanged"
-                              AutomationProperties.AutomationId="PreviewFrameEnabledCheckBox"/>
-                    <TextBlock Text="{DynamicResource PreviewFrameHelp}" TextWrapping="Wrap" Margin="0,6,0,0"
-                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                    <controls:InfoRow Margin="0,10,0,0">
+                        <CheckBox x:Name="FrameEnabledCheckBox"
+                                  Content="{DynamicResource PreviewFrameShow}"
+                                  Checked="OnFrameEnabledChanged" Unchecked="OnFrameEnabledChanged"
+                                  AutomationProperties.AutomationId="PreviewFrameEnabledCheckBox"/>
+                        <controls:InfoTip Text="{DynamicResource PreviewFrameHelp}"/>
+                    </controls:InfoRow>
                     <StackPanel x:Name="FrameOptions" Margin="0,12,0,0">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -113,19 +111,21 @@
                                 AutomationProperties.AutomationId="PreviewFrameThicknessSlider"
                                 AutomationProperties.Name="{DynamicResource PreviewFrameThickness}"/>
                         <TextBlock Text="{DynamicResource PreviewFrameColor}"/>
-                        <CheckBox x:Name="AccentColorCheckBox" Margin="0,8,0,0"
-                                  Content="{DynamicResource PreviewFrameAccentColor}"
-                                  Checked="OnAccentColorChanged" Unchecked="OnAccentColorChanged"
-                                  AutomationProperties.AutomationId="PreviewFrameAccentColorCheckBox"/>
-                        <TextBlock Text="{DynamicResource PreviewFrameAccentColorHelp}" TextWrapping="Wrap" Margin="0,4,0,0"
-                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                        <controls:InfoRow Margin="0,8,0,0">
+                            <CheckBox x:Name="AccentColorCheckBox"
+                                      Content="{DynamicResource PreviewFrameAccentColor}"
+                                      Checked="OnAccentColorChanged" Unchecked="OnAccentColorChanged"
+                                      AutomationProperties.AutomationId="PreviewFrameAccentColorCheckBox"/>
+                            <controls:InfoTip Text="{DynamicResource PreviewFrameAccentColorHelp}"/>
+                        </controls:InfoRow>
                         <StackPanel x:Name="OtherColorOptions">
-                        <CheckBox x:Name="AutoColorCheckBox" Margin="0,8,0,0"
-                                  Content="{DynamicResource PreviewFrameAutoColor}"
-                                  Checked="OnAutoColorChanged" Unchecked="OnAutoColorChanged"
-                                  AutomationProperties.AutomationId="PreviewFrameAutoColorCheckBox"/>
-                        <TextBlock Text="{DynamicResource PreviewFrameAutoColorHelp}" TextWrapping="Wrap" Margin="0,4,0,0"
-                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                        <controls:InfoRow Margin="0,8,0,0">
+                            <CheckBox x:Name="AutoColorCheckBox"
+                                      Content="{DynamicResource PreviewFrameAutoColor}"
+                                      Checked="OnAutoColorChanged" Unchecked="OnAutoColorChanged"
+                                      AutomationProperties.AutomationId="PreviewFrameAutoColorCheckBox"/>
+                            <controls:InfoTip Text="{DynamicResource PreviewFrameAutoColorHelp}"/>
+                        </controls:InfoRow>
                         <StackPanel x:Name="FixedColorOptions">
                             <WrapPanel x:Name="Swatches" Margin="0,8,0,6"/>
                             <TextBox x:Name="ColorTextBox" MaxLength="7" Margin="0,0,0,12" Width="120"
@@ -151,10 +151,11 @@
 
                         <!-- Home button -->
                         <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
-                        <TextBlock Text="{DynamicResource PreviewHomeTitle}" FontWeight="SemiBold"/>
-                        <TextBlock Text="{DynamicResource PreviewHomeHelp}" TextWrapping="Wrap" Margin="0,6,0,10"
-                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
-                        <Grid>
+                        <controls:InfoRow>
+                            <TextBlock Text="{DynamicResource PreviewHomeTitle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <controls:InfoTip Text="{DynamicResource PreviewHomeHelp}"/>
+                        </controls:InfoRow>
+                        <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="12"/>
@@ -185,12 +186,13 @@
                         <!-- Control -->
                         <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
                         <TextBlock Text="{DynamicResource PreviewControlTitle}" FontWeight="SemiBold"/>
-                        <CheckBox x:Name="AutoStartControlCheckBox" Margin="0,10,0,0"
-                                  Content="{DynamicResource PreviewAutoStartControl}"
-                                  Checked="OnAutoStartControlChanged" Unchecked="OnAutoStartControlChanged"
-                                  AutomationProperties.AutomationId="PreviewAutoStartControlCheckBox"/>
-                        <TextBlock Text="{DynamicResource PreviewAutoStartControlHelp}" TextWrapping="Wrap" Margin="0,6,0,0"
-                                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                        <controls:InfoRow Margin="0,10,0,0">
+                            <CheckBox x:Name="AutoStartControlCheckBox"
+                                      Content="{DynamicResource PreviewAutoStartControl}"
+                                      Checked="OnAutoStartControlChanged" Unchecked="OnAutoStartControlChanged"
+                                      AutomationProperties.AutomationId="PreviewAutoStartControlCheckBox"/>
+                            <controls:InfoTip Text="{DynamicResource PreviewAutoStartControlHelp}"/>
+                        </controls:InfoRow>
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="{DynamicResource ShortcutSettingsTitle}"
         Width="582" Height="672" MinWidth="522" MinHeight="542"
@@ -45,8 +46,12 @@
         </Grid.RowDefinitions>
         <Grid Style="{StaticResource SubWindowHeader}"
               animations:WindowDragBehavior.IsEnabled="True">
-            <TextBlock Text="{DynamicResource ShortcutSettingsTitle}"
-                       Style="{StaticResource SubWindowTitle}" Margin="0,0,48,0"/>
+            <controls:InfoRow Margin="0,0,48,0">
+                <TextBlock Text="{DynamicResource ShortcutSettingsTitle}"
+                           Style="{StaticResource SubWindowTitle}"/>
+                <controls:InfoTip Text="{DynamicResource ShortcutSettingsCaptureHint}" Margin="8,0,0,0"
+                                  shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+            </controls:InfoRow>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
             </Button>
@@ -60,9 +65,6 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <StackPanel Margin="0,0,0,12">
-                <TextBlock Text="{DynamicResource ShortcutSettingsDescription}"
-                           Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
-                           TextWrapping="Wrap" Margin="0,0,0,10"/>
                 <Grid>
                     <TextBox x:Name="ShortcutSearchBox" Style="{StaticResource RoundedTextBox}"
                              Padding="18,4,18,4" MinHeight="40" TextChanged="OnSearchChanged"
@@ -161,10 +163,6 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <TextBlock Text="{DynamicResource ShortcutSettingsCaptureHint}"
-                       Grid.Row="2"
-                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
-                       TextWrapping="Wrap" Margin="0,2,0,0"/>
             <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource ErrorBrush}"
                        Grid.Row="3"
                        FontSize="{DynamicResource CaptionFontSize}" TextWrapping="Wrap" MinHeight="20" Margin="0,8,0,0"/>

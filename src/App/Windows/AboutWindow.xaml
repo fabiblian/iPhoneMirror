@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource AboutTitle}"
         Width="782" Height="622" MinWidth="722" MinHeight="542"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
@@ -31,8 +32,6 @@
             <StackPanel Margin="0,0,48,0">
                 <TextBlock Text="{DynamicResource AboutTitle}"
                            Style="{StaticResource SubWindowTitle}"/>
-                <TextBlock Text="{DynamicResource AboutSubtitle}"
-                           Style="{StaticResource SubWindowSubtitle}"/>
             </StackPanel>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
@@ -61,15 +60,15 @@
                                            Width="52" Height="52"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="iPhoneMirror"
-                                               Style="{StaticResource SubWindowTitle}"/>
+                                    <controls:InfoRow>
+                                        <TextBlock Text="iPhoneMirror"
+                                                   Style="{StaticResource SubWindowTitle}"/>
+                                        <controls:InfoTip Text="{DynamicResource AboutDescription}" Margin="8,0,0,0"/>
+                                    </controls:InfoRow>
                                     <TextBlock Text="{Binding VersionText}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                FontSize="{DynamicResource SecondaryFontSize}" FontWeight="SemiBold"
                                                Margin="0,4,0,0"/>
-                                    <TextBlock Text="{DynamicResource AboutDescription}"
-                                               Style="{StaticResource SubWindowSubtitle}"
-                                               Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Grid>
 
@@ -104,17 +103,16 @@
                               Padding="0,0,8,0">
                     <StackPanel Margin="4,14,0,0">
                             <TextBlock Text="{DynamicResource UpdateSettingsTitle}"
-                                       Style="{StaticResource SubWindowSectionTitle}"/>
-                            <TextBlock Text="{DynamicResource UpdateSettingsDescription}"
-                                       Style="{StaticResource SubWindowSubtitle}"
-                                       Margin="0,6,0,18"/>
+                                       Style="{StaticResource SubWindowSectionTitle}" Margin="0,0,0,14"/>
                             <CheckBox Content="{DynamicResource CheckOnStartup}"
                                       IsChecked="{Binding CheckOnStartup}" Margin="0,0,0,14"/>
                             <CheckBox Content="{DynamicResource AutoDownloadUpdates}"
                                       IsChecked="{Binding AutoDownload}" Margin="0,0,0,14"/>
-                            <CheckBox Content="{DynamicResource AllowUpdateMirrorFallback}"
-                                      IsChecked="{Binding AllowMirrorFallback}" Margin="0,0,0,14"
-                                      ToolTip="{DynamicResource AllowUpdateMirrorFallbackDescription}"/>
+                            <controls:InfoRow Margin="0,0,0,14">
+                                <CheckBox Content="{DynamicResource AllowUpdateMirrorFallback}"
+                                          IsChecked="{Binding AllowMirrorFallback}"/>
+                                <controls:InfoTip Text="{DynamicResource AllowUpdateMirrorFallbackDescription}"/>
+                            </controls:InfoRow>
                             <CheckBox Content="{DynamicResource NotifyStableReleases}"
                                       IsChecked="{Binding NotifyStableReleases}" Margin="0,0,0,14"/>
                             <CheckBox Content="{DynamicResource NotifyPrereleaseReleases}"
@@ -128,11 +126,11 @@
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="0,0,8,0">
                     <StackPanel Margin="4,14,0,0">
-                            <TextBlock Text="{DynamicResource DiagnosticsTitle}"
-                                       Style="{StaticResource SubWindowSectionTitle}"/>
-                            <TextBlock Text="{DynamicResource DiagnosticsDescription}"
-                                       Style="{StaticResource SubWindowSubtitle}"
-                                       Margin="0,6,0,18"/>
+                            <controls:InfoRow Margin="0,0,0,14">
+                                <TextBlock Text="{DynamicResource DiagnosticsTitle}"
+                                           Style="{StaticResource SubWindowSectionTitle}"/>
+                                <controls:InfoTip Text="{DynamicResource DiagnosticsDescription}"/>
+                            </controls:InfoRow>
                             <TextBlock Text="{DynamicResource DiagnosticsLocation}"
                                        Style="{StaticResource SubWindowSectionTitle}"/>
                             <TextBox Text="{Binding DiagnosticPath, Mode=OneWay}"

@@ -13,8 +13,8 @@
    </Style></ui:SymbolIcon.Style>
   </ui:SymbolIcon>
   <Button x:Name="CaptureButton" Content="{Binding KeyText}" FontSize="32" MinWidth="220" MinHeight="112"
-    Padding="24" HorizontalContentAlignment="Center" AutomationProperties.AutomationId="MappingCapture"/>
+    Padding="24" HorizontalContentAlignment="Center" AutomationProperties.AutomationId="MappingCapture"
+    ToolTip="{DynamicResource WizardCaptureNavigation}"/>
   <TextBlock Text="{Binding KeyStatus}" Style="{StaticResource StatusText}" TextAlignment="Center" Margin="0,16,0,0"/>
-  <TextBlock Text="{DynamicResource WizardCaptureNavigation}" Style="{StaticResource CaptionText}" TextAlignment="Center" Margin="0,12,0,0"/>
  </StackPanel>
 </UserControl>
