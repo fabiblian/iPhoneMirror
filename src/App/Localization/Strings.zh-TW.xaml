@@ -23,7 +23,6 @@
     <system:String x:Key="DeviceBindingRenameProfile">重新命名裝置設定檔</system:String>
     <system:String x:Key="DeviceBindingDeleteProfile">刪除裝置設定檔</system:String>
     <system:String x:Key="DeviceBindingSelectProfile">選擇裝置設定檔</system:String>
-    <system:String x:Key="DeviceBindingProfileDescription">管理此裝置設定檔的 USB、AirPlay 和藍牙綁定。</system:String>
     <system:String x:Key="DeviceBindingWired">有線 USB</system:String>
     <system:String x:Key="DeviceBindingAirPlay">AirPlay</system:String>
     <system:String x:Key="DeviceBindingBluetooth">Bluetooth</system:String>
@@ -311,7 +310,6 @@
     <system:String x:Key="IndependentWindowWiredProjection">有線控制</system:String>
     <system:String x:Key="ShortcutSettings">快速鍵設定</system:String>
     <system:String x:Key="ShortcutSettingsTitle">快速鍵設定</system:String>
-    <system:String x:Key="ShortcutSettingsDescription">設定螢幕鏡像工具的快速鍵。</system:String>
     <system:String x:Key="ShortcutSettingsCategoryControl">控制</system:String>
     <system:String x:Key="ShortcutSettingsCategoryNavigation">系統導覽</system:String>
     <system:String x:Key="ShortcutSettingsCategoryAssistant">助理</system:String>
@@ -591,7 +589,6 @@
     <system:String x:Key="DecoderPreferenceQueuedFormat">已請求切換解碼器：{0}（將在關鍵影格生效）</system:String>
     <system:String x:Key="MoreImageSettingsButton">更多設定</system:String>
     <system:String x:Key="MoreImageSettingsTitle">畫面調節</system:String>
-    <system:String x:Key="MoreImageSettingsSubtitle">為現有裝置微調本機預覽畫面。</system:String>
     <system:String x:Key="ImageAdjustmentsPreviewOnlyNotice">僅對本機預覽生效，無法套用到串流、虛擬攝影機、畫面錄製或螢幕截圖。</system:String>
     <system:String x:Key="BrightnessLabel">亮度</system:String>
     <system:String x:Key="ContrastLabel">對比</system:String>
@@ -770,7 +767,6 @@
     <system:String x:Key="UnknownError">未知錯誤</system:String>
     <system:String x:Key="AboutTitle">關於</system:String>
     <system:String x:Key="AboutToolTip">關於和更新設定</system:String>
-    <system:String x:Key="AboutSubtitle">應用程式資訊、更新和診斷</system:String>
     <system:String x:Key="AboutDescription">低延遲 iPhone 螢幕鏡像、錄製、直播串流與虛擬攝影機。</system:String>
     <system:String x:Key="UpdateStatusTitle">更新狀態</system:String>
     <system:String x:Key="UpdateStatusReady">可隨時檢查 GitHub Release 更新。</system:String>
@@ -778,7 +774,6 @@
     <system:String x:Key="Changelog">更新記錄</system:String>
     <system:String x:Key="LicenseInformation">授權資訊</system:String>
     <system:String x:Key="UpdateSettingsTitle">更新設定</system:String>
-    <system:String x:Key="UpdateSettingsDescription">控制背景更新檢查、自動下載、鏡像加速和發布通道。</system:String>
     <system:String x:Key="DiagnosticsTitle">診斷</system:String>
     <system:String x:Key="DiagnosticsDescription">應用程式錯誤、螢幕鏡像核心和更新流程會寫入本機記錄檔，方便排解其他電腦上的問題。</system:String>
     <system:String x:Key="DiagnosticsLocation">記錄檔位置</system:String>
@@ -845,7 +840,6 @@
     <system:String x:Key="UpdateRequestTimedOut">連線更新服務逾時，請稍後重試。</system:String>
     <system:String x:Key="OpenLinkFailedTitle">無法開啟</system:String>
     <system:String x:Key="UpdateWindowTitle">發現新版本</system:String>
-    <system:String x:Key="UpdateWindowSubtitle">查看更新內容並一鍵完成升級</system:String>
     <system:String x:Key="OpenReleasePage">查看完整 Release</system:String>
     <system:String x:Key="CurrentVersionLabel">目前版本</system:String>
     <system:String x:Key="LatestVersionLabel">最新版本</system:String>
@@ -1203,9 +1197,7 @@
     <system:String x:Key="CompactShortcutCreated">已建立捷徑：{0}</system:String>
     <system:String x:Key="IndependentWindowStyle">樣式</system:String>
     <system:String x:Key="IndependentWindowStyleTitle">獨立視窗樣式</system:String>
-    <system:String x:Key="IndependentWindowStyleSubtitle">即時調整，只套用至目前獨立視窗。</system:String>
     <system:String x:Key="IndependentWindowOpacity">視窗透明度</system:String>
-    <system:String x:Key="IndependentWindowOpacityHelp">數值越低越透明，100% 為完全不透明。</system:String>
     <system:String x:Key="IndependentWindowOpacityReset">恢復不透明</system:String>
     <system:String x:Key="IndependentWindowOpacityFailed">暫時無法調整透明度，請重新開啟獨立視窗後再試。</system:String>
     <system:String x:Key="IndependentWindowOpaqueOnHover">滑鼠停留時不透明</system:String>
@@ -1243,7 +1235,6 @@
     <system:String x:Key="PreviewHomeFailedFormat">無法傳送主畫面操作：{0}</system:String>
     <system:String x:Key="PreviewFrameReset">重設邊框</system:String>
     <system:String x:Key="ApplicationModeTray">系統匣模式</system:String>
-    <system:String x:Key="TrayPanelSubtitle">選擇裝置，在獨立視窗中進行螢幕鏡像</system:String>
     <system:String x:Key="TrayHidePanel">收起到系統匣</system:String>
     <system:String x:Key="TrayNoDevices">連線並解鎖 USB 裝置，或在 iPhone 的螢幕鏡像中選擇此電腦。</system:String>
     <system:String x:Key="TrayStartMirroring">開啟獨立螢幕鏡像視窗</system:String>
@@ -1279,7 +1270,6 @@
     <system:String x:Key="MappingSuppress">阻止已映射一般按鍵的原有 Windows 行為</system:String>
     <system:String x:Key="MappingGlobalHelp">啟用後可在其他應用程式處於前景時生效；在設定、編輯及文字輸入時暫停。每次按下執行一次，按住不連發。組合鍵保留原有行為，修飾鍵不會被攔截。</system:String>
     <system:String x:Key="MappingEmpty">尚無映射。按「新增映射」，選擇按鍵及觸控操作。</system:String>
-    <system:String x:Key="MappingAutoSave">清單變更會自動儲存；編輯中的映射需按「儲存」。</system:String>
     <system:String x:Key="MappingAdd">新增映射</system:String>
     <system:String x:Key="MappingEdit">編輯</system:String>
     <system:String x:Key="MappingDelete">刪除</system:String>

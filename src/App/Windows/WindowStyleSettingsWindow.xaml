@@ -4,6 +4,7 @@
         xmlns:chrome="clr-namespace:IPhoneMirror.UI.Controls"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource IndependentWindowStyleTitle}"
         Width="482" Height="462" MinWidth="422" MinHeight="422"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
@@ -21,7 +22,6 @@
         <Grid Style="{StaticResource SubWindowHeader}" animations:WindowDragBehavior.IsEnabled="True">
             <StackPanel Margin="0,0,48,0">
                 <TextBlock Text="{DynamicResource IndependentWindowStyleTitle}" Style="{StaticResource SubWindowTitle}"/>
-                <TextBlock Text="{DynamicResource IndependentWindowStyleSubtitle}" Style="{StaticResource SubWindowSubtitle}"/>
             </StackPanel>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnCloseClick">
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
@@ -38,17 +38,16 @@
                     </Grid>
                     <Slider x:Name="OpacitySlider" Minimum="10" Maximum="100" Value="100"
                             TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="10"
-                            Margin="0,14,0,12" ValueChanged="OnOpacityChanged"
+                            Margin="0,14,0,0" ValueChanged="OnOpacityChanged"
                             AutomationProperties.AutomationId="IndependentWindowOpacitySlider"
                             AutomationProperties.Name="{DynamicResource IndependentWindowOpacity}"/>
-                    <TextBlock Text="{DynamicResource IndependentWindowOpacityHelp}" TextWrapping="Wrap"
-                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
                     <Border Height="1" Background="{DynamicResource BorderSoftBrush}" Margin="0,18"/>
-                    <CheckBox x:Name="OpaqueOnHoverCheckBox" Checked="OnOpaqueOnHoverChanged" Unchecked="OnOpaqueOnHoverChanged"
-                              AutomationProperties.AutomationId="IndependentWindowOpaqueOnHover"
-                              Content="{DynamicResource IndependentWindowOpaqueOnHover}"/>
-                    <TextBlock Text="{DynamicResource IndependentWindowOpaqueOnHoverHelp}" TextWrapping="Wrap" Margin="0,8,0,0"
-                               Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"/>
+                    <controls:InfoRow>
+                        <CheckBox x:Name="OpaqueOnHoverCheckBox" Checked="OnOpaqueOnHoverChanged" Unchecked="OnOpaqueOnHoverChanged"
+                                  AutomationProperties.AutomationId="IndependentWindowOpaqueOnHover"
+                                  Content="{DynamicResource IndependentWindowOpaqueOnHover}"/>
+                        <controls:InfoTip Text="{DynamicResource IndependentWindowOpaqueOnHoverHelp}"/>
+                    </controls:InfoRow>
                 </StackPanel>
             </ScrollViewer>
         </Border>

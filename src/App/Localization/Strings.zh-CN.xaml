@@ -23,7 +23,6 @@
     <system:String x:Key="DeviceBindingRenameProfile">重命名档案</system:String>
     <system:String x:Key="DeviceBindingDeleteProfile">删除档案</system:String>
     <system:String x:Key="DeviceBindingSelectProfile">选择设备档案</system:String>
-    <system:String x:Key="DeviceBindingProfileDescription">管理此设备档案的 USB、AirPlay 和蓝牙绑定。</system:String>
     <system:String x:Key="DeviceBindingWired">有线 USB</system:String>
     <system:String x:Key="DeviceBindingAirPlay">AirPlay</system:String>
     <system:String x:Key="DeviceBindingBluetooth">Bluetooth</system:String>
@@ -311,7 +310,6 @@
     <system:String x:Key="IndependentWindowWiredProjection">有线控制</system:String>
     <system:String x:Key="ShortcutSettings">快捷键设置</system:String>
     <system:String x:Key="ShortcutSettingsTitle">快捷键设置</system:String>
-    <system:String x:Key="ShortcutSettingsDescription">配置投屏工具的快捷键。</system:String>
     <system:String x:Key="ShortcutSettingsCategoryControl">控制</system:String>
     <system:String x:Key="ShortcutSettingsCategoryNavigation">系统导航</system:String>
     <system:String x:Key="ShortcutSettingsCategoryAssistant">助理</system:String>
@@ -591,7 +589,6 @@
     <system:String x:Key="DecoderPreferenceQueuedFormat">已请求切换解码器：{0}（将在关键帧生效）</system:String>
     <system:String x:Key="MoreImageSettingsButton">更多设置</system:String>
     <system:String x:Key="MoreImageSettingsTitle">画面调节</system:String>
-    <system:String x:Key="MoreImageSettingsSubtitle">为当前设备微调本地预览画面。</system:String>
     <system:String x:Key="ImageAdjustmentsPreviewOnlyNotice">仅对本地预览生效，无法应用到推流、虚拟摄像头、录屏或截图画面。</system:String>
     <system:String x:Key="BrightnessLabel">亮度</system:String>
     <system:String x:Key="ContrastLabel">对比度</system:String>
@@ -770,7 +767,6 @@
     <system:String x:Key="UnknownError">未知错误</system:String>
     <system:String x:Key="AboutTitle">关于</system:String>
     <system:String x:Key="AboutToolTip">关于和更新设置</system:String>
-    <system:String x:Key="AboutSubtitle">应用信息、更新和诊断</system:String>
     <system:String x:Key="AboutDescription">低延迟 iPhone 投屏、录制、直播推流与虚拟摄像头。</system:String>
     <system:String x:Key="UpdateStatusTitle">更新状态</system:String>
     <system:String x:Key="UpdateStatusReady">可随时检查 GitHub Release 更新。</system:String>
@@ -778,7 +774,6 @@
     <system:String x:Key="Changelog">更新日志</system:String>
     <system:String x:Key="LicenseInformation">许可证信息</system:String>
     <system:String x:Key="UpdateSettingsTitle">更新设置</system:String>
-    <system:String x:Key="UpdateSettingsDescription">控制后台检查、自动下载、镜像加速和发布通道。</system:String>
     <system:String x:Key="DiagnosticsTitle">诊断</system:String>
     <system:String x:Key="DiagnosticsDescription">应用错误、投屏核心和更新流程会写入本地日志，便于排查其他电脑上的问题。</system:String>
     <system:String x:Key="DiagnosticsLocation">日志位置</system:String>
@@ -845,7 +840,6 @@
     <system:String x:Key="UpdateRequestTimedOut">连接更新服务超时，请稍后重试。</system:String>
     <system:String x:Key="OpenLinkFailedTitle">无法打开</system:String>
     <system:String x:Key="UpdateWindowTitle">发现新版本</system:String>
-    <system:String x:Key="UpdateWindowSubtitle">查看更新内容并一键完成升级</system:String>
     <system:String x:Key="OpenReleasePage">查看完整 Release</system:String>
     <system:String x:Key="CurrentVersionLabel">当前版本</system:String>
     <system:String x:Key="LatestVersionLabel">最新版本</system:String>
@@ -1203,9 +1197,7 @@
     <system:String x:Key="CompactShortcutCreated">已创建快捷方式：{0}</system:String>
     <system:String x:Key="IndependentWindowStyle">样式</system:String>
     <system:String x:Key="IndependentWindowStyleTitle">独立窗口样式</system:String>
-    <system:String x:Key="IndependentWindowStyleSubtitle">实时调整，仅应用于当前独立窗口。</system:String>
     <system:String x:Key="IndependentWindowOpacity">窗口透明度</system:String>
-    <system:String x:Key="IndependentWindowOpacityHelp">数值越低越透明，100% 为完全不透明。</system:String>
     <system:String x:Key="IndependentWindowOpacityReset">恢复不透明</system:String>
     <system:String x:Key="IndependentWindowOpacityFailed">暂时无法调整透明度，请重新打开独立窗口后重试。</system:String>
     <system:String x:Key="IndependentWindowOpaqueOnHover">鼠标悬停时不透明</system:String>
@@ -1243,7 +1235,6 @@
     <system:String x:Key="PreviewHomeFailedFormat">无法发送主屏幕操作：{0}</system:String>
     <system:String x:Key="PreviewFrameReset">重置边框</system:String>
     <system:String x:Key="ApplicationModeTray">托盘模式</system:String>
-    <system:String x:Key="TrayPanelSubtitle">选择设备，直接在独立窗口投屏</system:String>
     <system:String x:Key="TrayHidePanel">收起到托盘</system:String>
     <system:String x:Key="TrayNoDevices">连接并解锁 USB 设备，或在 iPhone 的屏幕镜像中选择此电脑。</system:String>
     <system:String x:Key="TrayStartMirroring">打开独立投屏窗口</system:String>
@@ -1279,7 +1270,6 @@
     <system:String x:Key="MappingSuppress">阻止已映射普通按键的原始 Windows 行为</system:String>
     <system:String x:Key="MappingGlobalHelp">启用后可在其他应用前台时生效；在设置、编辑和文字输入时暂停。每次按下执行一次，按住不连发。组合键保留原行为，修饰键不会被拦截。</system:String>
     <system:String x:Key="MappingEmpty">尚无映射。点击「添加映射」，选择按键和触控操作。</system:String>
-    <system:String x:Key="MappingAutoSave">列表更改自动保存；编辑中的映射需点击「保存」。</system:String>
     <system:String x:Key="MappingAdd">添加映射</system:String>
     <system:String x:Key="MappingEdit">编辑</system:String>
     <system:String x:Key="MappingDelete">删除</system:String>

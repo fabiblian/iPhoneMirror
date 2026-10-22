@@ -3,6 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:chrome="clr-namespace:IPhoneMirror.UI.Controls"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
     xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
     Title="{DynamicResource UxPlayDownloadTitle}" Width="580" Height="400"
     MinWidth="480" MinHeight="400" WindowStartupLocation="CenterOwner"
@@ -23,11 +24,10 @@
         <Grid Style="{StaticResource SubWindowHeader}"
                     animations:WindowDragBehavior.IsEnabled="True">
           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-          <StackPanel>
+          <controls:InfoRow>
             <TextBlock Text="{DynamicResource UxPlayDownloadTitle}" Style="{StaticResource SubWindowTitle}"/>
-            <TextBlock Text="{DynamicResource UxPlayDownloadDescription}" TextWrapping="Wrap"
-                       Style="{StaticResource SubWindowSubtitle}"/>
-          </StackPanel>
+            <controls:InfoTip Text="{DynamicResource UxPlayDownloadDescription}" Margin="8,0,0,0"/>
+          </controls:InfoRow>
           <Button Grid.Column="1" Style="{StaticResource SubWindowCloseButton}" Click="OnCancel"
                   ToolTip="{DynamicResource UxPlayDownloadCancel}" Margin="12,0,0,0" VerticalAlignment="Top">
               <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>

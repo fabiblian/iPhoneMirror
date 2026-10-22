@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource BluetoothClientBindingTitle}"
         Width="542" Height="470" MinWidth="482" MinHeight="422"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
@@ -29,12 +30,10 @@
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
             </Button>
         </Grid>
-        <StackPanel Grid.Row="2">
+        <controls:InfoRow Grid.Row="2">
             <TextBlock TextWrapping="Wrap" Text="{Binding TargetText}" FontSize="{DynamicResource FontSize15}" FontWeight="SemiBold"/>
-            <TextBlock Text="{DynamicResource BluetoothClientBindingHint}"
-                       Foreground="{DynamicResource MutedTextBrush}" FontSize="{DynamicResource CaptionFontSize}"
-                       TextWrapping="Wrap" Margin="0,5,0,0"/>
-        </StackPanel>
+            <controls:InfoTip Text="{DynamicResource BluetoothClientBindingHint}"/>
+        </controls:InfoRow>
         <Grid Grid.Row="4"><ListBox  ItemsSource="{Binding Clients}"
                  SelectedItem="{Binding SelectedClient, Mode=TwoWay}"
                  BorderThickness="0" Background="Transparent"

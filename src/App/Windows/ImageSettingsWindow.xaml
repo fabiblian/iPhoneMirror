@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:animations="clr-namespace:IPhoneMirror.UI.Animations"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:IPhoneMirror.App.Controls"
         Title="{DynamicResource MoreImageSettingsTitle}"
         Width="582" Height="672" MinWidth="542" MinHeight="622"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
@@ -32,7 +33,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="16"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="*" MinHeight="{StaticResource DialogContentMinHeight}"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -41,23 +42,16 @@
         <Grid Style="{StaticResource SubWindowHeader}"
               animations:WindowDragBehavior.IsEnabled="True">
             <StackPanel Margin="0,0,48,0">
-                <TextBlock Text="{DynamicResource MoreImageSettingsTitle}"
-                           Style="{StaticResource SubWindowTitle}"/>
-                <TextBlock Text="{DynamicResource MoreImageSettingsSubtitle}"
-                           Style="{StaticResource SubWindowSubtitle}"/>
+                <controls:InfoRow>
+                    <TextBlock Text="{DynamicResource MoreImageSettingsTitle}"
+                               Style="{StaticResource SubWindowTitle}"/>
+                    <controls:InfoTip Text="{DynamicResource ImageAdjustmentsPreviewOnlyNotice}" Margin="8,0,0,0"/>
+                </controls:InfoRow>
             </StackPanel>
             <Button Style="{StaticResource SubWindowCloseButton}" Click="OnBackClick">
                 <ui:SymbolIcon Style="{StaticResource ButtonSymbolIcon}" Symbol="Dismiss20" FontSize="18"/>
             </Button>
         </Grid>
-
-        <Border Grid.Row="2" Background="{DynamicResource WarningSurfaceBrush}"
-                BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
-                CornerRadius="12" Padding="14,11">
-            <TextBlock Text="{DynamicResource ImageAdjustmentsPreviewOnlyNotice}"
-                       Foreground="{DynamicResource WarningBrush}" FontSize="{DynamicResource SecondaryFontSize}"
-                       TextWrapping="Wrap"/>
-        </Border>
 
         <Border x:Name="AdjustmentPanel" Grid.Row="4"
                 Style="{StaticResource SettingsSection}" Padding="20,16">
