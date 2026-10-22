@@ -175,6 +175,8 @@ internal static partial class Program
             }
             if (args is ["--ui-audit-fixes", var fixesOutput])
                 return RunUiAuditFixTests(fixesOutput);
+            if (args is ["--desktop-input"])
+                return RunDesktopInputTests();
             if (args is ["--audio-persistence", var audioPersistenceOutput])
                 return RunAudioPersistenceTests(audioPersistenceOutput);
             if (args is ["--volume-controls", var volumeOutput])

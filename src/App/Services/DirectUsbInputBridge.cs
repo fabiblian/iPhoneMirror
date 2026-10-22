@@ -233,7 +233,7 @@ public sealed partial class DirectUsbInputBridge : IAsyncDisposable
 
     public async Task SendTouchBatchAsync(IReadOnlyList<TouchPoint> points, long timestampNs,
         long sequence, CancellationToken ct = default, Func<bool>? canSend = null,
-        long? expectedGeneration = null)
+        long? expectedGeneration = null, bool requireAllContacts = false)
     {
         var generation = Interlocked.Read(ref _readyGeneration);
         var wireGeneration = Interlocked.Read(ref _wireGeneration);
@@ -272,6 +272,9 @@ public sealed partial class DirectUsbInputBridge : IAsyncDisposable
                 _touchContactGeneration = generation;
             }
             var contacts = new HashSet<int>(_touchContacts);
+            if (requireAllContacts && contacts.Count + points.Count(point =>
+                    point.Action == "down" && !contacts.Contains(point.PointerId)) > CoreDeviceTouchProtocol.MaxSlots)
+                throw new OperationCanceledException("The complete touch gesture does not fit.");
             var accepted = new List<TouchPoint>(points.Count);
             foreach (var point in points)
             {

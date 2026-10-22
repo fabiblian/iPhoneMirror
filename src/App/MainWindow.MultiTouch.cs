@@ -114,6 +114,7 @@ public partial class MainWindow
 
     private void ResetAllPreviewTouches()
     {
+        foreach (var zoom in _pinchZooms.Values.ToArray()) zoom.Cancel();
         foreach (var udid in _previewTouches.Keys.ToArray()) _ = ResetPreviewTouchesAsync(udid);
     }
 

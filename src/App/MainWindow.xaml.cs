@@ -96,6 +96,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         public bool WheelNeedsDown;
         public bool WheelDraining;
         public bool WheelCancelled;
+        public Task WheelCompletion = Task.CompletedTask;
+        public int ZoomWheelRemainder;
         public double WheelVelocity;
         public double WheelGestureDistance;
         public int WheelLastDirection;
@@ -663,12 +665,17 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         string? sourceUdid)
     {
         if (e.Kind == Controls.PreviewPointerKind.Reset && !string.IsNullOrWhiteSpace(sourceUdid))
+        {
+            await CancelPinchZoomAsync(sourceUdid);
             await ResetPreviewTouchesAsync(sourceUdid);
+        }
         var usbTargetActive = _viewModel.IsUsbControlTarget(sourceUdid);
         if (string.IsNullOrWhiteSpace(sourceUdid) ||
             (e.Kind != Controls.PreviewPointerKind.Reset && !usbTargetActive)) return;
         if (e.Kind is not (Controls.PreviewPointerKind.Reset or Controls.PreviewPointerKind.TouchUp) &&
             !CanForwardControlPointer(sourceUdid, GetControlKeyboardWindow(sourceUdid))) return;
+        if (e.Kind is Controls.PreviewPointerKind.ButtonDown or Controls.PreviewPointerKind.TouchDown)
+            await CancelPinchZoomAsync(sourceUdid);
         if (e.Kind is Controls.PreviewPointerKind.TouchDown or Controls.PreviewPointerKind.TouchMove or Controls.PreviewPointerKind.TouchUp)
         {
             await HandlePreviewTouchAsync(e, sourceUdid);
@@ -684,6 +691,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             state.Pressed = false;
             state.PendingMoveQueued = false;
             state.WheelRemainder = 0;
+            state.ZoomWheelRemainder = 0;
             if (wasPressed)
                 await _viewModel.SendUsbTouchAsync("up", state.LastX,
                     state.LastY, sourceUdid);
@@ -692,6 +700,14 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         var canSend = CapturePointerSendGuard(GetControlKeyboardWindow(sourceUdid));
         if (e.Kind == Controls.PreviewPointerKind.Wheel)
         {
+            if (IsZoomModifierPressed)
+            {
+                await QueuePinchZoomAsync(e, sourceUdid, state);
+                return;
+            }
+            state.ZoomWheelRemainder = 0;
+            await CancelPinchZoomAsync(sourceUdid);
+            if (!canSend()) return;
             // Velocity-based wheel simulation: the whole scroll gesture is
             // ONE continuous drag. Wheel events never emit moves themselves
             // — they only inject velocity, and the drain loop converts that
@@ -740,7 +756,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             if (!state.WheelDraining)
             {
                 state.WheelDraining = true;
-                _ = DrainWheelAsync(state, sourceUdid, canSend);
+                state.WheelCompletion = DrainWheelAsync(state, sourceUdid, canSend);
             }
             return;
         }
@@ -1050,6 +1066,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
         if (e.Kind == Controls.PreviewPointerKind.Wheel)
         {
+            // This transport advertises a mouse, not a multitouch digitizer.
+            if (IsZoomModifierPressed) return;
             if (e.Wheel != 0)
             {
                 var multiplier = Math.Clamp(

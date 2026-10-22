@@ -219,6 +219,19 @@ public partial class MainWindow
                             else _mappingHolds.Process(physical, false);
                         });
             }
+            // Windows chords stay with Windows. Only an unmapped, standalone
+            // Win press is translated into the iPhone's Search shortcut.
+            if (physical.IsWindows && chord || !physical.IsWindows && (_keyboardRouter.PressedModifiers & 8) != 0)
+                return new(KeyboardEventOwner.Windows, false);
+            if (physical.IsWindows && !chord && _keyboardRouter.Mode != KeyboardInputMode.None &&
+                CanForwardControlKeyboard(target, window) && _viewModel.CaptureDirectKeyboardRoute(target) is { } searchRoute)
+            {
+                var guard = CaptureKeyboardOwnerSendGuard(window, _keyboardRouter.Mode);
+                return new(KeyboardEventOwner.Shortcut, true, pressed =>
+                {
+                    if (pressed) _ = TrackKeyboardSendAsync(SendIphoneSearchAsync(searchRoute, guard));
+                });
+            }
             var session = _mappingWindow?.IsEditing != true && (IsDirectKeyboardInputModeActive || mixedTyping) &&
                 CanForwardControlKeyboard(target, window)
                 ? _viewModel.CaptureDirectKeyboardRoute(target) : null;
@@ -231,7 +244,8 @@ public partial class MainWindow
         }
         var defer = lookupMappings && (key.IsModifier || key.IsWindows) &&
             _mappingSettings.Mappings.Any(m => m.Enabled && m.Key!.SamePhysicalKey(key));
-        return _keyboardRouter.RouteEvent(key, down, Resolve, ReplayKeyboardEvent, defer,
+        defer |= key.IsWindows && CanForwardControlKeyboard(target, window) && _keyboardRouter.Mode != KeyboardInputMode.None;
+        return _keyboardRouter.RouteEvent(key, down, Resolve, _keyboardReplay, defer,
             bufferShortcutModifiers: CanForwardControlKeyboard(target, window) && _keyboardRouter.Mode != KeyboardInputMode.None);
     }
 
