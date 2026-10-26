@@ -57,6 +57,7 @@ public partial class PreviewSettingsWindow
         var everyday = (Application.Current as App)?.UpdateSettings.Everyday ?? new();
         HoverOnlyCheckBox.IsChecked = everyday.PreviewControlsOnHoverOnly;
         SnapCheckBox.IsChecked = everyday.SnapPreviewToEdges;
+        SyncDots(everyday);
     }
 
     private static void MarkTile(Button tile, bool selected)

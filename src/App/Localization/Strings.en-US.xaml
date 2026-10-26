@@ -1630,5 +1630,17 @@ Pair, select and save.</system:String>
     <system:String x:Key="PreviewControlsTitle">Controls on the preview</system:String>
     <system:String x:Key="PreviewControlsOnHover">Show controls only on hover</system:String>
     <system:String x:Key="PreviewSnapToEdges">Snap to screen edges and corners</system:String>
-    <system:String x:Key="PreviewControlsHelp">Top dot: drag to move. Bottom-right dot: drag to resize. Ctrl+Alt+arrow: move to a corner.</system:String>
+    <system:String x:Key="PreviewControlsHelp">The move dot moves borderless previews; the resize dot resizes from its nearest edge or corner. With a case, drag the frame to move; Ctrl+Alt+arrow moves the preview to a corner.</system:String>
+    <system:String x:Key="PreviewMoveDotPosition">Move dot</system:String>
+    <system:String x:Key="PreviewResizeDotPosition">Resize dot</system:String>
+    <system:String x:Key="PreviewDotPickerHelp">Click or drag to place the dot anywhere</system:String>
+    <system:String x:Key="PreviewDotTopCenter">Top centre</system:String>
+    <system:String x:Key="PreviewDotTopLeft">Top left</system:String>
+    <system:String x:Key="PreviewDotTopRight">Top right</system:String>
+    <system:String x:Key="PreviewDotLeftCenter">Left centre</system:String>
+    <system:String x:Key="PreviewDotRightCenter">Right centre</system:String>
+    <system:String x:Key="PreviewDotBottomLeft">Bottom left</system:String>
+    <system:String x:Key="PreviewDotBottomCenter">Bottom centre</system:String>
+    <system:String x:Key="PreviewDotBottomRight">Bottom right</system:String>
+    <system:String x:Key="PreviewDotCustom">Custom</system:String>
 </ResourceDictionary>

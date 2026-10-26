@@ -63,6 +63,7 @@ internal sealed partial class NativePreviewWindow
         if (message == WmEnterSizeMove)
         {
             _sizeMoveActive = GetWindowRect(_handle, out _sizeMoveStart);
+            _controlsOverlay?.SizeMoveChanged(true);
             return;
         }
         if (message != WmExitSizeMove) return;
@@ -73,6 +74,7 @@ internal sealed partial class NativePreviewWindow
             end.Bottom - end.Top == _sizeMoveStart.Bottom - _sizeMoveStart.Top)
             SnapToWorkArea(end, 0, 0, onlyWhenNear: true);
         _sizeMoveActive = false;
+        _controlsOverlay?.SizeMoveChanged(false);
         PublishPlacement();
     }
 

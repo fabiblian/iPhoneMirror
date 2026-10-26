@@ -93,6 +93,7 @@
     <Compile Include="..\App\Updater\UpdateSettingsStore.cs" Link="Updater\UpdateSettingsStore.cs" />
     <Compile Include="..\App\Models\EverydaySettings.cs" Link="EverydaySettings.cs" />
     <Compile Include="..\App\Models\PreviewPlacement.cs" Link="PreviewPlacement.cs" />
+    <Compile Include="..\App\Models\PreviewDotPosition.cs" Link="PreviewDotPosition.cs" />
     <Compile Include="..\App\Models\PreviewToolbarSettings.cs" Link="PreviewToolbarSettings.cs" />
     <Compile Include="..\App\Updater\GitHubReleaseClient.cs" Link="Updater\GitHubReleaseClient.cs" />
     <Compile Include="..\App\Updater\LocalizedReleaseNotes.cs" Link="Updater\LocalizedReleaseNotes.cs" />

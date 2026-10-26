@@ -51,6 +51,18 @@ internal sealed class EverydaySettings
     /// <summary>The preview's dots and floating bar appear only while the pointer is over it.</summary>
     public bool PreviewControlsOnHoverOnly { get; set; } = true;
 
+    /// <summary>Where the move dot sits. It shows only on a borderless preview; a frame moves the window itself.</summary>
+    public PreviewDotPosition PreviewMoveDot { get; set; } = PreviewDotPosition.TopCenter;
+    /// <summary>Custom spot of the move dot as fractions of the preview (0..1).</summary>
+    public double PreviewMoveDotX { get; set; } = 0.5;
+    public double PreviewMoveDotY { get; set; }
+
+    /// <summary>Where the resize dot sits.</summary>
+    public PreviewDotPosition PreviewResizeDot { get; set; } = PreviewDotPosition.BottomRight;
+    /// <summary>Custom spot of the resize dot as fractions of the preview (0..1).</summary>
+    public double PreviewResizeDotX { get; set; } = 1;
+    public double PreviewResizeDotY { get; set; } = 1;
+
     /// <summary>Snap a preview window to the screen edges and corners while moving it.</summary>
     public bool SnapPreviewToEdges { get; set; } = true;
 

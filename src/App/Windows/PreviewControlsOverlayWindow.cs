@@ -12,7 +12,9 @@ using IPhoneMirror.App.Models;
 namespace IPhoneMirror.App.Windows;
 
 /// <summary>What the preview controls show for one device.</summary>
-internal sealed record PreviewOverlayState(bool ControlsOnHoverOnly);
+internal sealed record PreviewOverlayState(bool ControlsOnHoverOnly,
+    PreviewDotPosition MoveDot, double MoveDotX, double MoveDotY,
+    PreviewDotPosition ResizeDot, double ResizeDotX, double ResizeDotY);
 
 /// <summary>Settings for the preview controls, supplied by the main window.</summary>
 internal interface IPreviewOverlayActions
@@ -21,9 +23,11 @@ internal interface IPreviewOverlayActions
 }
 
 /// <summary>
-/// Transparent window over a native preview: a dot to move the window (top
-/// centre) and a dot to resize it (bottom right). Everything but those
-/// controls lets clicks through to the preview, so touch control keeps working.
+/// Transparent window over a native preview: a dot on the edge to move the
+/// window (borderless previews only; a frame moves the window itself), a dot
+/// to resize it. Both dots sit where the preview settings put them.
+/// Everything but those controls lets
+/// clicks through to the preview, so touch control keeps working.
 /// </summary>
 internal sealed class PreviewControlsOverlayWindow : Window
 {
@@ -32,10 +36,18 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private const nint HtClient = 1;
     private const nint HtTransparent = -1;
     private const int HtCaption = 2;
-    private const int HtBottomRight = 17;
     private const int GwlExStyle = -20;
     private const long WsExNoActivate = 0x08000000L;
     private const long WsExToolWindow = 0x00000080L;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+    private const uint SwpNoOwnerZOrder = 0x0200;
+    // The dot's centre sits this far from the preview's edge, so the dot
+    // touches the edge; its press area is a square around it.
+    private const double DotEdgeInset = 7;
+    private const double DotHitSize = 32;
+    private const double DotSize = 12;
     private static readonly TimeSpan HoverLinger = TimeSpan.FromMilliseconds(900);
     private readonly nint _owner;
     private readonly string _udid;
@@ -45,9 +57,14 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private readonly List<FrameworkElement> _interactive = [];
     private HwndSource? _source;
     private DateTime _lastInside = DateTime.MinValue;
+    // Physical bounds last given to this window, to skip unchanged moves.
+    private WindowRect _applied;
+    private bool _sizeMoving;
+    private bool _hiddenForResize;
+    private PreviewOverlayState? _state;
 
-    private FrameworkElement _moveDot = null!;
-    private FrameworkElement _resizeDot = null!;
+    private Dot _moveDot = null!;
+    private Dot _resizeDot = null!;
 
     private PreviewControlsOverlayWindow(nint owner, string udid, IPreviewOverlayActions actions,
         Func<PreviewFrameInsets> contentInset)
@@ -67,6 +84,8 @@ internal sealed class PreviewControlsOverlayWindow : Window
         Content = BuildContent();
         _timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(100) };
         _timer.Tick += (_, _) => Refresh();
+        // The dots follow a new size once layout has it.
+        SizeChanged += (_, _) => PlaceDots();
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
         LocalizationService.LanguageChanged += OnLanguageChanged;
@@ -76,8 +95,9 @@ internal sealed class PreviewControlsOverlayWindow : Window
         IPreviewOverlayActions actions, Func<PreviewFrameInsets> contentInset)
     {
         var overlay = new PreviewControlsOverlayWindow(owner, udid, actions, contentInset);
-        _ = new WindowInteropHelper(overlay) { Owner = owner };
-        overlay.Show();
+        var helper = new WindowInteropHelper(overlay) { Owner = owner };
+        // Size the window over the preview before its first frame is drawn.
+        helper.EnsureHandle();
         overlay.Refresh();
         overlay._timer.Start();
         return overlay;
@@ -94,41 +114,24 @@ internal sealed class PreviewControlsOverlayWindow : Window
     {
         var root = new Grid();
 
-        _moveDot = Dot(HorizontalAlignment.Center, VerticalAlignment.Top, Cursors.SizeAll, HtCaption,
-            "PreviewMoveDot", new Thickness(0, 2, 0, 0));
-        _resizeDot = Dot(HorizontalAlignment.Right, VerticalAlignment.Bottom, Cursors.SizeNWSE, HtBottomRight,
-            "PreviewResizeDot", new Thickness(0, 0, 2, 2));
-        root.Children.Add(_moveDot);
-        root.Children.Add(_resizeDot);
+        _moveDot = new Dot(Cursors.SizeAll, "PreviewMoveDot");
+        _resizeDot = new Dot(Cursors.SizeNWSE, "PreviewResizeDot");
+        foreach (var dot in new[] { _moveDot, _resizeDot })
+        {
+            // Hand the press to the preview window as a caption or edge press,
+            // so Windows runs its own move/size loop (with snapping afterwards).
+            dot.Root.MouseLeftButtonDown += (_, e) =>
+            {
+                e.Handled = true;
+                ReleaseCapture();
+                _ = SendMessageW(_owner, WmNcLeftButtonDown, dot.HitTest, 0);
+            };
+            _interactive.Add(dot.Root);
+            root.Children.Add(dot.Root);
+        }
 
         ApplyTexts();
         return root;
-    }
-
-    private FrameworkElement Dot(HorizontalAlignment horizontal, VerticalAlignment vertical, Cursor cursor,
-        int hitTest, string toolTipKey, Thickness margin)
-    {
-        var dot = new Border
-        {
-            Width = 44, Height = 32, Background = Brushes.Transparent, Cursor = cursor,
-            HorizontalAlignment = horizontal, VerticalAlignment = vertical, Margin = margin, Tag = toolTipKey,
-            Child = new Ellipse
-            {
-                Width = 12, Height = 12, Fill = Frozen(Color.FromArgb(0xEB, 0xFF, 0xFF, 0xFF)),
-                Stroke = Frozen(Color.FromArgb(0x8C, 0x12, 0x12, 0x16)), StrokeThickness = 3,
-                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-            },
-        };
-        // Hand the press to the preview window as a caption or corner press,
-        // so Windows runs its own move/size loop (with snapping afterwards).
-        dot.MouseLeftButtonDown += (_, e) =>
-        {
-            e.Handled = true;
-            ReleaseCapture();
-            _ = SendMessageW(_owner, WmNcLeftButtonDown, hitTest, 0);
-        };
-        _interactive.Add(dot);
-        return dot;
     }
 
     private void ApplyTexts()
@@ -138,14 +141,30 @@ internal sealed class PreviewControlsOverlayWindow : Window
     }
 
     /// <summary>Follows the preview window right away (called on its moves).</summary>
-    internal void SyncToOwner() => Refresh();
+    internal void SyncToOwner() => UpdateBounds();
 
-    private void Refresh()
+    /// <summary>
+    /// The preview window entered or left its move/size loop. While it runs,
+    /// the overlay only follows moves; a resize hides it until the end, since
+    /// redrawing a transparent window at every step stalls that loop.
+    /// </summary>
+    internal void SizeMoveChanged(bool active)
     {
-        if (_owner == 0 || !IsWindowVisible(_owner) || IsIconic(_owner) || !GetWindowRect(_owner, out var rect))
+        _sizeMoving = active;
+        if (active) return;
+        _hiddenForResize = false;
+        Refresh();
+    }
+
+    // Puts this window over the preview's content with one native call; a
+    // plain move keeps the size, so nothing is redrawn.
+    private bool UpdateBounds()
+    {
+        if (_source is null || _owner == 0 || !IsWindowVisible(_owner) || IsIconic(_owner) ||
+            !GetWindowRect(_owner, out var rect))
         {
             if (IsVisible) Hide();
-            return;
+            return false;
         }
         var inset = _contentInset();
         if (rect.Right - rect.Left > inset.Horizontal && rect.Bottom - rect.Top > inset.Vertical)
@@ -155,26 +174,57 @@ internal sealed class PreviewControlsOverlayWindow : Window
             rect.Right -= inset.Right;
             rect.Bottom -= inset.Bottom;
         }
-        var dpi = GetDpiForWindow(_owner);
-        var scale = dpi == 0 ? 1.0 : dpi / 96.0;
-        Left = rect.Left / scale;
-        Top = rect.Top / scale;
-        Width = Math.Max(1, (rect.Right - rect.Left) / scale);
-        Height = Math.Max(1, (rect.Bottom - rect.Top) / scale);
+        var sameSize = rect.Right - rect.Left == _applied.Right - _applied.Left &&
+            rect.Bottom - rect.Top == _applied.Bottom - _applied.Top;
+        if (_sizeMoving && (!sameSize || _hiddenForResize))
+        {
+            _hiddenForResize = true;
+            if (IsVisible) Hide();
+            return false;
+        }
+        if (!sameSize || rect.Left != _applied.Left || rect.Top != _applied.Top)
+        {
+            var flags = SwpNoZOrder | SwpNoOwnerZOrder | SwpNoActivate | (sameSize ? SwpNoSize : 0);
+            if (SetWindowPos(_source.Handle, 0, rect.Left, rect.Top,
+                rect.Right - rect.Left, rect.Bottom - rect.Top, flags))
+                _applied = rect;
+        }
         if (!IsVisible) Show();
+        return true;
+    }
 
+    private void Refresh()
+    {
+        if (_sizeMoving || !UpdateBounds()) return;
         var state = _actions.GetOverlayState(_udid, _owner);
-        if (GetCursorPos(out var cursor) && cursor.X >= rect.Left && cursor.X < rect.Right &&
-            cursor.Y >= rect.Top && cursor.Y < rect.Bottom)
+        if (GetCursorPos(out var cursor) && cursor.X >= _applied.Left && cursor.X < _applied.Right &&
+            cursor.Y >= _applied.Top && cursor.Y < _applied.Bottom)
             _lastInside = DateTime.UtcNow;
         var hovered = DateTime.UtcNow - _lastInside < HoverLinger;
         var controlsVisible = hovered || !state.ControlsOnHoverOnly;
         var controlsOpacity = hovered ? 1.0 : 0.55;
-        foreach (var element in new[] { _moveDot, _resizeDot })
-        {
-            element.Visibility = controlsVisible ? Visibility.Visible : Visibility.Collapsed;
-            element.Opacity = controlsOpacity;
-        }
+
+        _state = state;
+        PlaceDots();
+        // A frame moves the window itself; only a borderless preview needs the dot.
+        SetShown(_moveDot.Root, controlsVisible && _contentInset().IsEmpty, controlsOpacity);
+        SetShown(_resizeDot.Root, controlsVisible, controlsOpacity);
+
+    }
+
+    private void PlaceDots()
+    {
+        if (_state is not { } state) return;
+        _moveDot.Place(PreviewDotPositions.Fractions(state.MoveDot, state.MoveDotX, state.MoveDotY),
+            ActualWidth, ActualHeight, resize: false);
+        _resizeDot.Place(PreviewDotPositions.Fractions(state.ResizeDot, state.ResizeDotX, state.ResizeDotY),
+            ActualWidth, ActualHeight, resize: true);
+    }
+
+    private static void SetShown(FrameworkElement element, bool shown, double opacity)
+    {
+        element.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        element.Opacity = opacity;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -217,6 +267,64 @@ internal sealed class PreviewControlsOverlayWindow : Window
         return HtTransparent;
     }
 
+    /// <summary>One dot: a small circle in a larger, invisible press area.</summary>
+    private sealed class Dot
+    {
+        private readonly Ellipse _circle;
+        private (double X, double Y, double Width, double Height) _placed = (double.NaN, 0, 0, 0);
+
+        internal Dot(Cursor cursor, string toolTipKey)
+        {
+            _circle = new Ellipse
+            {
+                Width = DotSize, Height = DotSize, Fill = Frozen(Color.FromArgb(0xEB, 0xFF, 0xFF, 0xFF)),
+                Stroke = Frozen(Color.FromArgb(0x8C, 0x12, 0x12, 0x16)), StrokeThickness = 3,
+                HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+            };
+            Root = new Grid
+            {
+                Width = DotHitSize, Height = DotHitSize, Background = Brushes.Transparent, Cursor = cursor,
+                HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                Tag = toolTipKey, Children = { _circle },
+            };
+        }
+
+        internal Grid Root { get; }
+
+        /// <summary>The non-client code the press is handed to the preview window as.</summary>
+        internal int HitTest { get; private set; } = HtCaption;
+
+        // Places the circle at the spot (fractions of the preview, its centre
+        // DotEdgeInset in from the edges) and keeps the press area inside.
+        internal void Place((double X, double Y) spot, double width, double height, bool resize)
+        {
+            if (_placed == (spot.X, spot.Y, width, height)) return;
+            _placed = (spot.X, spot.Y, width, height);
+            var centreX = DotEdgeInset + spot.X * Math.Max(0, width - 2 * DotEdgeInset);
+            var centreY = DotEdgeInset + spot.Y * Math.Max(0, height - 2 * DotEdgeInset);
+            var left = Math.Clamp(centreX - DotHitSize / 2, 0, Math.Max(0, width - DotHitSize));
+            var top = Math.Clamp(centreY - DotHitSize / 2, 0, Math.Max(0, height - DotHitSize));
+            Root.Margin = new Thickness(left, top, 0, 0);
+            _circle.Margin = new Thickness(centreX - left - DotSize / 2, centreY - top - DotSize / 2, 0, 0);
+            if (!resize) return;
+            // The resize dot pulls the nearest edge or corner; one in the
+            // middle pulls the bottom right corner.
+            var (horizontal, vertical) = PreviewDotPositions.Sides(spot.X, spot.Y);
+            if (horizontal == 0 && vertical == 0) (horizontal, vertical) = (1, 1);
+            (HitTest, Root.Cursor) = (horizontal, vertical) switch
+            {
+                (-1, -1) => (13, Cursors.SizeNWSE),
+                (0, -1) => (12, Cursors.SizeNS),
+                (1, -1) => (14, Cursors.SizeNESW),
+                (-1, 0) => (10, Cursors.SizeWE),
+                (1, 0) => (11, Cursors.SizeWE),
+                (-1, 1) => (16, Cursors.SizeNESW),
+                (0, 1) => (15, Cursors.SizeNS),
+                _ => (17, Cursors.SizeNWSE),
+            };
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct WindowRect
     {
@@ -242,7 +350,9 @@ internal sealed class PreviewControlsOverlayWindow : Window
     private static extern bool GetCursorPos(out CursorPoint point);
 
     [DllImport("user32.dll")]
-    private static extern uint GetDpiForWindow(nint window);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint window, nint insertAfter, int x, int y, int width, int height,
+        uint flags);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
